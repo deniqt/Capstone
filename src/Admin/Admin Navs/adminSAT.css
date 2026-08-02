@@ -1,0 +1,40 @@
+
+#SATTitle{
+    margin-bottom: 20px;
+}
+
+.TableOption{
+    margin-right: 10px;
+
+}
+.TableHead{
+    width: 100%;
+}
+
+.TableBox{
+    border: 1px solid black;
+    padding: 10px;
+}
+
+.mainTable{
+    width: 100%;
+    margin-top: 20px;
+}
+
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-table th,
+.user-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+
+.user-table tr:hover {
+  background-color: #ddd;
+}

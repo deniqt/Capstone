@@ -1,0 +1,87 @@
+
+
+#dashboardTitle{
+    margin-bottom: 5px;
+}
+
+.AdminDashboardNumberPanel{
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    margin: 20px 0px;
+    justify-content: space-around;
+}
+
+.NumberBox{
+    width: 23%;
+    min-height: 50px;
+    margin: 5px 0px 5px 0px;
+    border: 1px #6B7280 solid;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 5px;
+}
+
+.AdminLowerDashboardPanel{
+     display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    margin: 20px 0px;
+    justify-content: space-between;
+    height: 60vh;
+}
+
+.RecentTransactionPanel{
+margin: 10px 0px;
+border: 1px #6B7280 solid;
+border-radius: 8px;
+width: 67%;
+overflow-y: auto;
+}
+
+#RecentTransactionBanner{
+   display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+}
+
+.TodaySchedulePanel{
+margin: 10px 0px;
+border: 1px #6B7280 solid;
+width: 30%;
+border-radius: 8px;
+overflow-y: auto;
+}
+
+.viewall{
+    color: #0B74FF;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+.student-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.student-table th,
+.student-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+
+.student-table tr:hover {
+  background-color: #ddd;
+}
+
+.TodaySchedule-table{
+    width: 100%;
+  border-collapse: collapse;
+}

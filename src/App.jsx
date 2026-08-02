@@ -1,0 +1,91 @@
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from './assets/vite.svg'
+import heroImg from './assets/hero.png'
+import './App.css'
+import Login from './Login/Login'
+import TeacherDashboard from './Teacher/TeacherDashboard'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import TeacherMaterial from './Teacher/Teacher Navs/TeacherMaterial'
+import TeacherSchedule from './Teacher/Teacher Navs/TeacherSchedule'
+import TeacherStudent from './Teacher/Teacher Navs/TeacherStudent'
+import TeacherSettings from './Teacher/Teacher Navs/TeacherSettings'
+import StudentDashboard from './Student/StudentDashboard'
+import StudentMaterial from './Student/Student Navs/StudentMaterial'
+import StudentProgress from './Student/Student Navs/StudentProgress'
+import StudentEnrollment from './Student/Student Navs/StudentEnrollment'
+import StudentSchedule from './Student/Student Navs/StudentSchedule'
+import StudentSettings from './Student/Student Navs/StudentSettings'
+import AdminDashboard from './Admin/AdminDashboard'
+import AdminSchedule from './Admin/Admin Navs/AdminSchedule'
+import AdminSAT from './Admin/Admin Navs/AdminSAT'
+import AdminPayment from './Admin/Admin Navs/AdminPayment'
+import AdminReport from './Admin/Admin Navs/AdminReport'
+import AdminSettings from './Admin/Admin Navs/AdminSettings'
+import AdminMain from './Admin/Admin Navs/AdminMain'
+import AdminEditProfile from './Admin/Admin Navs/AdminEditProfile'
+import ProtectedRoute from './lib/ProtectedRoute'
+import LandingPage from './Login/LandingPage'
+import Register from './Login/Register'
+import UploadMaterial from './Teacher/Teacher Navs/UploadMaterial'
+import TeacherSubjects from './Teacher/Teacher Navs/TeacherSubjects'
+import TeacherSubject from './Teacher/Teacher Navs/TeacherSubject'
+
+
+function App() {
+  return (
+    <>
+      <BrowserRouter>
+      <Routes>
+        {/* Login Landing Page */}
+        <Route path="/" element = {<Login/>}/>
+
+        {/* After Login */}
+        <Route path="/landing" element = {<LandingPage/>}/>
+         <Route path="/register" element = {<Register/>}/>
+
+        {/* for teacher */}
+        <Route path="/teacher" element = {<ProtectedRoute allowedRole = "Tutor"><TeacherDashboard/></ProtectedRoute>}>
+            
+            <Route path="material" element = {<TeacherMaterial/>}/>
+            <Route path="materials/:studentID" element = {<TeacherSubjects/>}/>
+            <Route path="upload/:subjectId" element={<UploadMaterial />}/>
+            <Route path="schedule" element = {<TeacherSchedule/>}/>
+            <Route path="student" element = {<TeacherStudent/>}/>
+            <Route path="settings" element = {<TeacherSettings/>}/>
+        </Route>
+       
+        <Route path="/student" element = {
+           <ProtectedRoute allowedRole = "Student"><StudentDashboard/></ProtectedRoute>
+          }>
+            <Route path="material" element = {<StudentMaterial/>}/>
+            <Route path="progress" element = {<StudentProgress/>}/>
+            <Route path="enrollment" element = {<StudentEnrollment/>}/>
+            <Route path="schedule" element = {<StudentSchedule/>}/>
+            <Route path="settings" element = {<StudentSettings/>}/>
+        </Route>
+
+        <Route path="/admin" element = {
+          <ProtectedRoute allowedRole = "Admin">
+
+            <AdminDashboard/>
+          </ProtectedRoute>
+          
+          
+          }>
+            <Route index element = {<AdminMain/>}/>
+            <Route path="schedule" element = {<AdminSchedule/>}/>
+            <Route path="student-and-tutor" element = {<AdminSAT/>}/>
+            <Route path="EditProfile/:id" element = {<AdminEditProfile/>}/>
+            <Route path="payment" element = {<AdminPayment/>}/>
+            <Route path="report" element = {<AdminReport/>}/>
+            <Route path="settings" element = {<AdminSettings/>}/>
+        </Route>
+      </Routes>
+      </BrowserRouter>
+    
+    </>
+  )
+}
+
+export default App
