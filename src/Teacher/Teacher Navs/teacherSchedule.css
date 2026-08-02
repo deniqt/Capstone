@@ -1,0 +1,113 @@
+.TeacherScheduleHeader{
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+    justify-content: space-between;
+    border: black solid 1px;
+}
+.TeacherScheduleHeader h1{
+  margin: 0px;
+  margin-bottom: 5px;
+}
+
+.Teacher-NewSession{
+    padding: 10px;
+    height: fit-content;
+    align-self: center;
+}
+
+.TeacherScheduleLowerPanel{
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: nowrap;
+    height: 80vh;
+    border: 1px solid black;
+    justify-content: space-between;
+}
+
+.TeacherScheduleLowerLeft{
+    border: 1px solid black;
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: nowrap;
+    height: 110vh;
+    width: 60%;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.TeacherScheduleLowerRight{
+    border: 1px solid black;
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: nowrap;
+    height: 75vh;
+    width: 38%;
+    flex-direction: column;
+    
+}
+
+.TeacherScheduleCalendarPanel{
+    border: 1px solid black;
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: nowrap;
+    height: 80vh;
+    width: 98%;
+    flex-direction: column;
+}
+
+.TeacherScheduleCalendarPanel h3{
+    margin: 5px;
+}
+
+.TeacherScheduleUpcomingSessionPanel{
+    border: 1px solid black;
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: nowrap;
+    height: 30vh;
+    width: 98%;
+}
+
+.TeacherScheduleTodaySessionPanel{
+     border: 1px solid black;
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: nowrap;
+    height: 15vh;
+    width: 98%;
+}
+
+.TeacherScheduleSchedReqPanel{
+      border: 1px solid black;
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: nowrap;
+    height: 15vh;
+    width: 98%;
+}
+
+.CalendarPanel{
+    height: 100%;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.4);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+}
+
+.modal {
+    background: white;
+    padding: 24px;
+    border-radius: 10px;
+    width: 450px;
+    max-width: 90%;
+}
