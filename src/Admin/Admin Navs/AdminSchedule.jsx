@@ -17,7 +17,8 @@ function AdminSchedule(){
     const [assignedTutor, setAssignedTutor] = useState(null);
     const [duration,setDuration] = useState(1);
     const [notes,setNotes]=useState("");
-
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [editMode, setEditMode] = useState(false);
     useEffect(()=>{
 
     getEvents();
@@ -90,46 +91,132 @@ function AdminSchedule(){
         setAvailableStudents(available);
     }
 
-   async function handleEventDrop(info) {
-        const confirmMove = window.confirm(
-            "Move this schedule to the new time?"
-        );
+    async function hasConflict(
+            eventId,
+            studentId,
+            tutorId,
+            start,
+            end
+        ){
 
-        if (!confirmMove) {
-            info.revert();
-            return;
+            const { data, error } = await supabase
+            .from("calendar")
+            .select("*")
+            .neq("id", eventId)
+            .in("status", ["Pending","Confirmed"])
+            .lt("start_datetime", end.toISOString())
+            .gt("end_datetime", start.toISOString());
+
+            if(error){
+                console.log(error);
+                return true;
+            }
+
+            const studentConflict = data.some(
+                schedule => schedule.student_id === studentId
+            );
+
+            const tutorConflict = data.some(
+                schedule => schedule.tutor_id === tutorId
+            );
+
+            return studentConflict || tutorConflict;
+
+        }
+   async function handleEventDrop(info){
+
+            const confirmMove = window.confirm(
+                "Move this schedule?"
+            );
+
+            if(!confirmMove){
+                info.revert();
+                return;
+            }
+
+            const conflict = await hasConflict(
+
+                info.event.id,
+                info.event.extendedProps.student_id,
+                info.event.extendedProps.tutor_id,
+                info.event.start,
+                info.event.end
+
+            );
+
+            if(conflict){
+
+                alert("Schedule conflict detected.");
+
+                info.revert();
+
+                return;
+
+            }
+
+            const { error } = await supabase
+
+            .from("calendar")
+
+            .update({
+
+                start_datetime:info.event.start,
+                end_datetime:info.event.end
+
+            })
+
+            .eq("id",info.event.id);
+
+            if(error){
+
+                console.log(error);
+
+                info.revert();
+
+            }
+
         }
 
-        const { error } = await supabase
+    async function handleEventResize(info){
+
+            const conflict = await hasConflict(
+
+                info.event.id,
+                info.event.extendedProps.student_id,
+                info.event.extendedProps.tutor_id,
+                info.event.start,
+                info.event.end
+
+            );
+
+            if(conflict){
+
+                alert("Schedule conflict detected.");
+
+                info.revert();
+
+                return;
+
+            }
+
+            const { error } = await supabase
             .from("calendar")
             .update({
-                start_datetime: info.event.start,
-                end_datetime: info.event.end,
+
+                start_datetime:info.event.start,
+                end_datetime:info.event.end
+
             })
-            .eq("id", info.event.id);
+            .eq("id",info.event.id);
 
-        if (error) {
-            console.error(error);
-            info.revert();
-        }
-    }
+            if(error){
 
+                console.log(error);
 
-    async function handleEventResize(info) {
-            const { error } = await supabase
-                .from("calendar")
-                .update({
-                    start_datetime: info.event.start,
-                    end_datetime: info.event.end,
-                })
-                .eq("id", info.event.id);
-
-            if (error) {
-                console.error(error);
-
-                // Undo resize if database update failed
                 info.revert();
+
             }
+
         }
     async function getEvents(){
 
@@ -147,23 +234,35 @@ function AdminSchedule(){
 
             }
 
-            const formatted=data.map(event=>({
+           const formatted = data.map(event => ({
+                id: event.id,
+                title: event.title,
 
-            id:event.id,
+                start: event.start_datetime,
+                end: event.end_datetime,
 
-            title:event.title,
+                student_id: event.student_id,
+                tutor_id: event.tutor_id,
 
-            start:event.start_datetime,
+                notes: event.notes,
 
-            end:event.end_datetime,
+                meeting_platform: event.meeting_platform,
+                meeting_link: event.meeting_link,
 
-            color:event.color
+                status: event.status,
 
+                color:
+                    event.status === "Pending"
+                        ? "#FFC107"
+                    : event.status === "Confirmed"
+                        ? "#4CAF50"
+                    : "#F44336"
             }));
 
             setEvents(formatted);
 
             }
+
 
             async function createSchedule(){
 
@@ -184,7 +283,8 @@ function AdminSchedule(){
                         tutor_id: selectedStudent.details.Tutor_ID,
                         start_datetime: start.toISOString(),
                         end_datetime: end.toISOString(),
-                        notes:notes,
+                        notes,
+                        status: "Confirmed",
                         color: "#4CAF50"
                     });
 
@@ -207,7 +307,54 @@ function AdminSchedule(){
 
                  await getEvents();
 
+         }
+
+         async function approveSession(){
+
+            const { error } = await supabase
+                .from("calendar")
+                .update({
+                    status: "Confirmed",
+                    color: "#4CAF50"
+                })
+                .eq("id", selectedEvent.id);
+
+            if(error){
+                console.log(error);
+                return;
             }
+
+            await getEvents();
+
+            setSelectedEvent(null);
+        }
+
+
+        async function rejectSession(){
+
+            const confirmReject = window.confirm(
+                "Reject this schedule request?"
+            );
+
+            if(!confirmReject) return;
+
+            const { error } = await supabase
+                .from("calendar")
+                .update({
+                    status: "Cancelled",
+                    color: "#F44336"
+                })
+                .eq("id", selectedEvent.id);
+
+            if(error){
+                console.log(error);
+                return;
+            }
+
+            await getEvents();
+
+            setSelectedEvent(null);
+        }
 
     return(<>
         <h1> ADMIN Schedule</h1>
@@ -237,6 +384,17 @@ function AdminSchedule(){
 
             right:"dayGridMonth,timeGridWeek,timeGridDay,listWeek"
 
+            }}
+
+            eventClick={(info)=>{
+
+                setSelectedEvent({
+                    id: info.event.id,
+                    title: info.event.title,
+                    start: info.event.start,
+                    end: info.event.end,
+                    ...info.event.extendedProps
+                });
             }}
             nowIndicator={true}
             events={events}
@@ -421,7 +579,81 @@ function AdminSchedule(){
                 
 
         )}
-    </>);
+
+
+        {selectedEvent && (
+
+            <div className="modal-overlay">
+                <div className="modal">
+
+                    <h2>{selectedEvent.title}</h2>
+
+                    <p>
+                        <strong>Status:</strong> {selectedEvent.status}
+                    </p>
+
+                    <p>
+                        <strong>Start:</strong>
+                        {" "}
+                        {selectedEvent.start.toLocaleString()}
+                    </p>
+
+                    <p>
+                        <strong>End:</strong>
+                        {" "}
+                        {selectedEvent.end.toLocaleString()}
+                    </p>
+
+                    <p>
+                        <strong>Platform:</strong>
+                        {" "}
+                        {selectedEvent.meeting_platform || "N/A"}
+                    </p>
+
+                    <p>
+                        <strong>Notes:</strong>
+                        <br/>
+                        {selectedEvent.notes || "No notes"}
+                    </p>
+
+                    {selectedEvent.meeting_link && (
+
+                        <a
+                            href={selectedEvent.meeting_link}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Open Meeting
+                        </a>
+
+                    )}
+
+                    <br/><br/>
+                    {selectedEvent.status === "Pending" && (
+
+                        <>
+                            <button onClick={approveSession}>
+                                Approve
+                            </button>
+
+                            <button onClick={rejectSession}>
+                                Reject
+                            </button>
+                        </>
+
+                    )}
+
+                    <button
+                        onClick={()=>setSelectedEvent(null)}
+                    >
+                        Close
+                    </button>
+
+                </div>
+            </div>
+
+            )}
+                </>);
 
   
 }

@@ -298,13 +298,7 @@ function TeacherSchedule(){
                                     nowIndicator={true}
                                     events={events}
                                     dateClick={(info)=>{
-                                        if(selectedDate < new Date()){
-
-                                        alert("Cannot schedule in the past.");
-
-                                        return;
-
-                                        }
+                                        
                                     setSelectedDate(info.date);
                                     setShowModal(true);
                                 }}
