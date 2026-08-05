@@ -1,0 +1,27 @@
+.student-lower-panel{
+    display: flex;
+    flex-wrap: wrap;
+    border: solid 1px black;
+    padding: 5px;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+
+.student-lower-left{
+    border: 1px solid black;
+    padding: 2px;
+    width: 27%;
+}
+
+.student-lower-right{
+    width: 70%;
+    border: 1px solid black;
+    padding: 2px;
+    height: 70vh;
+}
+
+.calendar-panel{
+    border: 1px solid black;
+    height: 70vh;
+}

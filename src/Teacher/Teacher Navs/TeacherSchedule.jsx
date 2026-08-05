@@ -23,6 +23,11 @@ function TeacherSchedule(){
     const [meetingPlatform, setMeetingPlatform] = useState("Zoom");
     const [meetingLink, setMeetingLink] = useState("");
     const [editMode, setEditMode] = useState(false);
+    const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [newScheduleDate, setNewScheduleDate] = useState(null);
+    const [rescheduleDuration, setRescheduleDuration] = useState(1);
+    const [rescheduleReason, setRescheduleReason] = useState("");
+
 
     useEffect(()=>{
 
@@ -37,6 +42,61 @@ function TeacherSchedule(){
             loadUpcomingSessions();
             loadTodayCount();  
     }, [loggedTutor]);
+
+   useEffect(() => {
+
+            if (!loggedTutor) return;
+
+            const channel = supabase
+                .channel("calendar-realtime")
+                .on(
+                    "postgres_changes",
+                    {
+                        event: "*",
+                        schema: "public",
+                        table: "calendar",
+                    },
+                    async (payload) => {
+
+                        console.log("Realtime:", payload);
+
+                        await Promise.all([
+                            getEvents(loggedTutor.id),
+                            loadUpcomingSessions(),
+                            loadTodayCount()
+                        ]);
+
+                        if (selectedEvent) {
+
+                            const { data } = await supabase
+                                .from("calendar")
+                                .select("*")
+                                .eq("id", selectedEvent.id)
+                                .single();
+
+                            if (data) {
+
+                                setSelectedEvent({
+                                    id: data.id,
+                                    title: data.title,
+                                    start: new Date(data.start_datetime),
+                                    end: new Date(data.end_datetime),
+                                    ...data
+                                });
+
+                            }
+
+                        }
+
+                    }
+                )
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
+
+        }, [loggedTutor]);
 
     async function getTutor(){
 
@@ -90,20 +150,33 @@ function TeacherSchedule(){
                 title: event.title,
                 start: event.start_datetime,
                 end: event.end_datetime,
-
                 status: event.status,
                 notes: event.notes,
                 student_id: event.student_id,
                 tutor_id: event.tutor_id,
+                requested_start_datetime: event.requested_start_datetime,
+                requested_end_datetime: event.requested_end_datetime,
+                reschedule_reason: event.reschedule_reason,
+                student_approval: event.student_approval,
+                admin_approval: event.admin_approval,
+                reschedule_requested_by: event.reschedule_requested_by,
                 meeting_link: event.meeting_link,
                 meeting_platform: event.meeting_platform,
 
                 color:
                     event.status === "Pending"
-                        ? "#FFC107"
+                    ? "#FFC107"
                     : event.status === "Confirmed"
-                        ? "#4CAF50"
-                    : "#F44336"
+                    ? "#4CAF50"
+                    : event.status === "Reschedule Pending"
+                    ? "#9C27B0"
+                    : event.status === "Cancelled"
+                    ? "#F44336"
+                    : event.status === "Attended"
+                    ? "#2196F3"
+                    : event.status === "Absent"
+                    ? "#616161"
+                    : "#607D8B"
             }));
             setEvents(formatted);
 
@@ -261,6 +334,116 @@ function TeacherSchedule(){
 
         setSelectedEvent(null);
         
+
+    }
+
+
+    async function requestReschedule(){
+
+        const end = new Date(newScheduleDate);
+
+        end.setHours(
+            end.getHours() + rescheduleDuration
+        );
+
+        const { data: conflicts } = await supabase
+            .from("calendar")
+            .select("*")
+            .eq("tutor_id", loggedTutor.id)
+            .in("status", [
+                "Pending",
+                "Confirmed",
+                "Reschedule Pending"
+            ])
+            .neq("id", selectedEvent.id)
+            .lt("start_datetime", end.toISOString())
+            .gt("end_datetime", newScheduleDate.toISOString());
+
+        if (conflicts && conflicts.length > 0){
+            alert("Schedule conflict.");
+            return;
+        }
+
+        const { error } = await supabase
+            .from("calendar")
+            .update({
+                requested_start_datetime:
+                    newScheduleDate.toISOString(),
+                requested_end_datetime:
+                    end.toISOString(),
+                reschedule_reason:
+                    rescheduleReason,
+                reschedule_requested_by:
+                    "Tutor",
+                student_approval:
+                    "Pending",
+                admin_approval:
+                    "Pending",
+                status:
+                    "Reschedule Pending"
+
+            })
+            .eq("id", selectedEvent.id);
+        if(error){
+            console.log(error);
+            return;
+        }
+
+        await getEvents(loggedTutor.id);
+        await loadUpcomingSessions();
+        setShowRescheduleModal(false);
+        setNewScheduleDate(null);
+        setRescheduleDuration(1);
+        setRescheduleReason("");
+        setSelectedEvent(null);
+    }
+
+    async function markAttended(){
+
+        const { error } = await supabase
+            .from("calendar")
+            .update({
+                status: "Attended"
+            })
+            .eq("id", selectedEvent.id);
+
+        if(error){
+            console.log(error);
+            return;
+        }
+
+        await getEvents(loggedTutor.id);
+        await loadUpcomingSessions();
+        await loadTodayCount();
+
+        setSelectedEvent(null);
+
+    }
+
+    async function markAbsent(){
+
+        const confirmAbsent = window.confirm(
+            "Mark this student as absent?"
+        );
+
+        if(!confirmAbsent) return;
+
+        const { error } = await supabase
+            .from("calendar")
+            .update({
+                status: "Absent"
+            })
+            .eq("id", selectedEvent.id);
+
+        if(error){
+            console.log(error);
+            return;
+        }
+
+        await getEvents(loggedTutor.id);
+        await loadUpcomingSessions();
+        await loadTodayCount();
+        setSelectedEvent(null);
 
     }
             
@@ -557,6 +740,54 @@ function TeacherSchedule(){
 
                             )}
 
+                            {selectedEvent.status === "Reschedule Pending" && (
+                                <div className="reschedule-status">
+
+                                    <h3>Reschedule Request</h3>
+
+                                    <p>
+                                        <strong>Requested Date:</strong><br/>
+                                        {
+                                            new Date(
+                                                selectedEvent.requested_start_datetime
+                                            ).toLocaleString()
+                                        }
+                                    </p>
+
+                                    <p>
+                                        <strong>Requested Start:</strong><br/>
+                                        {new Date(
+                                            selectedEvent.requested_start_datetime
+                                        ).toLocaleString()}
+                                    </p>
+
+                                    <p>
+                                        <strong>Requested End:</strong><br/>
+                                        {new Date(
+                                            selectedEvent.requested_end_datetime
+                                        ).toLocaleString()}
+                                    </p>
+
+                                    <p>
+                                        <strong>Reason:</strong><br/>
+                                        {selectedEvent.reschedule_reason}
+                                    </p>
+
+                                    <p>
+                                        Student Approval:
+                                        {" "}
+                                        {selectedEvent.student_approval}
+                                    </p>
+
+                                    <p>
+                                        Admin Approval:
+                                        {" "}
+                                        {selectedEvent.admin_approval}
+                                    </p>
+
+                                </div>
+                            )}
+
                             {editMode ? (
 
                                 <input
@@ -608,7 +839,43 @@ function TeacherSchedule(){
                             </p>
 
                             }
+
+                            
                         </>
+                    )}
+
+                    {selectedEvent.status === "Confirmed" &&
+                    !selectedEvent.requested_start_datetime && (
+                        <button
+                            onClick={()=>{
+                               setNewScheduleDate(selectedEvent.start);
+                                const hours =
+                                    (selectedEvent.end - selectedEvent.start) /
+                                    (1000 * 60 * 60);
+
+                                setRescheduleDuration(hours);
+                                setRescheduleReason("");
+                                setShowRescheduleModal(true);
+                                
+                            }}
+                        >
+                            Reschedule
+                        </button>
+                    )}
+
+                    {selectedEvent.status === "Confirmed" &&
+                        new Date(selectedEvent.end) < new Date() && (
+
+                            <>
+                                <button onClick={markAttended}>
+                                    Mark Attended
+                                </button>
+
+                                <button onClick={markAbsent}>
+                                    Mark Absent
+                                </button>
+                            </>
+
                     )}
 
                     {selectedEvent.status === "Pending" && (
@@ -650,6 +917,73 @@ function TeacherSchedule(){
             </div>
 
             )}
+
+
+            {showRescheduleModal && (
+
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <h2>Reschedule Session</h2>
+                        <input
+                            type="datetime-local"
+                            value={
+                                newScheduleDate
+                                ?
+                                new Date(
+                                    newScheduleDate.getTime()
+                                    -
+                                    newScheduleDate.getTimezoneOffset()*60000
+                                )
+                                .toISOString()
+                                .slice(0,16)
+                                :
+                                ""
+                            }
+                            onChange={(e)=>
+                                setNewScheduleDate(
+                                    new Date(e.target.value)
+                                )
+                            }
+                        />
+                        <select
+                            value={rescheduleDuration}
+                            onChange={(e)=>
+                            setRescheduleDuration(
+                            Number(e.target.value)
+                            )
+                            }
+                        >
+                            <option value={1}>1 Hour</option>
+                            <option value={2}>2 Hours</option>
+                            <option value={3}>3 Hours</option>
+                        </select>
+
+                        <textarea
+                            placeholder="Reason"
+                            value={rescheduleReason}
+                            onChange={(e)=>
+                            setRescheduleReason(
+                            e.target.value
+                             )
+                            }
+                        />
+
+                        <button
+                             onClick={requestReschedule}
+                        >
+                             Submit Request
+                        </button>
+
+                        <button
+                             onClick={()=>{setShowRescheduleModal(false)}}
+                        >
+                            Cancel
+                        </button>
+
+                    </div>
+                </div>
+
+                )}
                 
     </>);
 }

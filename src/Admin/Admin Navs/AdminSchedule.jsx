@@ -25,6 +25,57 @@ function AdminSchedule(){
 
     },[]);
 
+    useEffect(() => {
+
+        const channel = supabase
+            .channel("admin-calendar-realtime")
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "calendar",
+                },
+                async () => {
+
+                    await getEvents();
+
+                    if (selectedEvent) {
+
+                        const { data } = await supabase
+                            .from("calendar")
+                            .select("*")
+                            .eq("id", selectedEvent.id)
+                            .single();
+
+                        if (data) {
+
+                            setSelectedEvent({
+                                id: data.id,
+                                title: data.title,
+                                start: new Date(data.start_datetime),
+                                end: new Date(data.end_datetime),
+                                ...data
+                            });
+
+                        } else {
+
+                            setSelectedEvent(null);
+
+                        }
+
+                    }
+
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+
+    }, [selectedEvent]);
+
      let endDate = null;
 
     if(selectedDate){
@@ -179,6 +230,15 @@ function AdminSchedule(){
 
     async function handleEventResize(info){
 
+        const confirmResize = window.confirm(
+                "Change session duration?"
+            );
+
+            if (!confirmResize) {
+                info.revert();
+                return;
+            }
+
             const conflict = await hasConflict(
 
                 info.event.id,
@@ -234,38 +294,62 @@ function AdminSchedule(){
 
             }
 
-           const formatted = data.map(event => ({
-                id: event.id,
-                title: event.title,
+          const formatted = data.map(event => ({
+            id: event.id,
+            title: event.title,
 
-                start: event.start_datetime,
-                end: event.end_datetime,
+            start: event.start_datetime,
+            end: event.end_datetime,
 
-                student_id: event.student_id,
-                tutor_id: event.tutor_id,
+            student_id: event.student_id,
+            tutor_id: event.tutor_id,
 
-                notes: event.notes,
+            notes: event.notes,
 
-                meeting_platform: event.meeting_platform,
-                meeting_link: event.meeting_link,
+            meeting_platform: event.meeting_platform,
+            meeting_link: event.meeting_link,
 
-                status: event.status,
+            status: event.status,
 
-                color:
-                    event.status === "Pending"
-                        ? "#FFC107"
-                    : event.status === "Confirmed"
-                        ? "#4CAF50"
-                    : "#F44336"
-            }));
+            requested_start_datetime: event.requested_start_datetime,
+            requested_end_datetime: event.requested_end_datetime,
+            reschedule_reason: event.reschedule_reason,
+            student_approval: event.student_approval,
+            admin_approval: event.admin_approval,
+            reschedule_requested_by: event.reschedule_requested_by,
+
+            color:
+                event.status === "Pending"
+                    ? "#FFC107"
+                : event.status === "Confirmed"
+                    ? "#4CAF50"
+                : event.status === "Reschedule Pending"
+                    ? "#9C27B0"
+                : event.status === "Cancelled"
+                    ? "#F44336"
+                : event.status === "Attended"
+                    ? "#2196F3"
+                : event.status === "Absent"
+                    ? "#616161"
+                : "#607D8B"
+        }));
 
             setEvents(formatted);
 
-            }
+     }
 
 
-            async function createSchedule(){
+    async function createSchedule(){
 
+                if(!selectedStudent){
+                    alert("Please select a student.");
+                    return;
+                }
+
+                if(!selectedDate){
+                    alert("Please select a date.");
+                    return;
+                }
                 const start = new Date(selectedDate);
 
                 const end = new Date(start);
@@ -307,9 +391,9 @@ function AdminSchedule(){
 
                  await getEvents();
 
-         }
+    }
 
-         async function approveSession(){
+    async function approveSession(){
 
             const { error } = await supabase
                 .from("calendar")
@@ -327,10 +411,10 @@ function AdminSchedule(){
             await getEvents();
 
             setSelectedEvent(null);
-        }
+    }
 
 
-        async function rejectSession(){
+    async function rejectSession(){
 
             const confirmReject = window.confirm(
                 "Reject this schedule request?"
@@ -354,7 +438,117 @@ function AdminSchedule(){
             await getEvents();
 
             setSelectedEvent(null);
+    }
+
+   async function approveReschedule(){
+
+        if(selectedEvent.student_approval !== "Approved"){
+            alert("Student has not approved this request.");
+            return;
         }
+
+        const conflict = await hasConflict(
+
+            selectedEvent.id,
+            selectedEvent.student_id,
+            selectedEvent.tutor_id,
+            new Date(selectedEvent.requested_start_datetime),
+            new Date(selectedEvent.requested_end_datetime)
+
+        );
+
+        if(conflict){
+
+            alert("Another schedule already occupies this time.");
+
+            return;
+
+        }
+
+        const { data: student } = await supabase
+            .from("users")
+            .select("Status")
+            .eq("id", selectedEvent.student_id)
+            .single();
+
+        if(student.Status !== "Active"){
+
+            alert("This student's subscription is inactive.");
+
+            return;
+
+        }
+
+        const { error } = await supabase
+            .from("calendar")
+            .update({
+
+                start_datetime:
+                    selectedEvent.requested_start_datetime,
+
+                end_datetime:
+                    selectedEvent.requested_end_datetime,
+
+                requested_start_datetime: null,
+                requested_end_datetime: null,
+                reschedule_reason: null,
+
+                student_approval: "Approved",
+                admin_approval: "Approved",
+
+                status: "Confirmed"
+
+            })
+            .eq("id", selectedEvent.id);
+
+        if(error){
+            console.log(error);
+            return;
+        }
+
+        await getEvents();
+
+        setSelectedEvent(null);
+
+        alert("Reschedule approved.");
+
+    }
+
+    async function rejectReschedule(){
+
+        const { error } = await supabase
+            .from("calendar")
+            .update({
+
+                requested_start_datetime: null,
+                requested_end_datetime: null,
+                reschedule_reason: null,
+
+                student_approval:
+                    selectedEvent.student_approval,
+
+                admin_approval: "Rejected",
+
+                status: "Confirmed"
+
+            })
+            .eq("id", selectedEvent.id);
+
+        if(error){
+
+            console.log(error);
+
+            return;
+
+        }
+
+        await getEvents();
+
+        setSelectedEvent(null);
+
+        alert("Reschedule rejected.");
+
+    }
 
     return(<>
         <h1> ADMIN Schedule</h1>
@@ -395,6 +589,18 @@ function AdminSchedule(){
                     end: info.event.end,
                     ...info.event.extendedProps
                 });
+            }}
+
+            eventAllow={(dropInfo, draggedEvent)=>{
+
+                return (
+                    draggedEvent.extendedProps.status !== "Cancelled"
+                    &&
+                    draggedEvent.extendedProps.status !== "Absent"
+                    &&
+                    draggedEvent.extendedProps.status !== "Attended"
+                );
+
             }}
             nowIndicator={true}
             events={events}
@@ -642,6 +848,70 @@ function AdminSchedule(){
                         </>
 
                     )}
+
+                    {selectedEvent.status === "Reschedule Pending" && (
+                    <>
+
+                        <button onClick={approveReschedule}>
+                            Approve Reschedule
+                        </button>
+
+                        <button onClick={rejectReschedule}>
+                            Reject Reschedule
+                        </button>
+
+                    </>
+                    )}
+
+                    {selectedEvent.status === "Reschedule Pending" && (
+
+                        <div className="reschedule-status">
+
+                            <h3>Reschedule Request</h3>
+
+                            <p>
+                                <strong>Requested By:</strong>
+                                {" "}
+                                {selectedEvent.reschedule_requested_by}
+                            </p>
+
+                            <p>
+                                <strong>Requested Start:</strong>
+                                <br />
+                                {new Date(
+                                    selectedEvent.requested_start_datetime
+                                ).toLocaleString()}
+                            </p>
+
+                            <p>
+                                <strong>Requested End:</strong>
+                                <br />
+                                {new Date(
+                                    selectedEvent.requested_end_datetime
+                                ).toLocaleString()}
+                            </p>
+
+                            <p>
+                                <strong>Reason:</strong>
+                                <br />
+                                {selectedEvent.reschedule_reason}
+                            </p>
+
+                            <p>
+                                Student Approval:
+                                {" "}
+                                {selectedEvent.student_approval}
+                            </p>
+
+                            <p>
+                                Admin Approval:
+                                {" "}
+                                {selectedEvent.admin_approval}
+                            </p>
+
+                        </div>
+
+                        )}
 
                     <button
                         onClick={()=>setSelectedEvent(null)}
