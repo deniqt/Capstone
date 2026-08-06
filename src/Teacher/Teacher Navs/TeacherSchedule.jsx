@@ -18,6 +18,7 @@ function TeacherSchedule(){
     const [duration, setDuration] = useState(1);
     const [notes, setNotes] = useState("");
     const [upcomingSessions, setUpcomingSessions] = useState([]);
+    const [newScheduleRequest, setNewScheduleRequest] = useState([]);
     const [todayCount, setTodayCount] = useState(0);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [meetingPlatform, setMeetingPlatform] = useState("Zoom");
@@ -40,6 +41,7 @@ function TeacherSchedule(){
             getEvents(loggedTutor.id);
             loadStudents();
             loadUpcomingSessions();
+            loadNewScheduleRequest();
             loadTodayCount();  
     }, [loggedTutor]);
 
@@ -63,6 +65,7 @@ function TeacherSchedule(){
                         await Promise.all([
                             getEvents(loggedTutor.id),
                             loadUpcomingSessions(),
+                            loadNewScheduleRequest(),
                             loadTodayCount()
                         ]);
 
@@ -158,6 +161,7 @@ function TeacherSchedule(){
                 requested_end_datetime: event.requested_end_datetime,
                 reschedule_reason: event.reschedule_reason,
                 student_approval: event.student_approval,
+                tutor_approval: event.tutor_approval,  
                 admin_approval: event.admin_approval,
                 reschedule_requested_by: event.reschedule_requested_by,
                 meeting_link: event.meeting_link,
@@ -182,6 +186,60 @@ function TeacherSchedule(){
 
     }
 
+    async function viewEvent(selectedID) {
+        const{data, error} = await supabase
+        .from("calendar")
+        .select("*")
+        .eq("id", selectedID)
+        .single();
+
+
+        if(error){
+            console.log(error)
+            return
+        }
+
+        console.log(data)
+        const formatted = {
+                id: data.id,
+                title: data.title,
+                start: data.start_datetime,
+                end: data.end_datetime,
+                status: data.status,
+                notes: data.notes,
+                student_id: data.student_id,
+                tutor_id: data.tutor_id,
+                requested_start_datetime: data.requested_start_datetime,
+                requested_end_datetime: data.requested_end_datetime,
+                reschedule_reason: data.reschedule_reason,
+                student_approval: data.student_approval,
+                tutor_approval: data.tutor_approval,  
+                admin_approval: data.admin_approval,
+                reschedule_requested_by: data.reschedule_requested_by,
+                meeting_link: data.meeting_link,
+                meeting_platform: data.meeting_platform,
+
+                color:
+                    data.status === "Pending"
+                    ? "#FFC107"
+                    : data.status === "Confirmed"
+                    ? "#4CAF50"
+                    : data.status === "Reschedule Pending"
+                    ? "#9C27B0"
+                    : data.status === "Cancelled"
+                    ? "#F44336"
+                    : data.status === "Attended"
+                    ? "#2196F3"
+                    : data.status === "Absent"
+                    ? "#616161"
+                    : "#607D8B"
+            };
+            
+            console.log(formatted)
+
+        setSelectedEvent(formatted);
+       
+    }
    
     async function createRequest(){
         const end = new Date(selectedDate);
@@ -268,7 +326,27 @@ function TeacherSchedule(){
 
         setUpcomingSessions(data);
     }
-        
+       
+    async function loadNewScheduleRequest() {
+        const now = new Date().toISOString();
+
+        const { data, error } = await supabase
+            .from("calendar")
+            .select("*")
+            .eq("tutor_id", loggedTutor.id)
+            .eq("status", "Reschedule Pending")
+            .eq("reschedule_requested_by", "Student")
+            .order("start_datetime")
+            .limit(5);
+
+        if (error) {
+            console.log(error);
+            return;
+        }
+
+        setNewScheduleRequest(data);
+    }
+
     async function loadTodayCount() {
 
         const today = new Date();
@@ -375,6 +453,8 @@ function TeacherSchedule(){
                     rescheduleReason,
                 reschedule_requested_by:
                     "Tutor",
+                tutor_approval:
+                    "Approved",
                 student_approval:
                     "Pending",
                 admin_approval:
@@ -443,6 +523,71 @@ function TeacherSchedule(){
         await getEvents(loggedTutor.id);
         await loadUpcomingSessions();
         await loadTodayCount();
+        setSelectedEvent(null);
+
+    }
+
+     async function approveReschedule(){
+
+        const { error } = await supabase
+        .from("calendar")
+        .update({
+
+            tutor_approval:"Approved"
+
+        })
+        .eq("id", selectedEvent.id);
+
+        if(error){
+
+            console.log(error);
+
+            return;
+
+        }
+
+        await getEvents(loggedTutor.id);
+
+        await loadTodaySessions(loggedTutor.id);
+
+        setSelectedEvent(null);
+
+    }
+
+    async function rejectReschedule(schedID){
+
+        const confirmed = window.confirm("Are you sure you want to reject this reschedule?");
+
+        if (!confirmed) return;
+
+
+        const { error } = await supabase
+        .from("calendar")
+        .update({
+
+            tutor_approval:"Rejected",
+
+            requested_start_datetime:null,
+            requested_end_datetime:null,
+            reschedule_reason:null,
+
+            status:"Confirmed"
+
+        })
+        .eq("id", schedID);
+
+        if(error){
+
+            console.log(error);
+
+            return;
+
+        }
+
+        await getEvents(loggedTutor.id);
+
+        await loadTodaySessions(loggedTutor.id);
+
         setSelectedEvent(null);
 
     }
@@ -535,15 +680,31 @@ function TeacherSchedule(){
             <div className='TeacherScheduleLowerRight'>
                 <div className='TeacherScheduleTodaySessionPanel'>
                     <h3>Today's Session</h3>
-                        <h3>{todayCount}</h3>
+                        <br/>
+                        <h1>{todayCount}</h1>
                 </div>
 
                  <div className='TeacherScheduleSchedReqPanel'>
                     <h3>New Schedule Request</h3>
-                    <h3>(coming soon)</h3>
+                    {newScheduleRequest.map(schedReq => (
+
+                        <div
+                            key={schedReq.id}
+                            className="UpcomingCard"
+                        >
+                            <p>{schedReq.id}</p>
+                            <strong>{schedReq.title}</strong>
+
+                            <p>{schedReq.status}</p>
+                            <button onClick={()=>(rejectReschedule(schedReq.id))}>Decline</button>
+                            <button onClick={()=>(viewEvent(schedReq.id))}>View</button>
+                
+                        </div>
+
+                    ))}
                 </div>
 
-                <div className='TeacherScheduleSchedReqPanel'>
+                <div className='a'>
                     <h3>Tutor Ratings</h3>
                     <h3>(coming soon)</h3>
                 </div>
@@ -708,6 +869,61 @@ function TeacherSchedule(){
 
                     )}
 
+                    {selectedEvent.status === "Reschedule Pending" && (
+                        <div className="reschedule-status">
+
+                            <h3>Reschedule Request</h3>
+
+                            <p>
+                                <strong>Requested Date:</strong><br/>
+                                {
+                                    new Date(
+                                        selectedEvent.requested_start_datetime
+                                    ).toLocaleString()
+                                }
+                            </p>
+
+                            <p>
+                                <strong>Requested Start:</strong><br/>
+                                {new Date(
+                                    selectedEvent.requested_start_datetime
+                                ).toLocaleString()}
+                            </p>
+
+                            <p>
+                                <strong>Requested End:</strong><br/>
+                                {new Date(
+                                    selectedEvent.requested_end_datetime
+                                ).toLocaleString()}
+                            </p>
+
+                            <p>
+                                <strong>Reason:</strong><br/>
+                                {selectedEvent.reschedule_reason}
+                            </p>
+
+                            <p>
+                                Student Approval:
+                                {" "}
+                                {selectedEvent.student_approval}
+                            </p>
+                            
+                                <p>
+                                tutor Approval:
+                                {" "}
+                                {selectedEvent.tutor_approval}
+                            </p>
+                            
+
+                            <p>
+                                Admin Approval:
+                                {" "}
+                                {selectedEvent.admin_approval}
+                            </p>
+
+                        </div>
+                    )}
+
                     {selectedEvent.meeting_link && (
                         <>
                             {editMode ? (
@@ -740,53 +956,6 @@ function TeacherSchedule(){
 
                             )}
 
-                            {selectedEvent.status === "Reschedule Pending" && (
-                                <div className="reschedule-status">
-
-                                    <h3>Reschedule Request</h3>
-
-                                    <p>
-                                        <strong>Requested Date:</strong><br/>
-                                        {
-                                            new Date(
-                                                selectedEvent.requested_start_datetime
-                                            ).toLocaleString()
-                                        }
-                                    </p>
-
-                                    <p>
-                                        <strong>Requested Start:</strong><br/>
-                                        {new Date(
-                                            selectedEvent.requested_start_datetime
-                                        ).toLocaleString()}
-                                    </p>
-
-                                    <p>
-                                        <strong>Requested End:</strong><br/>
-                                        {new Date(
-                                            selectedEvent.requested_end_datetime
-                                        ).toLocaleString()}
-                                    </p>
-
-                                    <p>
-                                        <strong>Reason:</strong><br/>
-                                        {selectedEvent.reschedule_reason}
-                                    </p>
-
-                                    <p>
-                                        Student Approval:
-                                        {" "}
-                                        {selectedEvent.student_approval}
-                                    </p>
-
-                                    <p>
-                                        Admin Approval:
-                                        {" "}
-                                        {selectedEvent.admin_approval}
-                                    </p>
-
-                                </div>
-                            )}
 
                             {editMode ? (
 
@@ -844,6 +1013,26 @@ function TeacherSchedule(){
                         </>
                     )}
 
+                    {selectedEvent.status === "Reschedule Pending" &&
+                            selectedEvent.tutor_approval === "Pending" && (
+
+                                <>
+
+                                    <button
+                                        onClick={approveReschedule}
+                                    >
+                                        Approve
+                                    </button>
+
+                                    <button
+                                        onClick={()=>{rejectReschedule(selectedEvent.id)}}
+                                    >
+                                        Reject
+                                    </button>
+
+                                </>
+
+                        )}
                     {selectedEvent.status === "Confirmed" &&
                     !selectedEvent.requested_start_datetime && (
                         <button

@@ -71,12 +71,17 @@
 }
 
 .TeacherScheduleTodaySessionPanel{
-     border: 1px solid black;
+    border: 1px solid black;
     margin-top: 10px;
     display: flex;
     flex-wrap: nowrap;
+    flex-direction: column;
     height: 15vh;
     width: 98%;
+}
+
+.TeacherScheduleTodaySessionPanel h3,h1{
+    margin: 5px;
 }
 
 .TeacherScheduleSchedReqPanel{
@@ -84,7 +89,8 @@
     margin-top: 10px;
     display: flex;
     flex-wrap: nowrap;
-    height: 15vh;
+    flex-direction: column;
+    height: 50vh;
     width: 98%;
 }
 

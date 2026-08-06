@@ -315,6 +315,7 @@ function AdminSchedule(){
             requested_end_datetime: event.requested_end_datetime,
             reschedule_reason: event.reschedule_reason,
             student_approval: event.student_approval,
+            tutor_approval: event.tutor_approval,  
             admin_approval: event.admin_approval,
             reschedule_requested_by: event.reschedule_requested_by,
 
@@ -447,6 +448,11 @@ function AdminSchedule(){
             return;
         }
 
+        if(selectedEvent.tutor_approval !== "Approved"){
+            alert("Tutor has not approved this request.");
+            return;
+        }
+
         const conflict = await hasConflict(
 
             selectedEvent.id,
@@ -494,6 +500,7 @@ function AdminSchedule(){
                 reschedule_reason: null,
 
                 student_approval: "Approved",
+                tutor_approval: "Approved",
                 admin_approval: "Approved",
 
                 status: "Confirmed"
@@ -526,6 +533,9 @@ function AdminSchedule(){
 
                 student_approval:
                     selectedEvent.student_approval,
+
+                tutor_approval:
+                    selectedEvent.tutor_approval,
 
                 admin_approval: "Rejected",
 
@@ -901,6 +911,12 @@ function AdminSchedule(){
                                 Student Approval:
                                 {" "}
                                 {selectedEvent.student_approval}
+                            </p>
+
+                            <p>
+                                Tutor Approval:
+                                {" "}
+                                {selectedEvent.tutor_approval}
                             </p>
 
                             <p>

@@ -145,6 +145,7 @@ function StudentSchedule(){
 
                 reschedule_reason:event.reschedule_reason,
                 student_approval:event.student_approval,
+                tutor_approval: event.tutor_approval,  
                 admin_approval:event.admin_approval,
                 reschedule_requested_by:event.reschedule_requested_by,
 
@@ -286,10 +287,10 @@ function StudentSchedule(){
         const diffHours =
             (currentStart - now) / (1000 * 60 * 60);
 
-        if(diffHours < 24){
+        if(diffHours < 12){
 
             alert(
-                "Reschedule requests must be made at least 24 hours before the session."
+                "Reschedule requests must be made at least 12 hours before the session."
             );
 
             return;
@@ -354,6 +355,9 @@ function StudentSchedule(){
 
                 student_approval:
                     "Approved",
+                
+                tutor_approval:
+                    "Pending",
 
                 admin_approval:
                     "Pending",
