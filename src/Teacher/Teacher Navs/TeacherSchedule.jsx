@@ -529,6 +529,27 @@ function TeacherSchedule(){
 
      async function approveReschedule(){
 
+
+        if(selectedEvent.meeting_platform !== "Face To Face" &&
+            !selectedEvent.meeting_link
+        ){
+            alert("provide Meeting Link")
+            return;
+
+        }
+        if(selectedEvent.status === "Pending"){
+            const { error } = await supabase
+            .from("calendar")
+            .update({
+
+                tutor_approval:"Approved",
+                status:"Confirmed"
+
+
+            })
+            .eq("id", selectedEvent.id);
+        }
+
         const { error } = await supabase
         .from("calendar")
         .update({
@@ -545,12 +566,11 @@ function TeacherSchedule(){
             return;
 
         }
-
+        alert("Schedule Approved")
+        setSelectedEvent(null);
         await getEvents(loggedTutor.id);
 
         await loadTodaySessions(loggedTutor.id);
-
-        setSelectedEvent(null);
 
     }
 
@@ -584,11 +604,14 @@ function TeacherSchedule(){
 
         }
 
+        alert("Schedule Approved")
+        setSelectedEvent(null);
+        
         await getEvents(loggedTutor.id);
 
         await loadTodaySessions(loggedTutor.id);
 
-        setSelectedEvent(null);
+      
 
     }
             
@@ -640,6 +663,8 @@ function TeacherSchedule(){
                                             end: info.event.end,
                                             ...info.event.extendedProps
                                         });
+
+                                        
 
                                     }}
                                 editable={false}
@@ -823,53 +848,71 @@ function TeacherSchedule(){
                     </button>
                 </div>
             </div>
-            )}
+        )}
 
-            {selectedEvent && (
 
-            <div className="modal-overlay">
 
-                <div className="modal">
+
+
+        {selectedEvent && (
+
+        <div className="modal-overlay">
+
+             <div className="modal">
+
                     <h2>{selectedEvent.title}</h2>
 
-                    <p>
-                        <strong>Status:</strong> {selectedEvent.status}
-                    </p>
+                        <p>
+                            <strong>Status:</strong> {selectedEvent.status}
+                        </p>
 
-                    <p>
-                        <strong>Start:</strong>
-                        {" "}
-                        {selectedEvent.start.toLocaleString()}
-                    </p>
+                        <p>
+                            <strong>Start:</strong>
+                            {" "}
+                            {selectedEvent.start.toLocaleString()}
+                        </p>
 
-                    <p>
-                        <strong>End:</strong>
-                        {" "}
-                        {selectedEvent.end.toLocaleString()}
-                    </p>
+                        <p>
+                            <strong>End:</strong>
+                            {" "}
+                            {selectedEvent.end.toLocaleString()}
+                        </p>
 
-                   {editMode ? (
+                        <p>
 
-                    <textarea
-                        value={selectedEvent.notes || ""}
-                        onChange={(e)=>
-                            setSelectedEvent({
-                                ...selectedEvent,
-                                notes:e.target.value
-                            })
-                        }
-                    />
+                            <strong>Platform:</strong>
+
+                            {selectedEvent.meeting_platform}
+
+                        </p>
+
+
+
+                    {editMode ? (
+
+                        <textarea
+                            value={selectedEvent.notes || ""}
+                            onChange={(e)=>
+                                setSelectedEvent({
+                                    ...selectedEvent,
+                                    notes:e.target.value
+                                })
+                            }
+                        />
 
                     ) : (
 
-                    <p>
-                        <strong>Notes:</strong><br/>
-                        {selectedEvent.notes || "No notes"}
-                    </p>
+                        <p>
+                            <strong>Notes:</strong><br/>
+                            {selectedEvent.notes || "No notes"}
+                        </p>
 
                     )}
 
+
+
                     {selectedEvent.status === "Reschedule Pending" && (
+
                         <div className="reschedule-status">
 
                             <h3>Reschedule Request</h3>
@@ -924,88 +967,99 @@ function TeacherSchedule(){
                         </div>
                     )}
 
-                    {selectedEvent.meeting_link && (
+
+
+
+
+
+                    {(selectedEvent.meeting_link || selectedEvent.status === "Pending")&& (
                         <>
                             {editMode ? (
 
-                            <select
-                                value={selectedEvent.meeting_platform || ""}
-                                onChange={(e)=>
-                                    setSelectedEvent({
-                                        ...selectedEvent,
-                                        meeting_platform:e.target.value
-                                    })
-                                }
-                            >
+                                <>
+                                    <select
+                                        value={selectedEvent.meeting_platform || ""}
+                                        onChange={(e)=>
+                                            setSelectedEvent({
+                                                ...selectedEvent,
+                                                meeting_platform:e.target.value
+                                            })
 
-                            <option>Zoom</option>
-                            <option>Google Meet</option>
-                            <option>Face To Face</option>
 
-                            </select>
+                                        }
+                                    >
+
+                                        <option>Zoom</option>
+                                        <option>Google Meet</option>
+                                        <option>Face To Face</option>
+
+                                    </select>
+
+                                      {selectedEvent.meeting_platform !== "Face To Face" && (
+                                            <input
+                                                type="url"
+                                                placeholder="Meeting Link"
+                                                value={selectedEvent.meeting_link || ""}
+                                                onChange={(e)=>
+                                                    setSelectedEvent({
+                                                        ...selectedEvent,
+                                                        meeting_link:e.target.value
+                                                    })
+                                                }
+                                            />
+                                        )}      
+
+                                </>
+
+                               
 
                             ) : (
 
-                            <p>
+                                <> 
 
-                            <strong>Platform:</strong>
+                                
+                                    <p>
+                                       <strong>Link: </strong> 
+                                        {selectedEvent.meeting_link||"No link"}
 
-                            {selectedEvent.meeting_platform}
+                                    </p>
+                                </>
 
-                            </p>
+                              
 
                             )}
 
-
-                            {editMode ? (
-
-                                <input
-                                    type="url"
-                                    value={selectedEvent.meeting_link || ""}
-                                    onChange={(e)=>
-                                        setSelectedEvent({
-                                            ...selectedEvent,
-                                            meeting_link:e.target.value
-                                        })
-                                    }
-                                />
-
-                                ) : (
-
-                                <p>
-
-                                {selectedEvent.meeting_link}
-
-                                </p>
-
-                                )}
-
-                                <button
-                                    onClick={()=>
-                                    navigator.clipboard.writeText(
-                                    selectedEvent.meeting_link
-                                    )
-                                    }
-                                    >
-                                Copy Link
-                                </button>
-
-                            {selectedEvent.status === "Confirmed" &&
-                                selectedEvent.meeting_link && (
-
-                                <a
-                                    href={selectedEvent.meeting_link}
-                                    target="_blank"
-                                    rel="noreferrer"
+                            {selectedEvent.meeting_platform !== "Face To Face" &&(
+                                  <button
+                                onClick={()=>
+                                navigator.clipboard.writeText(
+                                selectedEvent.meeting_link
+                                )
+                                }
                                 >
-                                    Join Meeting
-                                </a>
+                                Copy Link
+                            </button>
                             )}
+
+                          
+                            {selectedEvent.status === "Confirmed" &&
+                                selectedEvent.meeting_link &&(
+
+                                    <a
+                                        href={selectedEvent.meeting_link}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        Join Meeting
+                                    </a>
+                                )
+                            }
+
                             {selectedEvent.status === "Pending" &&
 
-                            <p>
-                            Waiting for admin approval.
-                            </p>
+                                <p>
+                                Waiting for approval.
+                                </p>
 
                             }
 
@@ -1013,31 +1067,42 @@ function TeacherSchedule(){
                         </>
                     )}
 
-                    {selectedEvent.status === "Reschedule Pending" &&
-                            selectedEvent.tutor_approval === "Pending" && (
 
-                                <>
 
-                                    <button
-                                        onClick={approveReschedule}
-                                    >
-                                        Approve
-                                    </button>
 
-                                    <button
-                                        onClick={()=>{rejectReschedule(selectedEvent.id)}}
-                                    >
-                                        Reject
-                                    </button>
 
-                                </>
 
-                        )}
-                    {selectedEvent.status === "Confirmed" &&
-                    !selectedEvent.requested_start_datetime && (
-                        <button
-                            onClick={()=>{
-                               setNewScheduleDate(selectedEvent.start);
+
+                {(selectedEvent.status === "Reschedule Pending" || selectedEvent.status === "Pending" ) &&
+                        selectedEvent.tutor_approval === "Pending" && (
+
+                            <>
+
+                                <button
+                                    onClick={approveReschedule}
+                                >
+                                    Approve
+                                </button>
+
+                                <button
+                                    onClick={()=>{rejectReschedule(selectedEvent.id)}}
+                                >
+                                    Reject
+                                </button>
+
+                            </>
+
+                )}
+
+
+
+
+
+                {selectedEvent.status === "Confirmed" &&
+                !selectedEvent.requested_start_datetime && (
+                    <button
+                        onClick={()=>{
+                                setNewScheduleDate(selectedEvent.start);
                                 const hours =
                                     (selectedEvent.end - selectedEvent.start) /
                                     (1000 * 60 * 60);
@@ -1045,12 +1110,17 @@ function TeacherSchedule(){
                                 setRescheduleDuration(hours);
                                 setRescheduleReason("");
                                 setShowRescheduleModal(true);
-                                
-                            }}
-                        >
-                            Reschedule
-                        </button>
-                    )}
+                            
+                             }
+                        }
+                    >
+                        Reschedule
+                    </button>
+                    )
+                }
+
+
+
 
                     {selectedEvent.status === "Confirmed" &&
                         new Date(selectedEvent.end) < new Date() && (
@@ -1065,114 +1135,121 @@ function TeacherSchedule(){
                                 </button>
                             </>
 
-                    )}
+                        )
+                    }
+
+
 
                     {selectedEvent.status === "Pending" && (
-                    !editMode ?
-                    (
-                        <button onClick={() => setEditMode(true)}>
-                            Edit
-                        </button>
-                    )
-                    :
-                    (
-                        <button onClick={updateSession}>
-                            Save
-                        </button>
-                    )
+                        !editMode?
+                            (
+                                <button onClick={() => setEditMode(true)}>
+                                    Edit
+                                </button>
+                            )
+                            :
+                            (
+                                <button onClick={updateSession}>
+                                    Save
+                                </button>
+                            )
 
-                )}
-
-                   {selectedEvent.status==="Pending" && (
-
-                    <button onClick={cancelSession}>
-                        Cancel Session
-                    </button>
-
-                    )}
+                        )
+                    }
 
 
-                    <button
-                        onClick={()=>{
-                        setSelectedEvent(null);
-                        setEditMode(false);
-                        }}
-                        >
-                        Close
-                    </button>
 
-                </div>
+                    {selectedEvent.status==="Pending" && (
+
+                            <button onClick={cancelSession}>
+                                Cancel Session
+                            </button>
+
+                        )
+                    }
+
+
+                <button
+                    onClick={()=>{
+                    setSelectedEvent(null);
+                    setEditMode(false);
+                    }}
+                    >
+                    Close
+                </button>
 
             </div>
 
-            )}
+        </div>
+
+        )}
 
 
-            {showRescheduleModal && (
+        {showRescheduleModal && (
 
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <h2>Reschedule Session</h2>
-                        <input
-                            type="datetime-local"
-                            value={
-                                newScheduleDate
-                                ?
-                                new Date(
-                                    newScheduleDate.getTime()
-                                    -
-                                    newScheduleDate.getTimezoneOffset()*60000
-                                )
-                                .toISOString()
-                                .slice(0,16)
-                                :
-                                ""
-                            }
-                            onChange={(e)=>
-                                setNewScheduleDate(
-                                    new Date(e.target.value)
-                                )
-                            }
-                        />
-                        <select
-                            value={rescheduleDuration}
-                            onChange={(e)=>
-                            setRescheduleDuration(
-                            Number(e.target.value)
+            <div className="modal-overlay">
+                <div className="modal">
+                    <h2>Reschedule Session</h2>
+                    <input
+                        type="datetime-local"
+                        value={
+                            newScheduleDate
+                            ?
+                            new Date(
+                                newScheduleDate.getTime()
+                                -
+                                newScheduleDate.getTimezoneOffset()*60000
                             )
-                            }
-                        >
-                            <option value={1}>1 Hour</option>
-                            <option value={2}>2 Hours</option>
-                            <option value={3}>3 Hours</option>
-                        </select>
+                            .toISOString()
+                            .slice(0,16)
+                            :
+                            ""
+                        }
+                        onChange={(e)=>
+                            setNewScheduleDate(
+                                new Date(e.target.value)
+                            )
+                        }
+                    />
+                    <select
+                        value={rescheduleDuration}
+                        onChange={(e)=>
+                        setRescheduleDuration(
+                        Number(e.target.value)
+                        )
+                        }
+                    >
+                        <option value={1}>1 Hour</option>
+                        <option value={2}>2 Hours</option>
+                        <option value={3}>3 Hours</option>
+                    </select>
 
-                        <textarea
-                            placeholder="Reason"
-                            value={rescheduleReason}
-                            onChange={(e)=>
-                            setRescheduleReason(
-                            e.target.value
-                             )
-                            }
-                        />
+                    <textarea
+                        placeholder="Reason"
+                        value={rescheduleReason}
+                        onChange={(e)=>
+                        setRescheduleReason(
+                        e.target.value
+                            )
+                        }
+                    />
 
-                        <button
-                             onClick={requestReschedule}
-                        >
-                             Submit Request
-                        </button>
+                    <button
+                            onClick={requestReschedule}
+                    >
+                            Submit Request
+                    </button>
 
-                        <button
-                             onClick={()=>{setShowRescheduleModal(false)}}
-                        >
-                            Cancel
-                        </button>
+                    <button
+                            onClick={()=>{setShowRescheduleModal(false)}}
+                    >
+                        Cancel
+                    </button>
 
-                    </div>
                 </div>
+            </div>
 
-                )}
+        )}
                 
     </>);
 }

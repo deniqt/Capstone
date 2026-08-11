@@ -18,15 +18,20 @@ function StudentSchedule(){
     const [newScheduleDate, setNewScheduleDate] = useState(null);
     const [rescheduleDuration, setRescheduleDuration] = useState(1);
     const [rescheduleReason, setRescheduleReason] = useState("");
+    const [classAttendedCount, setClassAttendedCount] = useState();
+    const [classAbsentCount, setClassAbsentCount] = useState();
+    const [attendancePercentage, setAttendancePercentage] = useState();
 
     useEffect(() => {
             getStudent();
+            getAttendace();
     }, []);
 
     useEffect(() => {
         if (loggedStudent) {
             getEvents(loggedStudent.id);
             loadTodaySessions(loggedStudent.id);
+            getAttendace();
         }
     }, [loggedStudent]);
 
@@ -49,6 +54,8 @@ function StudentSchedule(){
 
                         await Promise.all([
                             getEvents(loggedStudent.id),
+                            getAttendace()
+                            ,
                             loadUpcomingSessions()
                         ]);
 
@@ -427,8 +434,47 @@ function StudentSchedule(){
             );
 
             return studentConflict || tutorConflict;
-
         }
+
+        async function getAttendace() {
+
+
+            const{data, error} = await supabase
+            .from("calendar")
+            .select("*")
+            .eq("student_id", loggedStudent.id)
+            ;
+
+
+            if(error){
+                console.log(error);
+                return;
+            }
+            const attendedCount = data.filter(
+                sched => sched.status === "Attended"
+            ).length;
+
+             const absentCount = data.filter(
+                sched => sched.status === "Absent"
+            ).length;
+
+
+           const totalCount = attendedCount + absentCount;
+
+            const attendancePercentage =
+                totalCount > 0
+                    ? Number(((attendedCount / totalCount) * 100).toFixed(2))
+                    : 0;
+
+
+            console.log(attendedCount);
+            setClassAttendedCount(attendedCount);
+            setClassAbsentCount(absentCount);
+            setAttendancePercentage(attendancePercentage);
+            
+        }
+
+        
 
     return(<>
         <h1> STUDENT ATTENDANCE & SCHEDULE</h1>
@@ -437,17 +483,17 @@ function StudentSchedule(){
             <div className="student-lower-left">
                 <div className="lower-left-panel">
                     <h3>Overall Attendance</h3>
-                    <h1>Comming Soon</h1>   
+                    <h1>{attendancePercentage} %</h1>   
                 </div>
 
                 <div className="lower-left-panel">
-                    <h3>classes Attendance</h3>
-                    <h1>Comming Soon</h1>   
+                    <h3>Classes Attendance</h3>
+                    <h1>{classAttendedCount}</h1>   
                 </div>
 
                 <div className="lower-left-panel">
                     <h3>Missed classes</h3>
-                    <h1>Comming Soon</h1>   
+                    <h1>{classAbsentCount}</h1>   
                                     
                 </div>
 

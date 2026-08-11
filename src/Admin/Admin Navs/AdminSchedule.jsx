@@ -369,8 +369,15 @@ function AdminSchedule(){
                         start_datetime: start.toISOString(),
                         end_datetime: end.toISOString(),
                         notes,
-                        status: "Confirmed",
-                        color: "#4CAF50"
+                        status: "Pending",
+                        student_approval:
+                            "Approved",
+                        
+                        tutor_approval:
+                            "Pending",
+
+                        admin_approval:
+                            "Approved"
                     });
 
                 if(error){

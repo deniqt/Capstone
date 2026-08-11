@@ -124,6 +124,11 @@ const [file, setFile] = useState(null);
 
     async function uploadMaterial(){
 
+        if (!file) {
+            alert("Please select a file.");
+            return;
+        }
+
         const {data:{user}}= await supabase.auth.getUser();
         const fileName=`${Date.now()}-${file.name}`;
         const { error }=await supabase.storage
@@ -173,7 +178,7 @@ const [file, setFile] = useState(null);
             }
             );
         if(AssignmentError){
-            console.log(error);
+            console.log(AssignmentError);
             return;
         }
 
@@ -183,7 +188,6 @@ const [file, setFile] = useState(null);
         setTitle("");
         setDescription("");
         setFile(null);
-        setShowModal(false);
         setShowModal(false);
     }
 

@@ -29,7 +29,7 @@ import LandingPage from './Login/LandingPage'
 import Register from './Login/Register'
 import UploadMaterial from './Teacher/Teacher Navs/UploadMaterial'
 import TeacherSubjects from './Teacher/Teacher Navs/TeacherSubjects'
-import TeacherSubject from './Teacher/Teacher Navs/TeacherSubject'
+
 
 
 function App() {
@@ -49,7 +49,7 @@ function App() {
             
             <Route path="material" element = {<TeacherMaterial/>}/>
             <Route path="materials/:studentID" element = {<TeacherSubjects/>}/>
-            <Route path="upload/:subjectId" element={<UploadMaterial />}/>
+            {/* <Route path="upload/:subjectId" element={<UploadMaterial />}/> */}
             <Route path="schedule" element = {<TeacherSchedule/>}/>
             <Route path="student" element = {<TeacherStudent/>}/>
             <Route path="settings" element = {<TeacherSettings/>}/>
