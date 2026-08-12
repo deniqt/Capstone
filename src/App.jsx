@@ -29,6 +29,10 @@ import LandingPage from './Login/LandingPage'
 import Register from './Login/Register'
 import UploadMaterial from './Teacher/Teacher Navs/UploadMaterial'
 import TeacherSubjects from './Teacher/Teacher Navs/TeacherSubjects'
+import StudentSubject from './Student/Student Navs/StudentSubject'
+import StudentAssignment from './Student/Student Navs/StudentAssignment'
+import StudentMaterialDetails from './Student/Student Navs/StudentMaterialDetails'
+import StudentProgressSubject from './Student/Student Navs/StudentProgressSubject'
 
 
 
@@ -55,15 +59,56 @@ function App() {
             <Route path="settings" element = {<TeacherSettings/>}/>
         </Route>
        
-        <Route path="/student" element = {
-           <ProtectedRoute allowedRole = "Student"><StudentDashboard/></ProtectedRoute>
-          }>
-            <Route path="material" element = {<StudentMaterial/>}/>
-            <Route path="progress" element = {<StudentProgress/>}/>
-            <Route path="enrollment" element = {<StudentEnrollment/>}/>
-            <Route path="schedule" element = {<StudentSchedule/>}/>
-            <Route path="settings" element = {<StudentSettings/>}/>
-        </Route>
+        <Route
+          path="/student"
+          element={
+              <ProtectedRoute allowedRole="Student">
+                  <StudentDashboard />
+              </ProtectedRoute>
+          }
+      >
+          <Route path="materials" element={<StudentMaterial />} />
+
+          <Route
+              path="progress"
+              element={<StudentProgress />}
+          />
+
+          <Route
+              path="progress/subject/:subjectID"
+              element={<StudentProgressSubject />}
+          />
+
+          <Route
+              path="materials/subject/:subjectID"
+              element={<StudentSubject />}
+          />
+
+          <Route
+            path="materials/material/:materialID"
+            element={<StudentMaterialDetails />}
+          />
+
+          <Route
+              path="materials/assignment/:assignmentID"
+              element={<StudentAssignment />}
+          />
+
+          <Route
+              path="enrollment"
+              element={<StudentEnrollment />}
+          />
+
+          <Route
+              path="schedule"
+              element={<StudentSchedule />}
+          />
+
+          <Route
+              path="settings"
+              element={<StudentSettings />}
+          />
+      </Route>
 
         <Route path="/admin" element = {
           <ProtectedRoute allowedRole = "Admin">

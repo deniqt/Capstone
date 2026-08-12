@@ -1,0 +1,495 @@
+.student-progress-container {
+    padding: 30px;
+    background: #f7f9fc;
+    min-height: calc(100vh - 60px);
+}
+
+
+/* ============================= */
+/* HEADER */
+/* ============================= */
+
+.progress-header {
+    margin-bottom: 30px;
+}
+
+.progress-header h1 {
+    margin: 0;
+    font-size: 28px;
+    color: #263f57;
+}
+
+
+/* ============================= */
+/* LAYOUT */
+/* ============================= */
+
+.progress-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 24px;
+}
+
+
+/* ============================= */
+/* SUBJECT BREAKDOWN */
+/* ============================= */
+
+.subject-breakdown > h3,
+.progress-overview > h3 {
+    margin-bottom: 16px;
+    color: #1e3550;
+}
+
+
+.subject-progress-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
+
+
+.progress-subject-card {
+    position: relative;
+
+    background: white;
+
+    border: 1px solid #e5e9ef;
+
+    border-radius: 8px;
+
+    padding: 20px;
+
+    display: flex;
+
+    gap: 15px;
+
+    align-items: flex-start;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+
+.progress-subject-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.07);
+}
+
+
+.subject-icon {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 7px;
+
+    background: #eef3ff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+}
+
+
+.subject-card-content {
+    width: 100%;
+}
+
+
+.subject-card-content h3 {
+    margin: 0 0 5px;
+
+    color: #173452;
+
+    font-size: 16px;
+}
+
+
+.tutor-name {
+    margin: 0;
+
+    color: #777;
+
+    font-size: 12px;
+}
+
+
+.grade-row {
+    margin-top: 30px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    color: #777;
+
+    font-size: 12px;
+}
+
+
+.grade-row strong {
+    color: #555;
+}
+
+
+.progress-arrow {
+    position: absolute;
+
+    right: 15px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #777;
+
+    font-size: 22px;
+}
+
+
+/* ============================= */
+/* OVERALL GRADE */
+/* ============================= */
+
+.overall-grade-card {
+    background: #2864e8;
+
+    color: white;
+
+    border-radius: 8px;
+
+    padding: 22px;
+
+    margin-bottom: 18px;
+}
+
+
+.overall-grade-card span {
+    display: block;
+
+    font-size: 12px;
+
+    margin-bottom: 5px;
+}
+
+
+.overall-grade-card strong {
+    display: block;
+
+    font-size: 38px;
+
+    line-height: 1;
+
+    margin-bottom: 10px;
+}
+
+
+.overall-grade-card p {
+    margin: 0;
+
+    font-size: 11px;
+
+    opacity: 0.85;
+}
+
+
+/* ============================= */
+/* PERFORMANCE */
+/* ============================= */
+
+.performance-card {
+    background: white;
+
+    border: 1px solid #e5e9ef;
+
+    border-radius: 8px;
+
+    padding: 18px;
+}
+
+
+.performance-card h3 {
+    font-size: 14px;
+
+    margin-top: 0;
+
+    margin-bottom: 20px;
+}
+
+
+.highlight-item {
+    margin-bottom: 20px;
+}
+
+
+.highlight-item:last-child {
+    margin-bottom: 0;
+}
+
+
+.highlight-item span {
+    display: block;
+
+    font-size: 9px;
+
+    color: #777;
+
+    margin-bottom: 5px;
+}
+
+
+.highlight-item div {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+}
+
+
+.highlight-item strong {
+    font-size: 13px;
+
+    color: #243b53;
+}
+
+
+.highlight-item b {
+    font-size: 11px;
+
+    color: #1ca56c;
+}
+
+
+/* ============================= */
+/* BREADCRUMB */
+/* ============================= */
+
+.progress-breadcrumb {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    font-size: 13px;
+
+    margin-bottom: 15px;
+
+    color: #777;
+}
+
+
+.progress-breadcrumb button {
+    border: none;
+
+    background: none;
+
+    padding: 0;
+
+    cursor: pointer;
+
+    color: #55718d;
+}
+
+
+/* ============================= */
+/* SUBJECT DETAIL */
+/* ============================= */
+
+.subject-detail {
+    background: white;
+
+    border: 1px solid #e5e9ef;
+
+    border-radius: 8px;
+
+    padding: 25px;
+}
+
+
+.subject-detail-header {
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+}
+
+
+.subject-detail-header h2 {
+    margin: 0 0 5px;
+
+    color: #173452;
+}
+
+
+.subject-detail-header p {
+    margin: 0;
+
+    font-size: 12px;
+
+    color: #777;
+}
+
+
+.subject-grade {
+    margin-top: 25px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    border-top: 1px solid #eee;
+
+    padding-top: 15px;
+}
+
+
+.subject-grade span {
+    font-size: 12px;
+
+    color: #777;
+}
+
+
+.subject-grade strong {
+    font-size: 14px;
+}
+
+
+/* ============================= */
+/* EVALUATIONS */
+/* ============================= */
+
+.evaluations {
+    margin-top: 35px;
+}
+
+
+.evaluations h3 {
+    font-size: 15px;
+
+    margin-bottom: 15px;
+}
+
+
+.evaluation-table {
+    border: 1px solid #e5e9ef;
+
+    border-radius: 6px;
+
+    overflow: hidden;
+}
+
+
+.evaluation-header,
+.evaluation-row {
+    display: grid;
+
+    grid-template-columns:
+        130px
+        1fr
+        120px;
+
+    align-items: center;
+
+    gap: 20px;
+
+    padding: 14px 18px;
+}
+
+
+.evaluation-header {
+    background: #eef5fb;
+
+    font-size: 9px;
+
+    color: #62758a;
+
+    font-weight: 600;
+}
+
+
+.evaluation-row {
+    border-top: 1px solid #edf0f3;
+
+    font-size: 12px;
+
+    color: #536274;
+}
+
+
+.evaluation-row strong {
+    color: #243b53;
+}
+
+
+.evaluation-row small {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #888;
+
+    font-size: 10px;
+}
+
+
+.pending-score {
+    color: #999;
+}
+
+
+/* ============================= */
+/* EMPTY / LOADING */
+/* ============================= */
+
+.progress-loading,
+.empty-progress {
+    padding: 50px;
+
+    text-align: center;
+
+    color: #66788a;
+}
+
+
+/* ============================= */
+/* RESPONSIVE */
+/* ============================= */
+
+@media (max-width: 900px) {
+
+    .progress-layout {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .subject-progress-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .evaluation-header,
+    .evaluation-row {
+        grid-template-columns:
+            90px
+            1fr
+            90px;
+
+        gap: 10px;
+
+        padding: 12px;
+    }
+
+}
