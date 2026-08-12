@@ -29,6 +29,11 @@ function TeacherSchedule(){
     const [rescheduleDuration, setRescheduleDuration] = useState(1);
     const [rescheduleReason, setRescheduleReason] = useState("");
 
+    const [tutorRating, setTutorRating] = useState(0);
+    const [ratingCount, setRatingCount] = useState(0);
+    const [recentRatings, setRecentRatings] = useState([]);
+
+    const [todayHours, setTodayHours] = useState(0);
 
     useEffect(()=>{
 
@@ -36,14 +41,19 @@ function TeacherSchedule(){
 
     },[]);
 
-    useEffect(() => {
+   useEffect(() => {
+
         if (!loggedTutor) return;
-            getEvents(loggedTutor.id);
-            loadStudents();
-            loadUpcomingSessions();
-            loadNewScheduleRequest();
-            loadTodayCount();  
+
+        getEvents(loggedTutor.id);
+        loadStudents();
+        loadUpcomingSessions();
+        loadNewScheduleRequest();
+        loadTodayCount();
+        loadTutorRatings();
+
     }, [loggedTutor]);
+
 
    useEffect(() => {
 
@@ -132,6 +142,8 @@ function TeacherSchedule(){
         setStudents(data);
 
     }
+
+
 
         
     async function getEvents(tutorId){
@@ -352,22 +364,39 @@ function TeacherSchedule(){
         const today = new Date();
 
         const start = new Date(today);
-        start.setHours(0,0,0,0);
+        start.setHours(0, 0, 0, 0);
 
         const end = new Date(today);
-        end.setHours(23,59,59,999);
+        end.setHours(23, 59, 59, 999);
 
-        const { count } = await supabase
+        const { data, error } = await supabase
             .from("calendar")
-            .select("*", {
-                count:"exact",
-                head:true
-            })
+            .select("start_datetime, end_datetime")
             .eq("tutor_id", loggedTutor.id)
+            .in("status", ["Confirmed", "Attended", "Absent"])
             .gte("start_datetime", start.toISOString())
             .lte("start_datetime", end.toISOString());
 
-        setTodayCount(count);
+        if (error) {
+            console.log(error);
+            return;
+        }
+
+        setTodayCount(data?.length || 0);
+
+        const hours = (data || []).reduce((total, session) => {
+
+            const startTime = new Date(session.start_datetime);
+            const endTime = new Date(session.end_datetime);
+
+            const difference =
+                (endTime - startTime) / (1000 * 60 * 60);
+
+            return total + difference;
+
+        }, 0);
+
+        setTodayHours(hours);
     }
 
     async function updateSession(){
@@ -570,7 +599,7 @@ function TeacherSchedule(){
         setSelectedEvent(null);
         await getEvents(loggedTutor.id);
 
-        await loadTodaySessions(loggedTutor.id);
+      await loadTodayCount();
 
     }
 
@@ -609,12 +638,66 @@ function TeacherSchedule(){
         
         await getEvents(loggedTutor.id);
 
-        await loadTodaySessions(loggedTutor.id);
+        await loadTodayCount();
 
       
 
     }
-            
+
+
+
+
+
+   async function loadTutorRatings() {
+
+        if (!loggedTutor) return;
+
+        const { data, error } = await supabase
+            .from("Session_Ratings")
+            .select("*")
+            .eq("Tutor_ID", loggedTutor.id)
+            .order("created_at", {
+                ascending: false
+            });
+
+        if (error) {
+
+            console.log("Rating error:", error);
+
+            return;
+
+        }
+
+        console.log("Tutor ratings:", data);
+
+        if (!data || data.length === 0) {
+
+            setTutorRating(0);
+            setRatingCount(0);
+            setRecentRatings([]);
+
+            return;
+
+        }
+
+        const average =
+            data.reduce(
+                (total, item) =>
+                    total + Number(item.Rating),
+                0
+            ) / data.length;
+
+        setTutorRating(
+            Number(average.toFixed(1))
+        );
+
+        setRatingCount(data.length);
+
+        setRecentRatings(
+            data.slice(0, 3)
+        );
+    }
+                
     return(<>
         <div className="TeacherScheduleHeader">
              <h1> TEACHER SCHEDULE</h1>
@@ -641,7 +724,7 @@ function TeacherSchedule(){
                                     interactionPlugin,
                                     listPlugin
                                 ]}
-                                    initialView="timeGridWeek"
+                                    initialView="dayGridMonth"
                                     headerToolbar={{
                                         left:"dayGridMonth,timeGridWeek,timeGridDay,listWeek",
                                         right:"today prev,next"
@@ -673,65 +756,379 @@ function TeacherSchedule(){
                             />
                         </div>
                 </div>
-                <div className='TeacherScheduleUpcomingSessionPanel'>
-                    <h3>Upcoming Sessions</h3>
+                <div className="TeacherScheduleUpcomingSessionPanel">
 
-                    {upcomingSessions.map(session => (
+                    <div className="section-title">
+                        <h3>Upcoming Sessions</h3>
+                    </div>
 
-                        <div
-                            key={session.id}
-                            className="UpcomingCard"
-                        >
-                            <strong>{session.title}</strong>
+                    {upcomingSessions.length === 0 ? (
 
-                            <p>
-                                {new Date(session.start_datetime)
-                                    .toLocaleString()}
-                            </p>
-
-                            <p>{session.status}</p>
-                            <p>
-
-                            Platform:
-                            {session.meeting_platform ?? "None"}
-
-                            </p>
-
+                        <div className="empty-state">
+                            No upcoming sessions.
                         </div>
 
-                    ))}
+                    ) : (
+
+                        upcomingSessions.map(session => {
+
+                            const start = new Date(session.start_datetime);
+                            const end = new Date(session.end_datetime);
+
+                            return (
+
+                                <div
+                                    key={session.id}
+                                    className="UpcomingSessionCard"
+                                >
+
+                                    <div className="session-top">
+
+                                        <div>
+                                            <h4>
+                                                {start.toLocaleTimeString([], {
+                                                    hour: "numeric",
+                                                    minute: "2-digit"
+                                                })}
+                                            </h4>
+
+                                            <span>
+                                                {end.toLocaleTimeString([], {
+                                                    hour: "numeric",
+                                                    minute: "2-digit"
+                                                })}
+                                            </span>
+                                        </div>
+
+                                        <span className="session-badge">
+                                            Upcoming
+                                        </span>
+
+                                    </div>
+
+                                    <h3>
+                                        {session.title}
+                                    </h3>
+
+                                    <p className="session-student">
+                                        👤 Tutor Session
+                                    </p>
+
+                                    <div className="session-platform">
+
+                                        <span>
+                                            {session.meeting_platform === "Face To Face"
+                                                ? "📍 Face to Face"
+                                                : "💻 Online Session"
+                                            }
+                                        </span>
+
+                                    </div>
+
+                                    <div className="session-actions">
+
+                                        <button
+                                            className="reschedule-btn"
+                                            onClick={() => {
+
+                                                setSelectedEvent({
+                                                    id: session.id,
+                                                    title: session.title,
+                                                    start: start,
+                                                    end: end,
+                                                    ...session
+                                                });
+
+                                                setNewScheduleDate(start);
+
+                                                const hours =
+                                                    (end - start) /
+                                                    (1000 * 60 * 60);
+
+                                                setRescheduleDuration(hours);
+
+                                                setRescheduleReason("");
+
+                                                setShowRescheduleModal(true);
+
+                                            }}
+                                        >
+                                            Reschedule
+                                        </button>
+
+                                        {session.meeting_link && (
+
+                                            <a
+                                                className="join-btn"
+                                                href={session.meeting_link}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                Join Meeting
+                                            </a>
+
+                                        )}
+
+                                    </div>
+
+                                </div>
+
+                            );
+
+                        })
+
+                    )}
+
                 </div>
             </div>
             <div className='TeacherScheduleLowerRight'>
-                <div className='TeacherScheduleTodaySessionPanel'>
-                    <h3>Today's Session</h3>
-                        <br/>
-                        <h1>{todayCount}</h1>
+                <div className="TeacherScheduleTodaySessionPanel">
+
+                    <div className="today-stat-header">
+                        <span>Today's Sessions</span>
+                        <span>Total Hours</span>
+                    </div>
+
+                    <div className="today-stat-values">
+                        <strong>{todayCount}</strong>
+
+                        <strong>
+                            {todayHours % 1 === 0
+                                ? `${todayHours}h`
+                                : `${todayHours.toFixed(1)}h`
+                            }
+                        </strong>
+                    </div>
+
                 </div>
 
-                 <div className='TeacherScheduleSchedReqPanel'>
-                    <h3>New Schedule Request</h3>
-                    {newScheduleRequest.map(schedReq => (
+                 <div className="TeacherScheduleSchedReqPanel">
 
-                        <div
-                            key={schedReq.id}
-                            className="UpcomingCard"
-                        >
-                            <p>{schedReq.id}</p>
-                            <strong>{schedReq.title}</strong>
+                    <div className="section-header">
+                        <h3>New Schedule Request</h3>
 
-                            <p>{schedReq.status}</p>
-                            <button onClick={()=>(rejectReschedule(schedReq.id))}>Decline</button>
-                            <button onClick={()=>(viewEvent(schedReq.id))}>View</button>
-                
+                        {newScheduleRequest.length > 0 && (
+                            <span className="request-count">
+                                {newScheduleRequest.length} New
+                            </span>
+                        )}
+                    </div>
+
+                    {newScheduleRequest.length === 0 ? (
+
+                        <div className="empty-request">
+                            No new requests
                         </div>
 
-                    ))}
+                    ) : (
+
+                        newScheduleRequest.map(schedReq => (
+
+                            <div
+                                key={schedReq.id}
+                                className="ScheduleRequestCard"
+                            >
+
+                                <div className="request-user">
+
+                                    <div className="request-avatar">
+                                        {schedReq.title?.charAt(0)}
+                                    </div>
+
+                                    <div>
+                                        <strong>
+                                            {schedReq.title}
+                                        </strong>
+
+                                        <p>
+                                            Rescheduling request
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                                <div className="request-actions">
+
+                                    <button
+                                        className="decline-btn"
+                                        onClick={() =>
+                                            rejectReschedule(schedReq.id)
+                                        }
+                                    >
+                                        Decline
+                                    </button>
+
+                                    <button
+                                        className="view-btn"
+                                        onClick={() =>
+                                            viewEvent(schedReq.id)
+                                        }
+                                    >
+                                        View
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        ))
+
+                    )}
+
                 </div>
 
-                <div className='a'>
-                    <h3>Tutor Ratings</h3>
-                    <h3>(coming soon)</h3>
+                <div className="TeacherRatingsPanel">
+
+                    <div className="section-header">
+
+                        <h3>Past Tutor Ratings</h3>
+
+                        {ratingCount > 0 && (
+                            <span className="review-count">
+                                {ratingCount} reviews
+                            </span>
+                        )}
+
+                    </div>
+
+                    <div className="rating-summary">
+
+                        <div className="rating-number">
+                            {tutorRating || "—"}
+                        </div>
+
+                        <div>
+
+                            <div className="stars">
+
+                                {[1, 2, 3, 4, 5].map(star => {
+
+                                    const ratingValue = Number(tutorRating);
+
+                                    if (star <= Math.floor(ratingValue)) {
+
+                                        return (
+                                            <span
+                                                key={star}
+                                                className="star filled"
+                                            >
+                                                ★
+                                            </span>
+                                        );
+
+                                    }
+
+                                    if (
+                                        star === Math.floor(ratingValue) + 1 &&
+                                        ratingValue % 1 !== 0
+                                    ) {
+
+                                        return (
+                                            <span
+                                                key={star}
+                                                className="star half"
+                                            >
+                                                ★
+                                            </span>
+                                        );
+
+                                    }
+
+                                    return (
+                                        <span
+                                            key={star}
+                                            className="star"
+                                        >
+                                            ★
+                                        </span>
+                                    );
+
+                                })}
+
+                            </div>
+
+                            <p>
+                                Average from students
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div className="rating-list">
+
+                        {recentRatings.length === 0 ? (
+
+                            <div className="empty-rating">
+                                No ratings yet.
+                            </div>
+
+                        ) : (
+
+                          recentRatings.map(rating => (
+
+                                <div
+                                    className="RatingCard"
+                                    key={rating.Rating_ID}
+                                >
+
+                                    <div className="rating-user">
+
+                                        <div className="rating-avatar">
+
+                                            {rating.student?.Name
+                                                ?.charAt(0)
+                                                ?.toUpperCase() || "S"}
+
+                                        </div>
+
+                                        <div>
+
+                                            <strong>
+                                                {rating.student?.Name ||
+                                                    "Student"}
+                                            </strong>
+
+                                            <div className="small-stars">
+
+                                                {[1, 2, 3, 4, 5].map(star => (
+
+                                                    <span
+                                                        key={star}
+                                                        className={
+                                                            star <= Number(rating.Rating)
+                                                                ? "star filled"
+                                                                : "star"
+                                                        }
+                                                    >
+                                                        ★
+                                                    </span>
+
+                                                ))}
+
+                                            </div>
+
+                                        </div>
+
+                                       <strong className="rating-value">
+                                            {Number(rating.Rating).toFixed(1)}
+                                        </strong>
+                                    </div>
+
+                                    <p className="rating-comment">
+                                        {rating.Comment ||
+                                            "No comment provided."}
+                                    </p>
+
+                                </div>
+
+                            ))
+
+                        )}
+
+                    </div>
+
                 </div>
             </div>
 

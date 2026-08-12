@@ -1,107 +1,532 @@
-.TeacherScheduleHeader{
+/* =========================
+   MAIN HEADER
+========================= */
+
+.TeacherScheduleHeader {
     display: flex;
-    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
-    justify-content: space-between;
-    border: black solid 1px;
-}
-.TeacherScheduleHeader h1{
-  margin: 0px;
-  margin-bottom: 5px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
 }
 
-.Teacher-NewSession{
-    padding: 10px;
-    height: fit-content;
-    align-self: center;
+.TeacherScheduleHeader h1 {
+    margin: 0;
+    font-size: 25px;
+    color: #243b53;
 }
 
-.TeacherScheduleLowerPanel{
-    margin-top: 10px;
+.TeacherScheduleHeader p {
+    margin: 5px 0 0;
+    color: #7b8794;
+    font-size: 13px;
+}
+
+.Teacher-NewSession {
+    border: none;
+    background: #2f6fed;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.Teacher-NewSession:hover {
+    background: #245bd1;
+}
+
+
+/* =========================
+   MAIN TWO-COLUMN LAYOUT
+========================= */
+
+.TeacherScheduleLowerPanel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 18px;
+    width: 100%;
+    align-items: start;
+    box-sizing: border-box;
+}
+
+
+/* =========================
+   LEFT SIDE
+========================= */
+
+.TeacherScheduleLowerLeft {
+    min-width: 0;
+    width: auto;
+    height: auto;
     display: flex;
-    flex-wrap: nowrap;
-    height: 80vh;
-    border: 1px solid black;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 16px;
+    box-sizing: border-box;
 }
 
-.TeacherScheduleLowerLeft{
-    border: 1px solid black;
-    margin-top: 10px;
+
+/* =========================
+   RIGHT SIDE
+========================= */
+
+.TeacherScheduleLowerRight {
+    width: auto;
+    height: auto;
     display: flex;
-    flex-wrap: nowrap;
-    height: 110vh;
-    width: 60%;
+    flex-direction: column;
+    gap: 16px;
+    box-sizing: border-box;
+}
+
+
+/* =========================
+   WHITE PANELS
+========================= */
+
+.TeacherScheduleCalendarPanel,
+.TeacherScheduleUpcomingSessionPanel,
+.TeacherScheduleSchedReqPanel,
+.TeacherRatingsPanel {
+    background: white;
+    border: 1px solid #e5e9f2;
+    border-radius: 7px;
+    padding: 16px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.TeacherScheduleCalendarPanel h3,
+.TeacherScheduleUpcomingSessionPanel h3,
+.TeacherScheduleSchedReqPanel h3,
+.TeacherRatingsPanel h3 {
+    margin: 0;
+    color: #243b53;
+    font-size: 15px;
+}
+
+
+/* =========================
+   CALENDAR
+========================= */
+
+.CalendarPanel {
+    margin-top: 12px;
+    height: 430px;
+    width: 100%;
+}
+
+.fc {
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.fc .fc-toolbar {
+    margin-bottom: 12px;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 16px;
+    color: #243b53;
+}
+
+.fc .fc-button {
+    background: white;
+    border: 1px solid #dbe4f0;
+    color: #52606d;
+    box-shadow: none;
+}
+
+.fc .fc-button:hover {
+    background: #f5f7fa;
+    color: #243b53;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+    background: #2864e8;
+    border-color: #2864e8;
+}
+
+.fc .fc-daygrid-day {
+    min-height: 75px;
+}
+
+.fc .fc-daygrid-day-number {
+    color: #52606d;
+    font-size: 11px;
+}
+
+.fc .fc-event {
+    border: none;
+    border-radius: 4px;
+    font-size: 10px;
+    padding: 2px 4px;
+}
+
+
+/* =========================
+   TODAY'S SESSIONS
+========================= */
+
+.TeacherScheduleTodaySessionPanel {
+    background: #2864e8;
+    color: white;
+    border-radius: 7px;
+    padding: 18px;
+    min-height: 95px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.today-stat-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+.today-stat-values {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 10px;
+}
+
+.today-stat-values strong:first-child {
+    font-size: 28px;
+}
+
+.today-stat-values strong:last-child {
+    font-size: 20px;
+}
+
+
+/* =========================
+   SECTION HEADER
+========================= */
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.request-count,
+.review-count {
+    font-size: 10px;
+    background: #e8f0ff;
+    color: #2864e8;
+    padding: 4px 7px;
+    border-radius: 10px;
+}
+
+
+/* =========================
+   UPCOMING SESSION
+========================= */
+
+.TeacherScheduleUpcomingSessionPanel {
+    display: flex;
+    flex-direction: column;
+}
+
+.UpcomingSessionCard {
+    border: 1px solid #dbe4f0;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 12px;
+    background: #f9fbff;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.session-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.session-top h4 {
+    margin: 0;
+    color: #243b53;
+    font-size: 16px;
+}
+
+.session-top span {
+    color: #829ab1;
+    font-size: 11px;
+}
+
+.session-badge {
+    background: #e5f7ee;
+    color: #159957 !important;
+    padding: 4px 8px;
+    border-radius: 10px;
+}
+
+.UpcomingSessionCard h3 {
+    margin: 12px 0 4px;
+    font-size: 14px;
+}
+
+.session-student {
+    color: #627d98;
+    font-size: 12px;
+}
+
+.session-platform {
+    font-size: 11px;
+    color: #52606d;
+    margin: 8px 0;
+}
+
+.session-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.session-actions button,
+.session-actions a {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.reschedule-btn {
+    background: white;
+    border: 1px solid #dbe4f0;
+    color: #52606d;
+}
+
+.join-btn {
+    background: #2864e8;
+    color: white;
+    border: 1px solid #2864e8;
+}
+
+
+/* =========================
+   SCHEDULE REQUESTS
+========================= */
+
+.TeacherScheduleSchedReqPanel {
+    display: flex;
+    flex-direction: column;
+}
+
+.ScheduleRequestCard {
+    padding: 12px 0;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.ScheduleRequestCard:last-child {
+    border-bottom: none;
+}
+
+.request-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.request-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #d9e7ff;
+    color: #2864e8;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    flex-direction: column;
+    font-weight: bold;
+    flex-shrink: 0;
 }
 
-.TeacherScheduleLowerRight{
-    border: 1px solid black;
-    margin-top: 10px;
+.request-user strong {
+    font-size: 12px;
+    color: #243b53;
+}
+
+.request-user p {
+    margin: 3px 0 0;
+    color: #829ab1;
+    font-size: 10px;
+}
+
+.request-actions {
     display: flex;
-    flex-wrap: nowrap;
-    height: 75vh;
-    width: 38%;
-    flex-direction: column;
-    
-}
-
-.TeacherScheduleCalendarPanel{
-    border: 1px solid black;
+    gap: 7px;
     margin-top: 10px;
+}
+
+.request-actions button {
+    flex: 1;
+    padding: 7px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.decline-btn {
+    background: white;
+    border: 1px solid #dbe4f0;
+}
+
+.view-btn {
+    background: #2864e8;
+    border: 1px solid #2864e8;
+    color: white;
+}
+
+
+/* =========================
+   RATINGS
+========================= */
+
+.TeacherRatingsPanel {
+    overflow: hidden;
+}
+
+.rating-summary {
     display: flex;
-    flex-wrap: nowrap;
-    height: 80vh;
-    width: 98%;
-    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid #edf1f5;
 }
 
-.TeacherScheduleCalendarPanel h3{
-    margin: 5px;
+.rating-number {
+    font-size: 32px;
+    font-weight: bold;
+    color: #243b53;
 }
 
-.TeacherScheduleUpcomingSessionPanel{
-    border: 1px solid black;
-    margin-top: 10px;
+.stars {
+    letter-spacing: 2px;
+}
+
+.star {
+    color: #d9e2ec;
+    font-size: 15px;
+}
+
+.star.filled {
+    color: #f5a623;
+}
+
+.stars .star {
+    color: #ccc;
+    font-size: 24px;
+}
+
+.stars .star.filled {
+    color: #ffc107;
+}
+
+.stars .star.half {
+    background: linear-gradient(
+        90deg,
+        #ffc107 50%,
+        #ccc 50%
+    );
+
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.rating-summary p {
+    margin: 4px 0 0;
+    color: #829ab1;
+    font-size: 10px;
+}
+
+.RatingCard {
+    padding: 13px 0;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.RatingCard:last-child {
+    border-bottom: none;
+}
+
+.rating-user {
     display: flex;
-    flex-wrap: nowrap;
-    height: 30vh;
-    width: 98%;
+    align-items: center;
+    gap: 8px;
 }
 
-.TeacherScheduleTodaySessionPanel{
-    border: 1px solid black;
-    margin-top: 10px;
+.rating-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #e8edf5;
+    color: #52606d;
     display: flex;
-    flex-wrap: nowrap;
-    flex-direction: column;
-    height: 15vh;
-    width: 98%;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    flex-shrink: 0;
 }
 
-.TeacherScheduleTodaySessionPanel h3,h1{
-    margin: 5px;
+.rating-user strong {
+    font-size: 11px;
+    color: #243b53;
 }
 
-.TeacherScheduleSchedReqPanel{
-      border: 1px solid black;
-    margin-top: 10px;
-    display: flex;
-    flex-wrap: nowrap;
-    flex-direction: column;
-    height: 50vh;
-    width: 98%;
+.small-stars {
+    line-height: 12px;
 }
 
-.CalendarPanel{
-    height: 100%;
+.small-stars .star {
+    font-size: 10px;
+    letter-spacing: 0;
 }
+
+.rating-value {
+    margin-left: auto;
+    color: #2864e8 !important;
+}
+
+.rating-comment {
+    margin: 8px 0 0;
+    color: #627d98;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+
+/* =========================
+   EMPTY STATES
+========================= */
+
+.empty-rating,
+.empty-request,
+.empty-state {
+    text-align: center;
+    color: #829ab1;
+    font-size: 12px;
+    padding: 20px 5px;
+}
+
+
+/* =========================
+   MODALS
+========================= */
 
 .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,.4);
+    background: rgba(0, 0, 0, 0.4);
 
     display: flex;
     justify-content: center;
@@ -116,4 +541,102 @@
     border-radius: 10px;
     width: 450px;
     max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.modal h2 {
+    margin-top: 0;
+    color: #243b53;
+}
+
+.modal input,
+.modal select,
+.modal textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #dbe4f0;
+    border-radius: 5px;
+    font-family: inherit;
+}
+
+.modal textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.modal button {
+    padding: 9px 14px;
+    border: 1px solid #dbe4f0;
+    border-radius: 5px;
+    background: white;
+    cursor: pointer;
+    margin-right: 8px;
+    margin-top: 5px;
+}
+
+.modal button:hover {
+    background: #f5f7fa;
+}
+
+
+/* =========================
+   RESCHEDULE STATUS
+========================= */
+
+.reschedule-status {
+    background: #f8faff;
+    border: 1px solid #e5e9f2;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 15px 0;
+}
+
+.reschedule-status h3 {
+    margin-top: 0;
+    font-size: 14px;
+    color: #243b53;
+}
+
+.reschedule-status p {
+    font-size: 12px;
+    color: #52606d;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1000px) {
+
+    .TeacherScheduleLowerPanel {
+        grid-template-columns: 1fr;
+    }
+
+    .TeacherScheduleLowerRight {
+        width: 100%;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .TeacherScheduleHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .Teacher-NewSession {
+        width: 100%;
+    }
+
+    .CalendarPanel {
+        height: 400px;
+    }
+
 }

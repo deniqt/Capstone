@@ -34,9 +34,8 @@ return(
         }}>
 
                <NavLink to="/student">Dashboard</NavLink>
-               <NavLink to="/student/material">Material</NavLink>
+               <NavLink to="/student/materials">Material</NavLink>
                <NavLink to="/student/progress">Progress</NavLink>
-               <NavLink to="/student/enrollment">Enrollment</NavLink>
                <NavLink to="/student/schedule">Schedule</NavLink> 
                <NavLink to="/student/settings">Settings</NavLink> 
                <button onClick={handleLogout}>

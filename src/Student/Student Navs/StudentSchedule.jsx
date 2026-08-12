@@ -22,9 +22,14 @@ function StudentSchedule(){
     const [classAbsentCount, setClassAbsentCount] = useState();
     const [attendancePercentage, setAttendancePercentage] = useState();
 
+    const [ratingSession, setRatingSession] = useState(null);
+    const [rating, setRating] = useState(0);
+    const [ratingComment, setRatingComment] = useState("");
+    const [submittingRating, setSubmittingRating] = useState(false);
+    const [ratedSessions, setRatedSessions] = useState([]);
+
     useEffect(() => {
             getStudent();
-            getAttendace();
     }, []);
 
     useEffect(() => {
@@ -32,6 +37,7 @@ function StudentSchedule(){
             getEvents(loggedStudent.id);
             loadTodaySessions(loggedStudent.id);
             getAttendace();
+             getRatedSessions(loggedStudent.id);
         }
     }, [loggedStudent]);
 
@@ -177,6 +183,10 @@ function StudentSchedule(){
 
     }
 
+
+
+
+
     async function loadTodaySessions(studentId){
 
         const today = new Date();
@@ -205,6 +215,9 @@ function StudentSchedule(){
 
     }
 
+
+
+
     async function approveReschedule(){
 
         const { error } = await supabase
@@ -231,6 +244,8 @@ function StudentSchedule(){
         setSelectedEvent(null);
 
     }
+
+
 
 
     async function rejectReschedule(){
@@ -265,6 +280,9 @@ function StudentSchedule(){
         setSelectedEvent(null);
 
     }
+
+
+
 
 
    async function requestReschedule(){
@@ -397,7 +415,9 @@ function StudentSchedule(){
             "Reschedule request sent to the administrator."
         );
 
-}
+    }
+
+
 
 
     async function hasConflict(
@@ -435,6 +455,9 @@ function StudentSchedule(){
 
             return studentConflict || tutorConflict;
         }
+
+
+
 
         async function getAttendace() {
 
@@ -474,7 +497,108 @@ function StudentSchedule(){
             
         }
 
+
+
+        async function getRatedSessions(studentId) {
+
+            const { data, error } = await supabase
+                .from("Session_Ratings")
+                .select("Calendar_ID")
+                .eq("Student_ID", studentId);
+
+            if (error) {
+                console.log(error);
+                return;
+            }
+
+            setRatedSessions(
+                data.map(rating => rating.Calendar_ID)
+            );
+        }
         
+
+
+        function getPreviousRateableSession() {
+
+            const now = new Date();
+
+            const previousSessions = events
+                .filter(event => {
+
+                    const end = new Date(event.end);
+
+                    return (
+                        end < now &&
+                        event.status !== "Cancelled" &&
+                        event.status !== "Pending" &&
+                        !ratedSessions.includes(event.id)
+                    );
+
+                })
+                .sort(
+                    (a, b) =>
+                        new Date(b.end) -
+                        new Date(a.end)
+                );
+
+            return previousSessions[0] || null;
+        }
+
+
+
+
+        async function submitRating() {
+
+            if (!ratingSession) {
+                return;
+            }
+
+            if (rating < 1 || rating > 5) {
+                alert("Please select a rating from 1 to 5 stars.");
+                return;
+            }
+
+            setSubmittingRating(true);
+
+            try {
+
+                const { error } = await supabase
+                    .from("Session_Ratings")
+                    .insert({
+                        Calendar_ID: ratingSession.id,
+                        Student_ID: loggedStudent.id,
+                        Tutor_ID: ratingSession.tutor_id,
+                        Rating: rating,
+                        Comment: ratingComment.trim() || null,
+                        created_at: new Date().toISOString()
+                    });
+
+                if (error) {
+
+                    console.log("Rating submission error:", error);
+
+                    alert("Failed to submit rating.");
+
+                    return;
+                }
+
+                setRatedSessions(prev => [
+                    ...prev,
+                    ratingSession.id
+                ]);
+
+                setRatingSession(null);
+                setRating(0);
+                setRatingComment("");
+
+                alert("Thank you for rating your session! ⭐");
+
+            } finally {
+
+                setSubmittingRating(false);
+
+            }
+        }
 
     return(<>
         <h1> STUDENT ATTENDANCE & SCHEDULE</h1>
@@ -498,8 +622,60 @@ function StudentSchedule(){
                 </div>
 
                 <div className="rate-previous-session-panel">
-                    <h3>Rate Previous Session</h3>    
-                    <h1>Comming Soon</h1>         
+
+                    <h3>
+                        Rate Previous Session
+                    </h3>
+
+                    {(() => {
+
+                        const previousSession =
+                            getPreviousRateableSession();
+
+                        if (!previousSession) {
+
+                            return (
+                                <>
+
+                                    <h1>✓</h1>
+
+                                    <p>
+                                        No session waiting for a rating.
+                                    </p>
+
+                                </>
+                            );
+
+                        }
+
+                        return (
+                            <>
+
+                                <h4>
+                                    {previousSession.title}
+                                </h4>
+
+                                <p>
+                                    {new Date(
+                                        previousSession.start
+                                    ).toLocaleDateString()}
+                                </p>
+
+                                <button
+                                    onClick={() =>
+                                        setRatingSession(
+                                            previousSession
+                                        )
+                                    }
+                                >
+                                    ⭐ Rate Session
+                                </button>
+
+                            </>
+                        );
+
+                    })()}
+
                 </div>
 
 
@@ -579,295 +755,413 @@ function StudentSchedule(){
         </div>
 
 
-        {selectedEvent && (
+     {/* 
+        /////////////
+        modal for Selected Event
+        /////////////
+    */}
 
-                <div className="modal-overlay">
-                    <div className="modal">
+    {selectedEvent && (
 
-                        <h2>{selectedEvent.title}</h2>
+            <div className="modal-overlay">
+                <div className="modal">
 
-                        <p>
-                            <strong>Status:</strong>{" "}
-                            {selectedEvent.status}
-                        </p>
+                    <h2>{selectedEvent.title}</h2>
 
-                        <p>
-                            <strong>Start:</strong>{" "}
-                            {selectedEvent.start.toLocaleString()}
-                        </p>
+                    <p>
+                        <strong>Status:</strong>{" "}
+                        {selectedEvent.status}
+                    </p>
 
-                        <p>
-                            <strong>End:</strong>{" "}
-                            {selectedEvent.end.toLocaleString()}
-                        </p>
+                    <p>
+                        <strong>Start:</strong>{" "}
+                        {selectedEvent.start.toLocaleString()}
+                    </p>
 
-                        <p>
-                            <strong>Platform:</strong>{" "}
-                            {selectedEvent.meeting_platform || "N/A"}
-                        </p>
+                    <p>
+                        <strong>End:</strong>{" "}
+                        {selectedEvent.end.toLocaleString()}
+                    </p>
 
-                        <p>
-                            <strong>Notes:</strong>
-                            <br />
-                            {selectedEvent.notes || "No notes"}
-                        </p>
+                    <p>
+                        <strong>Platform:</strong>{" "}
+                        {selectedEvent.meeting_platform || "N/A"}
+                    </p>
 
-                        {selectedEvent.status === "Reschedule Pending" && (
+                    <p>
+                        <strong>Notes:</strong>
+                        <br />
+                        {selectedEvent.notes || "No notes"}
+                    </p>
 
-                            <div className="reschedule-status">
+                    {selectedEvent.status === "Reschedule Pending" && (
 
-                                <h3>Reschedule Request</h3>
+                        <div className="reschedule-status">
 
-                                <p>
-                                    <strong>Requested By:</strong>{" "}
-                                    {selectedEvent.reschedule_requested_by}
-                                </p>
+                            <h3>Reschedule Request</h3>
 
-                                <p>
-                                    <strong>Requested Start:</strong>
-                                    <br />
+                            <p>
+                                <strong>Requested By:</strong>{" "}
+                                {selectedEvent.reschedule_requested_by}
+                            </p>
 
-                                    {new Date(
-                                        selectedEvent.requested_start_datetime
-                                    ).toLocaleString()}
-                                </p>
+                            <p>
+                                <strong>Requested Start:</strong>
+                                <br />
 
-                                <p>
-                                    <strong>Requested End:</strong>
-                                    <br />
+                                {new Date(
+                                    selectedEvent.requested_start_datetime
+                                ).toLocaleString()}
+                            </p>
 
-                                    {new Date(
-                                        selectedEvent.requested_end_datetime
-                                    ).toLocaleString()}
-                                </p>
+                            <p>
+                                <strong>Requested End:</strong>
+                                <br />
 
-                                <p>
-                                    <strong>Reason:</strong>
-                                    <br />
+                                {new Date(
+                                    selectedEvent.requested_end_datetime
+                                ).toLocaleString()}
+                            </p>
 
-                                    {selectedEvent.reschedule_reason}
-                                </p>
+                            <p>
+                                <strong>Reason:</strong>
+                                <br />
 
-                                <p>
-                                    Student Approval:
-                                    {" "}
-                                    {selectedEvent.student_approval}
-                                </p>
+                                {selectedEvent.reschedule_reason}
+                            </p>
 
-                                <p>
-                                    Admin Approval:
-                                    {" "}
-                                    {selectedEvent.admin_approval}
-                                </p>
+                            <p>
+                                Student Approval:
+                                {" "}
+                                {selectedEvent.student_approval}
+                            </p>
 
-                            </div>
+                            <p>
+                                Admin Approval:
+                                {" "}
+                                {selectedEvent.admin_approval}
+                            </p>
+
+                        </div>
+
+                    )}
+
+
+                    {selectedEvent.status === "Reschedule Pending" &&
+                        selectedEvent.student_approval === "Pending" && (
+
+                            <>
+
+                                <button
+                                    onClick={approveReschedule}
+                                >
+                                    Approve
+                                </button>
+
+                                <button
+                                    onClick={rejectReschedule}
+                                >
+                                    Reject
+                                </button>
+
+                            </>
 
                         )}
 
+                    {selectedEvent.status === "Confirmed" &&
+                    !selectedEvent.requested_start_datetime &&
+                    new Date(selectedEvent.start) > new Date() &&  (
 
-                        {selectedEvent.status === "Reschedule Pending" &&
-                            selectedEvent.student_approval === "Pending" && (
+                    <button
+                        onClick={() => {
 
-                                <>
+                            setNewScheduleDate(selectedEvent.start);
 
-                                    <button
-                                        onClick={approveReschedule}
-                                    >
-                                        Approve
-                                    </button>
+                            const hours =
+                                (selectedEvent.end - selectedEvent.start) /
+                                (1000 * 60 * 60);
 
-                                    <button
-                                        onClick={rejectReschedule}
-                                    >
-                                        Reject
-                                    </button>
+                            setRescheduleDuration(hours);
 
-                                </>
+                            setRescheduleReason("");
 
-                            )}
+                            setShowRescheduleModal(true);
 
-                        {selectedEvent.status === "Confirmed" &&
-                        !selectedEvent.requested_start_datetime &&
-                        new Date(selectedEvent.start) > new Date() &&  (
+                        }}
+                    >
+                        Request Reschedule
+                    </button>
+
+                    )}
+
+                    {selectedEvent.meeting_link && (
+                        <>
+                            <p>
+                                {selectedEvent.meeting_link}
+                            </p>
+
+                            <button
+                                onClick={() =>
+                                    navigator.clipboard.writeText(
+                                        selectedEvent.meeting_link
+                                    )
+                                }
+                            >
+                                Copy Link
+                            </button>
+                        </>
+                    )}
+
+                    {selectedEvent.status === "Confirmed" &&
+                    !selectedEvent.requested_start_datetime &&
+                    selectedEvent.meeting_link && (
+
+                    <a
+                        href={selectedEvent.meeting_link}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        Join Meeting
+                    </a>
+
+                    )}
+
+                    <button
+                        onClick={() => setSelectedEvent(null)}
+                    >
+                        Close
+                    </button>
+
+                </div>
+            </div>
+
+        )}
+
+    {/* 
+        /////////////
+        modal for Reschedule
+        /////////////
+    */}
+
+    {showRescheduleModal && (
+
+            <div className="modal-overlay">
+                <div className="modal">
+
+                    <h2>Request Reschedule</h2>
+
+                    <label>New Schedule</label>
+
+                    <input
+                        type="datetime-local"
+                        value={
+                            newScheduleDate
+                            ?
+                            new Date(
+                                newScheduleDate.getTime()
+                                -
+                                newScheduleDate.getTimezoneOffset()*60000
+                            )
+                            .toISOString()
+                            .slice(0,16)
+                            :
+                            ""
+                        }
+                        onChange={(e)=>
+                            setNewScheduleDate(
+                                new Date(e.target.value)
+                            )
+                        }
+                    />
+
+                    <select
+                        value={rescheduleDuration}
+                        onChange={(e)=>
+                            setRescheduleDuration(
+                                Number(e.target.value)
+                            )
+                        }
+                    >
+                        <option value={1}>1 Hour</option>
+                        <option value={2}>2 Hours</option>
+                        <option value={3}>3 Hours</option>
+                    </select>
+
+                    {newScheduleDate && (
+
+                        <>
+                            <label>Requested End Time</label>
+
+                            <input
+                                type="datetime-local"
+                                readOnly
+                                value={
+                                    (()=>{
+
+                                        const end = new Date(
+                                            newScheduleDate
+                                        );
+
+                                        end.setHours(
+                                            end.getHours() +
+                                            rescheduleDuration
+                                        );
+
+                                        return new Date(
+                                            end.getTime()
+                                            -
+                                            end.getTimezoneOffset()*60000
+                                        )
+                                        .toISOString()
+                                        .slice(0,16);
+
+                                    })()
+                                }
+                            />
+                        </>
+
+                    )}
+
+                    <textarea
+                        placeholder="Reason for rescheduling..."
+                        value={rescheduleReason}
+                        onChange={(e)=>
+                            setRescheduleReason(
+                                e.target.value
+                            )
+                        }
+                    />
+
+                    <button
+                        onClick={requestReschedule}
+                    >
+                        Submit Request
+                    </button>
+
+                    <button
+                        onClick={()=>{
+
+                            setShowRescheduleModal(false);
+
+                            setNewScheduleDate(null);
+
+                            setRescheduleDuration(1);
+
+                            setRescheduleReason("");
+
+                        }}
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+            </div>
+
+        )}
+
+        {/* 
+            /////////////
+            modal for rate 
+            /////////////
+        */}
+
+        {ratingSession && (
+
+            <div className="modal-overlay">
+
+                <div className="modal rating-modal">
+
+                    <h2>
+                        Rate Your Session
+                    </h2>
+
+                    <p>
+                        {ratingSession.title}
+                    </p>
+
+                    <p>
+                        How was your tutoring session?
+                    </p>
+
+
+                    <div className="star-rating">
+
+                        {[1, 2, 3, 4, 5].map(star => (
+
+                            <button
+                                key={star}
+                                type="button"
+                                className={
+                                    star <= rating
+                                        ? "star active"
+                                        : "star"
+                                }
+                                onClick={() =>
+                                    setRating(star)
+                                }
+                            >
+                                ★
+                            </button>
+
+                        ))}
+
+                    </div>
+
+
+                    <p className="rating-label">
+
+                        {rating === 1 && "Very Poor"}
+                        {rating === 2 && "Poor"}
+                        {rating === 3 && "Average"}
+                        {rating === 4 && "Good"}
+                        {rating === 5 && "Excellent"}
+
+                    </p>
+
+
+                    <textarea
+                        placeholder="Optional feedback..."
+                        value={ratingComment}
+                        onChange={(e) =>
+                            setRatingComment(
+                                e.target.value
+                            )
+                        }
+                    />
+
+
+                    <div className="rating-actions">
+
+                        <button
+                            onClick={submitRating}
+                            disabled={
+                                rating === 0 ||
+                                submittingRating
+                            }
+                        >
+                            {submittingRating
+                                ? "Submitting..."
+                                : "Submit Rating"}
+                        </button>
+
 
                         <button
                             onClick={() => {
 
-                                setNewScheduleDate(selectedEvent.start);
-
-                                const hours =
-                                    (selectedEvent.end - selectedEvent.start) /
-                                    (1000 * 60 * 60);
-
-                                setRescheduleDuration(hours);
-
-                                setRescheduleReason("");
-
-                                setShowRescheduleModal(true);
+                                setRatingSession(null);
+                                setRating(0);
+                                setRatingComment("");
 
                             }}
                         >
-                            Request Reschedule
-                        </button>
-
-                        )}
-
-                        {selectedEvent.meeting_link && (
-                            <>
-                                <p>
-                                    {selectedEvent.meeting_link}
-                                </p>
-
-                                <button
-                                    onClick={() =>
-                                        navigator.clipboard.writeText(
-                                            selectedEvent.meeting_link
-                                        )
-                                    }
-                                >
-                                    Copy Link
-                                </button>
-                            </>
-                        )}
-
-                        {selectedEvent.status === "Confirmed" &&
-                        !selectedEvent.requested_start_datetime &&
-                        selectedEvent.meeting_link && (
-
-                        <a
-                            href={selectedEvent.meeting_link}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            Join Meeting
-                        </a>
-
-                        )}
-
-                        <button
-                            onClick={() => setSelectedEvent(null)}
-                        >
-                            Close
+                            Cancel
                         </button>
 
                     </div>
+
                 </div>
 
-            )}
-
-            {showRescheduleModal && (
-
-        <div className="modal-overlay">
-            <div className="modal">
-
-                <h2>Request Reschedule</h2>
-
-                <label>New Schedule</label>
-
-                <input
-                    type="datetime-local"
-                    value={
-                        newScheduleDate
-                        ?
-                        new Date(
-                            newScheduleDate.getTime()
-                            -
-                            newScheduleDate.getTimezoneOffset()*60000
-                        )
-                        .toISOString()
-                        .slice(0,16)
-                        :
-                        ""
-                    }
-                    onChange={(e)=>
-                        setNewScheduleDate(
-                            new Date(e.target.value)
-                        )
-                    }
-                />
-
-                <select
-                    value={rescheduleDuration}
-                    onChange={(e)=>
-                        setRescheduleDuration(
-                            Number(e.target.value)
-                        )
-                    }
-                >
-                    <option value={1}>1 Hour</option>
-                    <option value={2}>2 Hours</option>
-                    <option value={3}>3 Hours</option>
-                </select>
-
-                {newScheduleDate && (
-
-                    <>
-                        <label>Requested End Time</label>
-
-                        <input
-                            type="datetime-local"
-                            readOnly
-                            value={
-                                (()=>{
-
-                                    const end = new Date(
-                                        newScheduleDate
-                                    );
-
-                                    end.setHours(
-                                        end.getHours() +
-                                        rescheduleDuration
-                                    );
-
-                                    return new Date(
-                                        end.getTime()
-                                        -
-                                        end.getTimezoneOffset()*60000
-                                    )
-                                    .toISOString()
-                                    .slice(0,16);
-
-                                })()
-                            }
-                        />
-                    </>
-
-                )}
-
-                <textarea
-                    placeholder="Reason for rescheduling..."
-                    value={rescheduleReason}
-                    onChange={(e)=>
-                        setRescheduleReason(
-                            e.target.value
-                        )
-                    }
-                />
-
-                <button
-                    onClick={requestReschedule}
-                >
-                    Submit Request
-                </button>
-
-                <button
-                    onClick={()=>{
-
-                        setShowRescheduleModal(false);
-
-                        setNewScheduleDate(null);
-
-                        setRescheduleDuration(1);
-
-                        setRescheduleReason("");
-
-                    }}
-                >
-                    Cancel
-                </button>
-
             </div>
-        </div>
 
         )}
     </>);
