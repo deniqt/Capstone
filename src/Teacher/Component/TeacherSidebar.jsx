@@ -1,6 +1,7 @@
 
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import MainHeader from "../../MainComponent/MainHeader";
 function TeacherSidebar(){
 
      const navigate = useNavigate();
@@ -25,6 +26,11 @@ return(
       }}
     >
         <h2>Yoseff Teacher Side</h2>
+
+        <div>
+            <MainHeader/>
+        </div>
+        
 
         <nav style={{
             display: "flex",

@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, useParams } from "react-router-dom";
 import "./teacherSubjects.css"
+import {
+    createNotification
+} from "../../Services/notificationService"
 
 function TeacherSubjects(){
     const {studentID}=useParams();
@@ -194,6 +197,11 @@ function TeacherSubjects(){
 
     async function uploadMaterial() {
 
+            const { data: { user }, error } = await supabase.auth.getUser();
+
+                console.log("AUTH USER:", user);
+                console.log("AUTH ERROR:", error);
+
             // Prevent double upload
             if (isUploading) {
                 return;
@@ -332,15 +340,30 @@ function TeacherSubjects(){
                 const {
                     error: assignmentError
                 } = await supabase
+
                     .from("Material_Assignment")
+
                     .insert({
-                        Material_ID: material.Material_ID,
-                        Student_ID: studentID
+
+                        Material_ID:
+                            material.Material_ID,
+
+                        Student_ID:
+                            studentID
+
                     });
 
+
                 if (assignmentError) {
-                    console.log(assignmentError);
-                    alert("Failed to assign material.");
+
+                    console.log(
+                        assignmentError
+                    );
+
+                    alert(
+                        "Failed to assign material."
+                    );
+
                     return;
                 }
 
@@ -349,30 +372,131 @@ function TeacherSubjects(){
                 // 5. Create Assignment
                 // --------------------------------
 
-                if (contentType === "Assignment") {
+                let createdAssignment = null;
+
+
+                if (
+                    contentType === "Assignment"
+                ) {
 
                     const {
+                        data: assignment,
                         error: gradedAssignmentError
                     } = await supabase
+
                         .from("Assignments")
+
                         .insert({
-                            Material_ID: material.Material_ID,
-                            Assignment_Type: assignmentType,
-                            Due_Date: dueDate,
-                            Total_Points: Number(totalPoints)
-                        });
+
+                            Material_ID:
+                                material.Material_ID,
+
+                            Assignment_Type:
+                                assignmentType,
+
+                            Due_Date:
+                                dueDate,
+
+                            Total_Points:
+                                Number(totalPoints)
+
+                        })
+
+                        .select()
+
+                        .single();
+
 
                     if (gradedAssignmentError) {
-                        console.log(gradedAssignmentError);
-                        alert("Failed to create assignment.");
+
+                        console.log(
+                            gradedAssignmentError
+                        );
+
+                        alert(
+                            "Failed to create assignment."
+                        );
+
                         return;
                     }
+
+
+                    createdAssignment =
+                        assignment;
+
+                }
+
+
+                // --------------------------------
+                // 6. CREATE NOTIFICATION
+                // --------------------------------
+
+                if (
+                    contentType === "Assignment"
+                ) {
+
+                    await createNotification({
+
+                        userId:
+                            Number(studentID),
+
+                        title:
+                            "New Assignment",
+
+                        message:
+                            `${material.Material_Name} has been assigned to you.`,
+
+                        type:
+                            "Assignment",
+
+                        relatedTable:
+                            "Assignments",
+
+                        relatedId:
+                            createdAssignment.Assignment_ID,
+
+                        actionUrl:
+                            `/student/materials`
+
+                    });
+
+                } else {
+
+                    await createNotification({
+
+                        userId:
+                            Number(studentID),
+
+                        title:
+                            "New Learning Material",
+
+                        message:
+                            `${material.Material_Name} has been assigned to you.`,
+
+                        type:
+                            "Material",
+
+                        relatedTable:
+                            "Materials",
+
+                        relatedId:
+                            material.Material_ID,
+
+                        actionUrl:
+                            `/student/materials`
+
+                    });
+
                 }
 
 
                 // --------------------------------
                 // Success
                 // --------------------------------
+
+
+                    console.log("CURRENT AUTH USER:", user);
+                    console.log("CURRENT AUTH UUID:", user?.id);
 
                 alert(
                     contentType === "Assignment"
@@ -575,6 +699,35 @@ function TeacherSubjects(){
 
                 return;
             }
+
+            await createNotification({
+
+                userId: Number(studentID),
+
+                title: "Assignment Graded",
+
+                message:
+                    `Your ${selectedAssignmentForGrading.Assignment_Type} has been graded. Score: ${score}/${selectedAssignmentForGrading.Total_Points}.`,
+
+                type: "Grade",
+
+                relatedTable:
+                    "Assignment_Submissions",
+
+                relatedId:
+                    selectedSubmission.Submission_ID,
+
+                actionUrl:
+                    "/student/materials"
+
+            });
+
+            const {
+                data: { user }
+            } = await supabase.auth.getUser();
+
+            console.log("CURRENT AUTH USER:", user);
+            console.log("CURRENT AUTH UUID:", user?.id);
 
             alert("Grade saved successfully!");
 

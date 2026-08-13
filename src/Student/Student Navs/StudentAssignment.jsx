@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, useParams } from "react-router-dom";
 import './studentMaterial.css'
+import { createNotification } from "../../Services/notificationService";
 
 function StudentAssignment() {
 
@@ -57,7 +58,7 @@ function StudentAssignment() {
                 error: studentError
             } = await supabase
                 .from("users")
-                .select("id")
+                .select("id, Name")
                 .eq("auth_id", user.id)
                 .single();
 
@@ -156,7 +157,6 @@ function StudentAssignment() {
 
             }
 
-
             setSubmission(
                 submissionData
             );
@@ -223,7 +223,7 @@ function StudentAssignment() {
                 error: studentError
             } = await supabase
                 .from("users")
-                .select("id")
+                .select("id, Name")
                 .eq("auth_id", user.id)
                 .single();
 
@@ -345,34 +345,30 @@ function StudentAssignment() {
             // Save
             // --------------------------------
 
-            const {
+           const {
+                data: newSubmission,
                 error: submissionError
             } = await supabase
                 .from("Assignment_Submissions")
                 .insert({
 
-                    Assignment_ID:
-                        assignmentID,
+                    Assignment_ID: assignmentID,
 
-                    Student_ID:
-                        student.id,
+                    Student_ID: student.id,
 
-                    Submission_URL:
-                        urlData.publicUrl,
+                    Submission_URL: urlData.publicUrl,
 
-                    file_name:
-                        submissionFile.name,
+                    file_name: submissionFile.name,
 
-                    Submitted_At:
-                        new Date().toISOString(),
+                    Submitted_At: new Date().toISOString(),
 
-                    Status:
-                        "Submitted",
+                    Status: "Submitted",
 
-                    Is_Late:
-                        isLate
+                    Is_Late: isLate
 
-                });
+                })
+                .select()
+                .single();
 
 
             if (submissionError) {
@@ -394,6 +390,72 @@ function StudentAssignment() {
                     : "Assignment submitted successfully!"
             );
 
+
+
+            // --------------------------------
+            // GET ASSIGNMENT + TUTOR
+            // --------------------------------
+
+            const {
+                data: assignmentInfo,
+                error: assignmentInfoError
+            } = await supabase
+                .from("Assignments")
+                .select(`
+                    Assignment_ID,
+                    Assignment_Type,
+
+                    Materials(
+                        Material_ID,
+                        Material_Name,
+                        Tutor_ID
+                    )
+                `)
+                .eq(
+                    "Assignment_ID",
+                    assignmentID
+                )
+                .single();
+
+            if (assignmentInfoError) {
+
+                console.log(
+                    "Failed to get tutor information:",
+                    assignmentInfoError
+                );
+
+            } else {
+
+                // --------------------------------
+                // CREATE TUTOR NOTIFICATION
+                // --------------------------------
+
+                await createNotification({
+
+                    userId:
+                        assignmentInfo.Materials.Tutor_ID,
+
+                    title:
+                        "New Assignment Submission",
+
+                    message:
+                        `${student.Name} submitted ${assignmentInfo.Materials.Material_Name}.`,
+
+                    type:
+                        "Submission",
+
+                    relatedTable:
+                        "Assignment_Submissions",
+
+                    relatedId:
+                        newSubmission.Submission_ID,
+
+                    actionUrl:
+                        `/teacher/materials/${student.id}`
+
+                });
+
+            }
 
             setSubmissionFile(null);
 

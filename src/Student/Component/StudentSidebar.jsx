@@ -1,6 +1,7 @@
 
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import MainHeader from "../../MainComponent/MainHeader";
 
 function StudentSidebar(){
     const navigate = useNavigate();
@@ -18,6 +19,7 @@ function StudentSidebar(){
 
 return(
     <div
+    
     style={{
         width: "250px",
         background: "#222",
@@ -25,7 +27,8 @@ return(
         padding: "20px",
       }}
     >
-        <h2>Yoseff Student Side</h2>
+        <h2>Yoseff Student Side</h2> 
+        <MainHeader/>
 
         <nav style={{
             display: "flex",
