@@ -28,23 +28,44 @@ return(
       }}
     >
         <h2>Yoseff Student Side</h2> 
-        <MainHeader/>
 
-        <nav style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "15px",  
-        }}>
+        <nav
+          style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "15px",
+          }}
+      >
 
-               <NavLink to="/student">Dashboard</NavLink>
-               <NavLink to="/student/materials">Material</NavLink>
-               <NavLink to="/student/progress">Progress</NavLink>
-               <NavLink to="/student/schedule">Schedule</NavLink> 
-               <NavLink to="/student/settings">Settings</NavLink> 
-               <button onClick={handleLogout}>
-                Log Out
-               </button>
-        </nav>
+          <NavLink to="/student">
+              Dashboard
+          </NavLink>
+
+          <NavLink to="/student/materials">
+              Material
+          </NavLink>
+
+          <NavLink to="/student/progress">
+              Progress
+          </NavLink>
+
+          <NavLink to="/student/schedule">
+              Schedule
+          </NavLink>
+
+          <NavLink to="/student/messages">
+              Messages
+          </NavLink>
+
+          <NavLink to="/student/settings">
+              Settings
+          </NavLink>
+
+          <button onClick={handleLogout}>
+              Log Out
+          </button>
+
+      </nav>
 
     </div>
 );

@@ -38,3 +38,441 @@
 .user-table tr:hover {
   background-color: #ddd;
 }
+
+
+/* ==========================================
+   ADD USER MODAL
+========================================== */
+
+.sat-modal-overlay {
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 9999;
+
+    padding: 20px;
+
+    animation: satFadeIn 0.2s ease;
+}
+
+
+/* ==========================================
+   MODAL
+========================================== */
+
+.sat-modal {
+    width: min(650px, 100%);
+
+    max-height: 90vh;
+
+    background: #ffffff;
+
+    border-radius: 14px;
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.2);
+
+    overflow-y: auto;
+
+    animation: satModalIn 0.25s ease;
+}
+
+
+/* ==========================================
+   MODAL HEADER
+========================================== */
+
+.sat-modal-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: flex-start;
+
+    padding: 24px 28px;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    position: sticky;
+    top: 0;
+
+    background: #ffffff;
+
+    z-index: 2;
+}
+
+.sat-modal-header h2 {
+    margin: 0;
+
+    font-size: 22px;
+
+    font-weight: 600;
+
+    color: #1f2937;
+}
+
+.sat-modal-header p {
+    margin: 6px 0 0;
+
+    font-size: 13px;
+
+    color: #6b7280;
+}
+
+
+/* ==========================================
+   CLOSE BUTTON
+========================================== */
+
+.sat-modal-close {
+    width: 36px;
+    height: 36px;
+
+    border: none;
+
+    background: #f3f4f6;
+
+    border-radius: 8px;
+
+    font-size: 24px;
+
+    color: #6b7280;
+
+    cursor: pointer;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.2s;
+}
+
+.sat-modal-close:hover {
+    background: #e5e7eb;
+
+    color: #111827;
+}
+
+
+/* ==========================================
+   FORM
+========================================== */
+
+.sat-modal form {
+    padding: 24px 28px;
+}
+
+
+/* ==========================================
+   FORM SECTION
+========================================== */
+
+.sat-form-section {
+    margin-bottom: 26px;
+}
+
+.sat-form-section h3 {
+    margin: 0 0 18px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    color: #315B78;
+
+    padding-bottom: 10px;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+/* ==========================================
+   FORM GROUP
+========================================== */
+
+.sat-form-group {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+
+    margin-bottom: 16px;
+}
+
+.sat-form-group label {
+    font-size: 13px;
+
+    font-weight: 500;
+
+    color: #374151;
+}
+
+.sat-form-group input,
+.sat-form-group select,
+.sat-form-group textarea {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 11px 12px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #111827;
+
+    font-family: inherit;
+
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+.sat-form-group input:focus,
+.sat-form-group select:focus,
+.sat-form-group textarea:focus {
+    border-color: #315B78;
+
+    box-shadow:
+        0 0 0 3px rgba(49, 91, 120, 0.1);
+}
+
+.sat-form-group textarea {
+    min-height: 80px;
+
+    resize: vertical;
+}
+
+.sat-form-group input:disabled {
+    background: #f3f4f6;
+
+    color: #6b7280;
+
+    cursor: not-allowed;
+}
+
+
+/* ==========================================
+   SMALL TEXT
+========================================== */
+
+.sat-form-group small,
+.profile-upload small {
+    font-size: 11px;
+
+    color: #9ca3af;
+}
+
+
+/* ==========================================
+   PROFILE UPLOAD
+========================================== */
+
+.profile-upload {
+    display: flex;
+
+    align-items: center;
+
+    gap: 18px;
+
+    margin-bottom: 22px;
+
+    padding: 15px;
+
+    background: #f8fafc;
+
+    border: 1px dashed #d1d5db;
+
+    border-radius: 10px;
+}
+
+.profile-preview {
+    width: 72px;
+    height: 72px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    background: #e5e7eb;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 25px;
+
+    color: #6b7280;
+}
+
+.profile-preview img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.profile-upload label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-size: 13px;
+
+    font-weight: 500;
+
+    color: #374151;
+}
+
+.profile-upload input[type="file"] {
+    width: 100%;
+
+    font-size: 12px;
+}
+
+
+/* ==========================================
+   MODAL ACTIONS
+========================================== */
+
+.sat-modal-actions {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding-top: 20px;
+
+    border-top: 1px solid #e5e7eb;
+
+    margin-top: 10px;
+}
+
+.sat-cancel-button,
+.sat-save-button {
+    padding: 10px 18px;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.sat-cancel-button {
+    border: 1px solid #d1d5db;
+
+    background: #ffffff;
+
+    color: #374151;
+}
+
+.sat-cancel-button:hover {
+    background: #f3f4f6;
+}
+
+.sat-save-button {
+    border: none;
+
+    background: #315B78;
+
+    color: #ffffff;
+}
+
+.sat-save-button:hover {
+    background: #264861;
+}
+
+.sat-cancel-button:disabled,
+.sat-save-button:disabled {
+    opacity: 0.6;
+
+    cursor: not-allowed;
+}
+
+
+/* ==========================================
+   ANIMATIONS
+========================================== */
+
+@keyframes satFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes satModalIn {
+    from {
+        opacity: 0;
+
+        transform: translateY(15px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 600px) {
+
+    .sat-modal-overlay {
+        padding: 10px;
+    }
+
+    .sat-modal {
+        max-height: 95vh;
+
+        border-radius: 10px;
+    }
+
+    .sat-modal-header {
+        padding: 18px 20px;
+    }
+
+    .sat-modal form {
+        padding: 20px;
+    }
+
+    .sat-modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .sat-cancel-button,
+    .sat-save-button {
+        width: 100%;
+    }
+
+}

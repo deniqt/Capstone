@@ -1,0 +1,487 @@
+.student-home {
+    min-height: 100vh;
+    background: #f5f8fc;
+    color: #18324a;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.student-home-header {
+    height: 58px;
+    background: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 22px;
+
+    border-bottom: 1px solid #e5e9ef;
+}
+
+
+.student-search {
+    width: 430px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    color: #8794a5;
+}
+
+
+.student-search span {
+    font-size: 22px;
+}
+
+
+.student-search input {
+    width: 100%;
+
+    border: none;
+    outline: none;
+
+    font-size: 13px;
+
+    background: transparent;
+}
+
+
+.student-notification-button {
+    position: relative;
+
+    width: 38px;
+    height: 38px;
+
+    border: 1px solid #e2e7ed;
+    border-radius: 8px;
+
+    background: white;
+
+    cursor: pointer;
+
+    font-size: 17px;
+}
+
+
+.student-notification-badge {
+    position: absolute;
+
+    top: -5px;
+    right: -5px;
+
+    min-width: 17px;
+    height: 17px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #ef4444;
+    color: white;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+
+/* =========================================
+   WELCOME
+========================================= */
+
+.student-welcome-card {
+    margin: 24px 18px 18px;
+
+    min-height: 145px;
+
+    padding: 22px 26px;
+
+    border-radius: 7px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            105deg,
+            #3769d5,
+            #eea313
+        );
+
+    overflow: hidden;
+}
+
+
+.student-welcome-card h1 {
+    margin: 0 0 6px;
+
+    font-size: 21px;
+}
+
+
+.student-welcome-card p {
+    margin: 0 0 14px;
+
+    font-size: 12px;
+
+    opacity: 0.95;
+}
+
+
+.student-welcome-card button {
+    border: none;
+
+    padding: 8px 14px;
+
+    border-radius: 4px;
+
+    background: white;
+    color: #3564c9;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.student-welcome-card small {
+    display: block;
+
+    margin-top: 7px;
+
+    font-size: 10px;
+}
+
+
+.welcome-icon {
+    font-size: 65px;
+
+    opacity: 0.25;
+
+    margin-right: 20px;
+}
+
+
+/* =========================================
+   STATISTICS
+========================================= */
+
+.student-stats {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 14px;
+
+    margin: 0 18px 24px;
+}
+
+
+.student-stat-card {
+    background: white;
+
+    border: 1px solid #e4e9ef;
+
+    border-radius: 6px;
+
+    padding: 15px 18px;
+
+    min-height: 72px;
+}
+
+
+.stat-title {
+    display: flex;
+
+    justify-content: space-between;
+
+    color: #6b7788;
+
+    font-size: 11px;
+}
+
+
+.stat-title span {
+    font-size: 15px;
+}
+
+
+.student-stat-card h2 {
+    margin: 6px 0 2px;
+
+    font-size: 18px;
+
+    color: #173452;
+}
+
+
+.student-stat-card p {
+    margin: 0;
+
+    font-size: 9px;
+
+    color: #8b96a4;
+}
+
+
+/* =========================================
+   SECTIONS
+========================================= */
+
+.student-section {
+    margin: 0 18px 24px;
+}
+
+
+.student-section > h2 {
+    margin: 0 0 10px;
+
+    font-size: 14px;
+
+    color: #173452;
+}
+
+
+/* =========================================
+   SUBJECTS
+========================================= */
+
+.student-subject-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 10px;
+}
+
+
+.student-dashboard-subject-card {
+    min-height: 83px;
+
+    background: white;
+
+    border: 1px solid #e4e9ef;
+
+    border-radius: 5px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    transition: 0.2s;
+}
+
+
+.student-dashboard-subject-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 5px 15px rgba(30, 60, 90, 0.08);
+}
+
+
+.subject-icon {
+    width: 31px;
+    height: 31px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #eef5ff;
+
+    margin-bottom: 5px;
+
+    font-size: 15px;
+}
+
+
+.student-dashboard-subject-card h3 {
+    margin: 0;
+
+    font-size: 10px;
+}
+
+
+.student-dashboard-subject-card p {
+    margin: 2px 0 0;
+
+    font-size: 8px;
+
+    color: #8994a1;
+}
+
+
+/* =========================================
+   RECENT ACTIVITY
+========================================= */
+
+.recent-activity-card {
+    background: white;
+
+    border: 1px solid #e4e9ef;
+
+    border-radius: 6px;
+
+    overflow: hidden;
+}
+
+
+.activity-item {
+    min-height: 58px;
+
+    padding: 10px 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    border-bottom: 1px solid #edf0f4;
+}
+
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+
+.activity-icon {
+    width: 26px;
+    height: 26px;
+
+    border-radius: 6px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #edf4ff;
+
+    color: #3268d5;
+
+    font-size: 13px;
+}
+
+
+.activity-content {
+    flex: 1;
+}
+
+
+.activity-content strong {
+    display: block;
+
+    font-size: 10px;
+
+    color: #25415e;
+}
+
+
+.activity-content p {
+    margin: 2px 0 0;
+
+    font-size: 8px;
+
+    color: #8a96a5;
+}
+
+
+.activity-score {
+    text-align: right;
+}
+
+
+.activity-score strong {
+    display: block;
+
+    color: #159447;
+
+    font-size: 9px;
+}
+
+
+.activity-score small,
+.activity-date {
+    font-size: 8px;
+
+    color: #8b96a4;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .student-stats {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .student-subject-grid {
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .student-welcome-card {
+        margin: 15px;
+
+        padding: 18px;
+    }
+
+
+    .student-stats,
+    .student-section {
+        margin-left: 15px;
+        margin-right: 15px;
+    }
+
+
+    .student-subject-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+
+    .welcome-icon {
+        display: none;
+    }
+
+
+    .student-search {
+        width: 220px;
+    }
+
+}

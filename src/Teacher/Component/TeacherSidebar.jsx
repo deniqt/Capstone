@@ -42,6 +42,9 @@ return(
                <NavLink to="/teacher/material">Material</NavLink>
                <NavLink to="/teacher/schedule">Scheduling</NavLink>
                <NavLink to="/teacher/student">Students</NavLink>
+                 <NavLink to="/teacher/messages">
+                    Messages
+                </NavLink>
                <NavLink to="/teacher/settings">Settings</NavLink> 
               <button onClick={handleLogout}>
                 Log Out

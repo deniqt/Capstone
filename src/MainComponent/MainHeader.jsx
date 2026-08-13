@@ -136,6 +136,8 @@ function MainHeader() {
                                                     : notification.type ===
                                                       "Grade"
                                                     ? "✅"
+                                                    :notification.type === "Message"
+                                                    ? "💬"
                                                     : "🔔"}
 
                                             </div>

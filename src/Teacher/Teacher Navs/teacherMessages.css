@@ -1,0 +1,738 @@
+.teacher-messages-page {
+    min-height: 100vh;
+
+    background: #f5f8fc;
+
+    color: #18324a;
+}
+
+
+/* =========================================
+   LOADING
+========================================= */
+
+.teacher-messages-loading {
+    min-height: 100vh;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: #f5f8fc;
+
+    color: #526273;
+
+    font-size: 14px;
+}
+
+
+/* =========================================
+   WRAPPER
+========================================= */
+
+.teacher-messages-wrapper {
+    margin: 24px 18px;
+}
+
+
+/* =========================================
+   TITLE
+========================================= */
+
+.teacher-messages-title {
+    margin-bottom: 16px;
+}
+
+.teacher-messages-title h1 {
+    margin: 0;
+
+    font-size: 20px;
+
+    color: #173452;
+}
+
+.teacher-messages-title p {
+    margin: 4px 0 0;
+
+    font-size: 11px;
+
+    color: #8994a1;
+}
+
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+
+.teacher-messaging-container {
+    max-width: 1100px;
+
+    height: calc(100vh - 150px);
+
+    min-height: 500px;
+
+    margin: 0 auto;
+
+    display: flex;
+
+    background: white;
+
+    border: 1px solid #e2e7ed;
+
+    border-radius: 8px;
+
+    overflow: hidden;
+}
+
+
+/* =========================================
+   STUDENT LIST
+========================================= */
+
+.student-list-panel {
+    width: 280px;
+
+    flex-shrink: 0;
+
+    border-right: 1px solid #e5e9ef;
+
+    background: white;
+}
+
+.student-list-header {
+    height: 60px;
+
+    padding: 0 16px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    border-bottom: 1px solid #e8edf2;
+}
+
+.student-list-header h2 {
+    margin: 0;
+
+    font-size: 13px;
+
+    color: #25415e;
+}
+
+.student-list-header span {
+    min-width: 22px;
+    height: 22px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #eef5ff;
+
+    color: #3268d5;
+
+    font-size: 9px;
+
+    font-weight: 700;
+}
+
+
+/* =========================================
+   STUDENT ITEMS
+========================================= */
+
+.student-list {
+    height: calc(100% - 60px);
+
+    overflow-y: auto;
+}
+
+.student-list-item {
+    width: 100%;
+
+    padding: 11px 13px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    border: none;
+
+    border-bottom: 1px solid #f0f2f5;
+
+    background: white;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition: 0.15s;
+}
+
+.student-list-item:hover {
+    background: #f7faff;
+}
+
+.student-list-item.selected {
+    background: #eef5ff;
+}
+
+.student-avatar {
+    width: 36px;
+    height: 36px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #eef5ff;
+
+    color: #3268d5;
+
+    font-size: 13px;
+
+    font-weight: 700;
+}
+
+.student-avatar.large {
+    width: 40px;
+    height: 40px;
+
+    font-size: 15px;
+}
+
+.student-list-info {
+    min-width: 0;
+}
+
+.student-list-info strong {
+    display: block;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    font-size: 11px;
+
+    color: #25415e;
+}
+
+.student-list-info small {
+    display: block;
+
+    margin-top: 2px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    font-size: 8px;
+
+    color: #8a96a5;
+}
+
+
+/* =========================================
+   CHAT PANEL
+========================================= */
+
+.teacher-chat-panel {
+    flex: 1;
+
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    background: #f8fafc;
+}
+
+
+/* =========================================
+   CHAT HEADER
+========================================= */
+
+.teacher-chat-header {
+    min-height: 65px;
+
+    padding: 10px 18px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    background: white;
+
+    border-bottom: 1px solid #e5e9ef;
+}
+
+.teacher-chat-header strong {
+    display: block;
+
+    font-size: 13px;
+
+    color: #25415e;
+}
+
+.teacher-chat-header span {
+    display: block;
+
+    margin-top: 2px;
+
+    font-size: 9px;
+
+    color: #8a96a5;
+}
+
+
+/* =========================================
+   MESSAGES
+========================================= */
+
+.teacher-chat-messages {
+    flex: 1;
+
+    padding: 20px;
+
+    overflow-y: auto;
+}
+
+.message-row {
+    display: flex;
+
+    margin-bottom: 10px;
+}
+
+.message-row.mine {
+    justify-content: flex-end;
+}
+
+.message-row.theirs {
+    justify-content: flex-start;
+}
+
+.teacher-message-bubble {
+    max-width: 65%;
+
+    padding: 9px 12px;
+
+    border-radius: 10px;
+}
+
+.message-row.mine
+.teacher-message-bubble {
+    background: #3769d5;
+
+    color: white;
+
+    border-bottom-right-radius: 3px;
+}
+
+.message-row.theirs
+.teacher-message-bubble {
+    background: white;
+
+    color: #25415e;
+
+    border: 1px solid #e2e7ed;
+
+    border-bottom-left-radius: 3px;
+}
+
+.teacher-message-bubble p {
+    margin: 0;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+
+    word-break: break-word;
+}
+
+.teacher-message-bubble small {
+    display: block;
+
+    margin-top: 4px;
+
+    font-size: 8px;
+
+    opacity: 0.7;
+
+    text-align: right;
+}
+
+
+/* =========================================
+   CHAT PLACEHOLDER
+========================================= */
+
+.chat-placeholder,
+.chat-start {
+    height: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+}
+
+.chat-placeholder > div,
+.chat-start > div {
+    margin-bottom: 8px;
+
+    font-size: 38px;
+}
+
+.chat-placeholder h2,
+.chat-start h3 {
+    margin: 0;
+
+    font-size: 15px;
+
+    color: #25415e;
+}
+
+.chat-placeholder p,
+.chat-start p {
+    margin: 5px 0 0;
+
+    font-size: 10px;
+
+    color: #8994a1;
+}
+
+.chat-loading {
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 11px;
+
+    color: #8994a1;
+}
+
+
+/* =========================================
+   INPUT
+========================================= */
+
+.teacher-chat-input {
+    padding: 12px;
+
+    display: flex;
+
+    gap: 8px;
+
+    background: white;
+
+    border-top: 1px solid #e5e9ef;
+}
+
+.teacher-chat-input input {
+    flex: 1;
+
+    height: 38px;
+
+    padding: 0 12px;
+
+    border: 1px solid #dce3ea;
+
+    border-radius: 6px;
+
+    outline: none;
+
+    font-size: 12px;
+
+    color: #25415e;
+}
+
+.teacher-chat-input input:focus {
+    border-color: #3769d5;
+}
+
+.teacher-chat-input button {
+    min-width: 65px;
+
+    padding: 0 15px;
+
+    border: none;
+
+    border-radius: 6px;
+
+    background: #3769d5;
+
+    color: white;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.teacher-chat-input button:hover {
+    background: #2f5ec4;
+}
+
+.teacher-chat-input button:disabled {
+    opacity: 0.5;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================
+   NO STUDENTS
+========================================= */
+
+.no-students {
+    height: 200px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+}
+
+.no-students span {
+    font-size: 30px;
+
+    margin-bottom: 8px;
+}
+
+.no-students p {
+    margin: 0;
+
+    font-size: 10px;
+
+    color: #8994a1;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+
+    .teacher-messages-wrapper {
+        margin: 15px;
+    }
+
+    .teacher-messaging-container {
+        height: calc(100vh - 125px);
+    }
+
+    .student-list-panel {
+        width: 210px;
+    }
+
+    .message-bubble,
+    .teacher-message-bubble {
+        max-width: 80%;
+    }
+
+}
+
+
+@media (max-width: 550px) {
+
+    .student-list-panel {
+        width: 75px;
+    }
+
+    .student-list-header h2 {
+        display: none;
+    }
+
+    .student-list-header {
+        justify-content: center;
+    }
+
+    .student-list-info {
+        display: none;
+    }
+
+    .student-list-item {
+        justify-content: center;
+
+        padding: 10px 5px;
+    }
+
+}
+
+
+/* ==========================================
+   UNREAD STUDENT
+========================================== */
+
+.student-list-item.has-unread {
+    background: #eef5ff;
+    border-left: 3px solid #3268d5;
+}
+
+
+.student-list-item.has-unread strong {
+    font-weight: 700;
+    color: #173452;
+}
+
+
+.student-unread-badge {
+    min-width: 20px;
+    height: 20px;
+
+    padding: 0 6px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: #ef4444;
+    color: white;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    margin-left: auto;
+}
+
+/* ==========================================
+   STUDENT LIST CONTROLS
+========================================== */
+
+.student-list-controls {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+
+/* SEARCH */
+
+.student-search-input {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 10px 12px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    outline: none;
+
+    font-size: 14px;
+
+    margin-bottom: 10px;
+}
+
+.student-search-input:focus {
+    border-color: #2563eb;
+}
+
+
+/* FILTER BUTTONS */
+
+.student-filter-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+
+.student-filter-buttons button {
+    flex: 1;
+
+    padding: 8px 12px;
+
+    border: 1px solid #d1d5db;
+
+    background: #f9fafb;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: #4b5563;
+}
+
+
+.student-filter-buttons button:hover {
+    background: #f3f4f6;
+}
+
+
+.student-filter-buttons button.active {
+    background: #2563eb;
+
+    color: white;
+
+    border-color: #2563eb;
+}
+
+
+/* UNREAD COUNT */
+
+.filter-unread-count {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 18px;
+
+    height: 18px;
+
+    margin-left: 6px;
+
+    padding: 0 5px;
+
+    border-radius: 10px;
+
+    background: #ef4444;
+
+    color: white;
+
+    font-size: 11px;
+
+    font-weight: 700;
+}

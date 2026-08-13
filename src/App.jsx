@@ -33,6 +33,9 @@ import StudentSubject from './Student/Student Navs/StudentSubject'
 import StudentAssignment from './Student/Student Navs/StudentAssignment'
 import StudentMaterialDetails from './Student/Student Navs/StudentMaterialDetails'
 import StudentProgressSubject from './Student/Student Navs/StudentProgressSubject'
+import StudentHome from './Student/Student Navs/StudentHome'
+import StudentMessages from './Student/Student Navs/StudentMessages'
+import TeacherMessages from './Teacher/Teacher Navs/TeacherMessages'
 
 
 
@@ -55,9 +58,23 @@ function App() {
             <Route path="materials/:studentID" element = {<TeacherSubjects/>}/>
             {/* <Route path="upload/:subjectId" element={<UploadMaterial />}/> */}
             <Route path="schedule" element = {<TeacherSchedule/>}/>
+            <Route
+                path="messages"
+                element={<TeacherMessages />}
+            />
             <Route path="student" element = {<TeacherStudent/>}/>
             <Route path="settings" element = {<TeacherSettings/>}/>
         </Route>
+
+
+
+        {/* 
+        
+
+            for student 
+            
+            
+        */}
        
         <Route
           path="/student"
@@ -66,7 +83,9 @@ function App() {
                   <StudentDashboard />
               </ProtectedRoute>
           }
-      >
+       >
+
+          <Route index element = {<StudentHome/>}/>
           <Route path="materials" element={<StudentMaterial />} />
 
           <Route
@@ -84,6 +103,10 @@ function App() {
               element={<StudentSubject />}
           />
 
+          <Route
+              path="messages"
+              element={<StudentMessages/>}
+          />
           <Route
             path="materials/material/:materialID"
             element={<StudentMaterialDetails />}
