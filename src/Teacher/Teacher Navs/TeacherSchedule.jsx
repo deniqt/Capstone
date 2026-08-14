@@ -134,7 +134,7 @@ function TeacherSchedule(){
         .from("users")
         .select(`
         *,
-        details:user_details!users_detail_id_fkey(*)
+         details:user_details!users_detail_id_fkey!inner(*)
         `)
 
         .eq("Role","Student")
@@ -170,6 +170,7 @@ function TeacherSchedule(){
                 notes: event.notes,
                 student_id: event.student_id,
                 tutor_id: event.tutor_id,
+                created_by:event.created_by,
                 requested_start_datetime: event.requested_start_datetime,
                 requested_end_datetime: event.requested_end_datetime,
                 reschedule_reason: event.reschedule_reason,
@@ -1289,7 +1290,7 @@ function TeacherSchedule(){
                                     interactionPlugin,
                                     listPlugin
                                 ]}
-                                    initialView="dayGridMonth"
+                                    initialView="timeGridWeek"
                                     headerToolbar={{
                                         left:"dayGridMonth,timeGridWeek,timeGridDay,listWeek",
                                         right:"today prev,next"
@@ -1845,6 +1846,14 @@ function TeacherSchedule(){
                             <strong>Platform:</strong>
 
                             {selectedEvent.meeting_platform}
+
+                        </p>
+
+                        <p>
+
+                            <strong>Created By: </strong>
+
+                            { selectedEvent.created_by || "Unknown"}
 
                         </p>
 

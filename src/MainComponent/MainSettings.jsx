@@ -41,6 +41,22 @@ function MainSettings() {
 
     const [changingPassword, setChangingPassword] = useState(false);
 
+
+    // ==========================================
+    // NOTIFICATION PREFERENCES
+    // ==========================================
+
+    const [notificationPreferences, setNotificationPreferences] =
+        useState(null);
+
+    const [loadingNotifications, setLoadingNotifications] =
+        useState(false);
+
+    const [savingNotifications, setSavingNotifications] =
+        useState(false);
+
+
+
     // ==========================================
     // CHANGE PASSWORD
     // ==========================================
@@ -323,6 +339,14 @@ function MainSettings() {
 
             setInfos(userData);
 
+            // ======================================
+            // LOAD NOTIFICATION PREFERENCES
+            // ======================================
+
+            await loadNotificationPreferences(
+                userData.id
+            );
+
 
             // ======================================
             // GET USER DETAILS
@@ -390,6 +414,244 @@ function MainSettings() {
 
     }
 
+
+    // ==========================================
+    // LOAD NOTIFICATION PREFERENCES
+    // ==========================================
+
+    async function loadNotificationPreferences(userId) {
+
+        try {
+
+            setLoadingNotifications(true);
+
+
+            // ======================================
+            // GET EXISTING PREFERENCES
+            // ======================================
+
+            const {
+                data,
+                error
+            } = await supabase
+
+                .from("notification_preferences")
+
+                .select("*")
+
+                .eq(
+                    "user_id",
+                    userId
+                )
+
+                .maybeSingle();
+
+
+            if (error) {
+
+                throw error;
+
+            }
+
+
+            // ======================================
+            // CREATE DEFAULT PREFERENCES
+            // ======================================
+
+            if (!data) {
+
+                const {
+                    data: newPreferences,
+                    error: insertError
+                } = await supabase
+
+                    .from("notification_preferences")
+
+                    .insert({
+
+                        user_id:
+                            userId,
+
+                        schedule_notifications:
+                            true,
+
+                        material_notifications:
+                            true,
+
+                        assignment_notifications:
+                            true,
+
+                        grading_notifications:
+                            true,
+
+                        payment_notifications:
+                            true,
+
+                        system_notifications:
+                            true
+
+                    })
+
+                    .select()
+
+                    .single();
+
+
+                if (insertError) {
+
+                    throw insertError;
+
+                }
+
+
+                setNotificationPreferences(
+                    newPreferences
+                );
+
+
+                return;
+
+            }
+
+
+            setNotificationPreferences(data);
+
+
+        } catch (error) {
+
+            console.error(
+                "Load notification preferences error:",
+                error
+            );
+
+
+            alert(
+                error.message ||
+                "Failed to load notification preferences."
+            );
+
+
+        } finally {
+
+            setLoadingNotifications(false);
+
+        }
+
+    }
+
+
+    // ==========================================
+    // NOTIFICATION PREFERENCE CHANGE
+    // ==========================================
+
+    function handleNotificationPreferenceChange(
+        name,
+        value
+    ) {
+
+        setNotificationPreferences(previous => ({
+
+            ...previous,
+
+            [name]: value
+
+        }));
+
+    }
+
+
+    // ==========================================
+    // SAVE NOTIFICATION PREFERENCES
+    // ==========================================
+
+    async function handleSaveNotificationPreferences() {
+
+        if (!notificationPreferences) {
+
+            alert(
+                "Notification preferences are not loaded yet."
+            );
+
+            return;
+
+        }
+
+
+        try {
+
+            setSavingNotifications(true);
+
+
+            const {
+                error
+            } = await supabase
+
+                .from("notification_preferences")
+
+                .update({
+
+                    schedule_notifications:
+                        notificationPreferences.schedule_notifications,
+
+                    material_notifications:
+                        notificationPreferences.material_notifications,
+
+                    assignment_notifications:
+                        notificationPreferences.assignment_notifications,
+
+                    grading_notifications:
+                        notificationPreferences.grading_notifications,
+
+                    payment_notifications:
+                        notificationPreferences.payment_notifications,
+
+                    system_notifications:
+                        notificationPreferences.system_notifications,
+
+                    updated_at:
+                        new Date().toISOString()
+
+                })
+
+                .eq(
+                    "user_id",
+                    notificationPreferences.user_id
+                );
+
+
+            if (error) {
+
+                throw error;
+
+            }
+
+
+            alert(
+                "Notification preferences saved successfully!"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Save notification preferences error:",
+                error
+            );
+
+
+            alert(
+                error.message ||
+                "Failed to save notification preferences."
+            );
+
+
+        } finally {
+
+            setSavingNotifications(false);
+
+        }
+
+    }
 
     // ==========================================
     // TOGGLE SECTION
@@ -1407,16 +1669,297 @@ function MainSettings() {
 
                     <div className="settings-section-content">
 
-                        <h3>
-                            Notification Preferences
-                        </h3>
+                    <h3>
+                        Notification Preferences
+                    </h3>
+
+                    <p>
+                        Choose which notifications you want
+                        to receive.
+                    </p>
+
+
+                    {loadingNotifications ? (
 
                         <p>
-                            Notification settings will
-                            appear here.
+                            Loading notification preferences...
                         </p>
 
-                    </div>
+                    ) : notificationPreferences ? (
+
+                        <div className="notification-preferences">
+
+
+                            {/* ==================================
+                                SCHEDULE
+                            ================================== */}
+
+                            <div className="notification-preference-item">
+
+                                <div>
+
+                                    <strong>
+                                        Schedule Notifications
+                                    </strong>
+
+                                    <p>
+                                        Receive notifications about
+                                        your tutoring schedules,
+                                        schedule requests, approvals,
+                                        and changes.
+                                    </p>
+
+                                </div>
+
+
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        notificationPreferences
+                                            .schedule_notifications
+                                    }
+                                    onChange={(event) =>
+                                        handleNotificationPreferenceChange(
+                                            "schedule_notifications",
+                                            event.target.checked
+                                        )
+                                    }
+                                    disabled={savingNotifications}
+                                />
+
+                            </div>
+
+
+                            {/* ==================================
+                                MATERIALS
+                            ================================== */}
+
+                            <div className="notification-preference-item">
+
+                                <div>
+
+                                    <strong>
+                                        Learning Material Notifications
+                                    </strong>
+
+                                    <p>
+                                        Receive notifications when new
+                                        learning materials are assigned
+                                        to you.
+                                    </p>
+
+                                </div>
+
+
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        notificationPreferences
+                                            .material_notifications
+                                    }
+                                    onChange={(event) =>
+                                        handleNotificationPreferenceChange(
+                                            "material_notifications",
+                                            event.target.checked
+                                        )
+                                    }
+                                    disabled={savingNotifications}
+                                />
+
+                            </div>
+
+
+                            {/* ==================================
+                                ASSIGNMENTS
+                            ================================== */}
+
+                            <div className="notification-preference-item">
+
+                                <div>
+
+                                    <strong>
+                                        Assignment Notifications
+                                    </strong>
+
+                                    <p>
+                                        Receive notifications about
+                                        assignments and assignment
+                                        updates.
+                                    </p>
+
+                                </div>
+
+
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        notificationPreferences
+                                            .assignment_notifications
+                                    }
+                                    onChange={(event) =>
+                                        handleNotificationPreferenceChange(
+                                            "assignment_notifications",
+                                            event.target.checked
+                                        )
+                                    }
+                                    disabled={savingNotifications}
+                                />
+
+                            </div>
+
+
+                            {/* ==================================
+                                GRADING
+                            ================================== */}
+
+                            <div className="notification-preference-item">
+
+                                <div>
+
+                                    <strong>
+                                        Grading Notifications
+                                    </strong>
+
+                                    <p>
+                                        Receive notifications when an
+                                        assignment has been graded or
+                                        updated.
+                                    </p>
+
+                                </div>
+
+
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        notificationPreferences
+                                            .grading_notifications
+                                    }
+                                    onChange={(event) =>
+                                        handleNotificationPreferenceChange(
+                                            "grading_notifications",
+                                            event.target.checked
+                                        )
+                                    }
+                                    disabled={savingNotifications}
+                                />
+
+                            </div>
+
+
+                            {/* ==================================
+                                PAYMENT
+                            ================================== */}
+
+                            <div className="notification-preference-item">
+
+                                <div>
+
+                                    <strong>
+                                        Payment Notifications
+                                    </strong>
+
+                                    <p>
+                                        Receive notifications about
+                                        payments, subscriptions,
+                                        and payment updates.
+                                    </p>
+
+                                </div>
+
+
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        notificationPreferences
+                                            .payment_notifications
+                                    }
+                                    onChange={(event) =>
+                                        handleNotificationPreferenceChange(
+                                            "payment_notifications",
+                                            event.target.checked
+                                        )
+                                    }
+                                    disabled={savingNotifications}
+                                />
+
+                            </div>
+
+
+                            {/* ==================================
+                                SYSTEM
+                            ================================== */}
+
+                            <div className="notification-preference-item">
+
+                                <div>
+
+                                    <strong>
+                                        System Notifications
+                                    </strong>
+
+                                    <p>
+                                        Receive important system and
+                                        account notifications.
+                                    </p>
+
+                                </div>
+
+
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        notificationPreferences
+                                            .system_notifications
+                                    }
+                                    onChange={(event) =>
+                                        handleNotificationPreferenceChange(
+                                            "system_notifications",
+                                            event.target.checked
+                                        )
+                                    }
+                                    disabled={savingNotifications}
+                                />
+
+                            </div>
+
+
+                            {/* ==================================
+                                SAVE
+                            ================================== */}
+
+                            <div className="settings-save-box">
+
+                                <button
+                                    onClick={
+                                        handleSaveNotificationPreferences
+                                    }
+                                    disabled={
+                                        savingNotifications
+                                    }
+                                >
+
+                                    {savingNotifications
+                                        ? "Saving..."
+                                        : "Save Notification Preferences"
+                                    }
+
+                                </button>
+
+                            </div>
+
+
+                        </div>
+
+                    ) : (
+
+                        <p>
+                            Unable to load notification preferences.
+                        </p>
+
+                    )}
+
+                </div>
 
                 )}
 

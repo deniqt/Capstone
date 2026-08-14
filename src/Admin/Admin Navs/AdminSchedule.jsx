@@ -396,6 +396,8 @@
 
                 status: event.status,
 
+                created_by: event.created_by,
+
                 requested_start_datetime: event.requested_start_datetime,
                 requested_end_datetime: event.requested_end_datetime,
                 reschedule_reason: event.reschedule_reason,
@@ -446,7 +448,7 @@
                     console.log("ISO", start.toISOString());
 
             
-                        const { data: schedule, error } = await supabase
+                    const { data: schedule, error } = await supabase
                     .from("calendar")
                     .insert({
                         title: selectedStudent.Name,
@@ -456,6 +458,7 @@
                         end_datetime: end.toISOString(),
                         notes,
                         status: "Pending",
+                        created_by:"Admin",
                         student_approval: "Approved",
                         tutor_approval: "Pending",
                         admin_approval: "Approved"
@@ -1153,6 +1156,12 @@
                             {selectedEvent.notes || "No notes"}
                         </p>
 
+                        <p>
+                            <strong>Created By:</strong>
+                            <br/>
+                            {selectedEvent.created_by || "Unknown"}
+                        </p>
+
                         {selectedEvent.meeting_link && (
 
                             <a
@@ -1166,7 +1175,7 @@
                         )}
 
                         <br/><br/>
-                        {selectedEvent.status === "Pending" && (
+                        {(selectedEvent.status === "Pending" && selectedEvent.admin_approval !== "Approved") && (
 
                             <>
                                 <button onClick={approveSession}>
@@ -1260,7 +1269,7 @@
                 </div>
 
                 )}
-                    </>);
+        </>);
 
     
     }
