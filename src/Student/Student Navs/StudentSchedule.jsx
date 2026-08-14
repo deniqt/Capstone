@@ -7,6 +7,9 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { supabase } from "../../lib/supabase";
 import { useEffect, useState } from "react";
 
+
+import { createNotification } from "../../Services/notificationService";
+
 import "./studentSchedule.css";
 
 function StudentSchedule(){
@@ -221,13 +224,13 @@ function StudentSchedule(){
     async function approveReschedule(){
 
         const { error } = await supabase
-        .from("calendar")
-        .update({
+            .from("calendar")
+            .update({
 
-            student_approval:"Approved"
+                student_approval:"Approved"
 
-        })
-        .eq("id", selectedEvent.id);
+            })
+            .eq("id", selectedEvent.id);
 
         if(error){
 
@@ -236,6 +239,73 @@ function StudentSchedule(){
             return;
 
         }
+
+
+        // ==========================================
+        // TUTOR NOTIFICATION
+        // ==========================================
+
+        await createNotification({
+
+            userId: selectedEvent.tutor_id,
+
+            title: "Reschedule Approved by Student",
+
+            message:
+                `The student ${selectedEvent.title} has approved the reschedule request. Please review the request.`,
+
+            type: "schedule",
+
+            relatedTable: "calendar",
+
+            relatedId: selectedEvent.id,
+
+            actionUrl: "/teacher/schedule"
+
+        });
+
+
+        // ==========================================
+        // ADMIN NOTIFICATION
+        // ==========================================
+
+        const { data: admins, error: adminError } = await supabase
+            .from("users")
+            .select("id")
+            .eq("Role", "Admin")
+            .eq("Status", "Active");
+
+        if (adminError) {
+
+            console.log("Failed to get admins:", adminError);
+
+        } else {
+
+            for (const admin of admins || []) {
+
+                await createNotification({
+
+                    userId: admin.id,
+
+                    title: "Reschedule Approved by Student",
+
+                    message:
+                        `${selectedEvent.title} has approved the reschedule request. The request is ready for review.`,
+
+                    type: "schedule",
+
+                    relatedTable: "calendar",
+
+                    relatedId: selectedEvent.id,
+
+                    actionUrl: "/admin/schedule"
+
+                });
+
+            }
+
+        }
+
 
         await getEvents(loggedStudent.id);
 
@@ -251,19 +321,19 @@ function StudentSchedule(){
     async function rejectReschedule(){
 
         const { error } = await supabase
-        .from("calendar")
-        .update({
+            .from("calendar")
+            .update({
 
-            student_approval:"Rejected",
+                student_approval:"Rejected",
 
-            requested_start_datetime:null,
-            requested_end_datetime:null,
-            reschedule_reason:null,
+                requested_start_datetime:null,
+                requested_end_datetime:null,
+                reschedule_reason:null,
 
-            status:"Confirmed"
+                status:"Confirmed"
 
-        })
-        .eq("id", selectedEvent.id);
+            })
+            .eq("id", selectedEvent.id);
 
         if(error){
 
@@ -273,6 +343,73 @@ function StudentSchedule(){
 
         }
 
+
+        // ==========================================
+        // TUTOR NOTIFICATION
+        // ==========================================
+
+        await createNotification({
+
+            userId: selectedEvent.tutor_id,
+
+            title: "Reschedule Rejected by Student",
+
+            message:
+                `The student ${selectedEvent.title} has rejected the reschedule request. The original schedule remains unchanged.`,
+
+            type: "schedule",
+
+            relatedTable: "calendar",
+
+            relatedId: selectedEvent.id,
+
+            actionUrl: "/teacher/schedule"
+
+        });
+
+
+        // ==========================================
+        // ADMIN NOTIFICATION
+        // ==========================================
+
+        const { data: admins, error: adminError } = await supabase
+            .from("users")
+            .select("id")
+            .eq("Role", "Admin")
+            .eq("Status", "Active");
+
+        if (adminError) {
+
+            console.log("Failed to get admins:", adminError);
+
+        } else {
+
+            for (const admin of admins || []) {
+
+                await createNotification({
+
+                    userId: admin.id,
+
+                    title: "Reschedule Rejected by Student",
+
+                    message:
+                        `${selectedEvent.title} has rejected the reschedule request. The original schedule remains unchanged.`,
+
+                    type: "schedule",
+
+                    relatedTable: "calendar",
+
+                    relatedId: selectedEvent.id,
+
+                    actionUrl: "/admin/schedule"
+
+                });
+
+            }
+
+        }
+
+
         await getEvents(loggedStudent.id);
 
         await loadTodaySessions(loggedStudent.id);
@@ -280,7 +417,6 @@ function StudentSchedule(){
         setSelectedEvent(null);
 
     }
-
 
 
 
@@ -398,6 +534,72 @@ function StudentSchedule(){
             console.log(error);
 
             return;
+
+        }
+
+
+        // ==========================================
+        // TUTOR NOTIFICATION
+        // ==========================================
+
+        await createNotification({
+
+            userId: selectedEvent.tutor_id,
+
+            title: "Reschedule Request",
+
+            message:
+                `The student ${selectedEvent.title} has requested to reschedule the class to ${newScheduleDate.toLocaleString()}.`,
+
+            type: "schedule",
+
+            relatedTable: "calendar",
+
+            relatedId: selectedEvent.id,
+
+            actionUrl: "/teacher/schedule"
+
+        });
+
+
+        // ==========================================
+        // ADMIN NOTIFICATION
+        // ==========================================
+
+        const { data: admins, error: adminError } = await supabase
+            .from("users")
+            .select("id")
+            .eq("Role", "Admin")
+            .eq("Status", "Active");
+
+        if (adminError) {
+
+            console.log("Failed to get admins:", adminError);
+
+        } else {
+
+            for (const admin of admins || []) {
+
+                await createNotification({
+
+                    userId: admin.id,
+
+                    title: "Student Reschedule Request",
+
+                    message:
+                        `${selectedEvent.title} has requested to reschedule a class to ${newScheduleDate.toLocaleString()}.`,
+
+                    type: "schedule",
+
+                    relatedTable: "calendar",
+
+                    relatedId: selectedEvent.id,
+
+                    actionUrl: "/admin/schedule"
+
+                });
+
+            }
 
         }
 

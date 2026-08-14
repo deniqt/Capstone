@@ -4,6 +4,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import listPlugin from "@fullcalendar/list";
+import { createNotification } from "../../Services/notificationService";
 
 import { supabase } from "../../lib/supabase";
 import { useEffect, useState } from "react";
@@ -278,7 +279,7 @@ function TeacherSchedule(){
             return;
         }
 
-       const { error } = await supabase
+       const { data:schedule, error } = await supabase
         .from("calendar")
         .insert({
             title:selectedStudent.Name,
@@ -292,7 +293,8 @@ function TeacherSchedule(){
             status:"Pending",
             created_by:"Tutor",
             color:"#FFC107"
-        });
+        }).select()
+        .single();
 
         if(error){
 
@@ -301,6 +303,76 @@ function TeacherSchedule(){
         alert(error.message);
 
         return;
+
+        }
+
+
+        // ==========================================
+        // NOTIFY STUDENT
+        // ==========================================
+
+
+        await createNotification({
+            userId: selectedStudent.id,
+
+            title: "New Class Schedule",
+
+           message:
+            `Your tutor has requested a class schedule for ${new Date(
+                selectedDate
+            ).toLocaleString()}.`,
+
+            type: "schedule",
+            relatedTable: "calendar",
+
+            relatedId: schedule.id,
+
+            actionUrl: "/student/schedule"
+        });
+
+        // ==========================================
+        // NOTIFY ADMIN
+        // ==========================================
+
+        const {
+            data: admins,
+            error: adminError
+        } = await supabase
+            .from("users")
+            .select("id, Name")
+            .eq("Role", "Admin");
+
+        if (adminError) {
+
+            console.error(
+                "Failed to load admins:",
+                adminError
+            );
+
+        } else {
+
+            for (const admin of admins || []) {
+
+                await createNotification({
+
+                    userId: admin.id,
+
+                    title: "New Schedule Request",
+
+                    message:
+                        `${loggedTutor.Name} has requested a schedule with ${selectedStudent.Name}.`,
+
+                    type: "schedule",
+
+                    relatedTable: "calendar",
+
+                    relatedId: schedule.id,
+
+                    actionUrl: "/admin/schedule"
+
+                });
+
+            }
 
         }
 
@@ -427,20 +499,114 @@ function TeacherSchedule(){
         );
 
         if(!confirmCancel) return;
-        await supabase
-        .from("calendar")
-        .update({
-            status:"Cancelled"
-        })
-        .eq("id", selectedEvent.id);
+
+        const { error } = await supabase
+            .from("calendar")
+            .update({
+                status: "Cancelled"
+            })
+            .eq("id", selectedEvent.id);
+
+        if(error){
+
+            console.log(error);
+            alert(error.message);
+
+            return;
+        }
+
+
+        // ==========================================
+        // NOTIFY STUDENT
+        // ==========================================
+
+        await createNotification({
+
+            userId: selectedEvent.student_id,
+
+            title: "Class Cancelled",
+
+            message:
+                `${loggedTutor.Name} has cancelled your class scheduled for ${new Date(
+                    selectedEvent.start
+                ).toLocaleString()}.`,
+
+            type: "schedule",
+
+            relatedTable: "calendar",
+
+            relatedId: selectedEvent.id,
+
+            actionUrl: "/student/schedule"
+
+        });
+
+
+        // ==========================================
+        // NOTIFY ADMINS
+        // ==========================================
+
+        const {
+            data: admins,
+            error: adminError
+        } = await supabase
+            .from("users")
+            .select("id, Name")
+            .eq("Role", "Admin");
+
+
+        if(adminError){
+
+            console.error(
+                "Failed to load admins:",
+                adminError
+            );
+
+        } else {
+
+            for(const admin of admins || []){
+
+                await createNotification({
+
+                    userId: admin.id,
+
+                    title: "Schedule Cancelled",
+
+                    message:
+                        `${loggedTutor.Name} has cancelled the class with ${selectedEvent.title}.`,
+
+                    type: "schedule",
+
+                    relatedTable: "calendar",
+
+                    relatedId: selectedEvent.id,
+
+                    actionUrl: "/admin/schedule"
+
+                });
+
+            }
+
+        }
+
+
+        // ==========================================
+        // REFRESH
+        // ==========================================
+
         await Promise.all([
+
             getEvents(loggedTutor.id),
+
             loadUpcomingSessions(),
-            loadTodayCount()
+
+            loadTodayCount(),
+
+            loadNewScheduleRequest()
+
         ]);
 
         setSelectedEvent(null);
-        
 
     }
 
@@ -498,6 +664,75 @@ function TeacherSchedule(){
             return;
         }
 
+        //              //
+        // Student Notif//
+        //              //
+        await createNotification({
+            userId: selectedEvent.student_id,
+
+            title: "Reschedule Request",
+
+            message:
+                `${loggedTutor.Name} requested to reschedule your class to ${new Date(
+                    newScheduleDate
+                ).toLocaleString()}.`,
+
+            type: "schedule",
+
+            relatedTable: "calendar",
+
+            relatedId: selectedEvent.id,
+
+            actionUrl: "/student/schedule"
+        });
+
+
+        //              //
+        // Admin Notif //
+        //              //
+
+        const {
+            data: admins,
+            error: adminError
+        } = await supabase
+            .from("users")
+            .select("id, Name")
+            .eq("Role", "Admin");
+
+        if (adminError) {
+
+            console.error(
+                "Failed to load admins:",
+                adminError
+            );
+
+        } else {
+
+            for (const admin of admins || []) {
+
+                await createNotification({
+
+                    userId: admin.id,
+
+                    title: "Tutor Reschedule Request",
+
+                    message:
+                        `${loggedTutor.Name} requested to reschedule a session with ${selectedEvent.title}.`,
+
+                    type: "schedule",
+
+                    relatedTable: "calendar",
+
+                    relatedId: selectedEvent.id,
+
+                    actionUrl: "/admin/schedule"
+
+                });
+
+            }
+
+        }
+
         await getEvents(loggedTutor.id);
         await loadUpcomingSessions();
         setShowRescheduleModal(false);
@@ -517,12 +752,42 @@ function TeacherSchedule(){
             .eq("id", selectedEvent.id);
 
         if(error){
+
             console.log(error);
+
             return;
+
         }
 
+
+        // ==========================================
+        // NOTIFY STUDENT
+        // ==========================================
+
+        await createNotification({
+
+            userId: selectedEvent.student_id,
+
+            title: "Session Attended",
+
+            message:
+                `Your session with ${loggedTutor.Name} has been marked as attended.`,
+
+            type: "schedule",
+
+            relatedTable: "calendar",
+
+            relatedId: selectedEvent.id,
+
+            actionUrl: "/student/schedule"
+
+        });
+
+
         await getEvents(loggedTutor.id);
+
         await loadUpcomingSessions();
+
         await loadTodayCount();
 
         setSelectedEvent(null);
@@ -537,6 +802,7 @@ function TeacherSchedule(){
 
         if(!confirmAbsent) return;
 
+
         const { error } = await supabase
             .from("calendar")
             .update({
@@ -545,85 +811,302 @@ function TeacherSchedule(){
             .eq("id", selectedEvent.id);
 
         if(error){
+
             console.log(error);
+
             return;
+
         }
 
+
+        // ==========================================
+        // NOTIFY STUDENT
+        // ==========================================
+
+        await createNotification({
+
+            userId: selectedEvent.student_id,
+
+            title: "Session Absent",
+
+            message:
+                `Your session with ${loggedTutor.Name} has been marked as absent.`,
+
+            type: "schedule",
+
+            relatedTable: "calendar",
+
+            relatedId: selectedEvent.id,
+
+            actionUrl: "/student/schedule"
+
+        });
+
+
         await getEvents(loggedTutor.id);
+
         await loadUpcomingSessions();
+
         await loadTodayCount();
+
         setSelectedEvent(null);
 
     }
 
-     async function approveReschedule(){
+    async function approveReschedule() {
 
-
-        if(selectedEvent.meeting_platform !== "Face To Face" &&
+        if (
+            selectedEvent.meeting_platform !== "Face To Face" &&
             !selectedEvent.meeting_link
-        ){
-            alert("provide Meeting Link")
+        ) {
+            alert("Provide Meeting Link");
             return;
-
         }
-        if(selectedEvent.status === "Pending"){
+
+        const isNewSchedule = selectedEvent.status === "Pending";
+        const isReschedule = selectedEvent.status === "Reschedule Pending";
+
+        // ==========================================
+        // APPROVE NEW SCHEDULE
+        // ==========================================
+
+        if (isNewSchedule) {
+
             const { error } = await supabase
-            .from("calendar")
-            .update({
+                .from("calendar")
+                .update({
+                    tutor_approval: "Approved",
+                    status: "Confirmed"
+                })
+                .eq("id", selectedEvent.id);
 
-                tutor_approval:"Approved",
-                status:"Confirmed"
+            if (error) {
+                console.log(error);
+                return;
+            }
 
+            // ==========================================
+            // NOTIFY STUDENT
+            // ==========================================
 
-            })
-            .eq("id", selectedEvent.id);
+            await createNotification({
+                userId: selectedEvent.student_id,
+
+                title: "Schedule Approved",
+
+                message:
+                    `${loggedTutor.Name} approved your class schedule for ${new Date(
+                        selectedEvent.start
+                    ).toLocaleString()}.`,
+
+                type: "schedule",
+
+                relatedTable: "calendar",
+
+                relatedId: selectedEvent.id,
+
+                actionUrl: "/student/schedule"
+            });
+
+            // ==========================================
+            // NOTIFY ADMINS
+            // ==========================================
+
+            const {
+                data: admins,
+                error: adminError
+            } = await supabase
+                .from("users")
+                .select("id, Name")
+                .eq("Role", "Admin");
+
+            if (adminError) {
+
+                console.error(
+                    "Failed to load admins:",
+                    adminError
+                );
+
+            } else {
+
+                for (const admin of admins || []) {
+
+                    await createNotification({
+
+                        userId: admin.id,
+
+                        title: "Schedule Approved",
+
+                        message:
+                            `${loggedTutor.Name} approved a schedule with ${selectedEvent.title}.`,
+
+                        type: "schedule",
+
+                        relatedTable: "calendar",
+
+                        relatedId: selectedEvent.id,
+
+                        actionUrl: "/admin/schedule"
+
+                    });
+
+                }
+
+            }
+
         }
 
-        const { error } = await supabase
-        .from("calendar")
-        .update({
+        // ==========================================
+        // APPROVE RESCHEDULE
+        // ==========================================
 
-            tutor_approval:"Approved"
+        else if (isReschedule) {
 
-        })
-        .eq("id", selectedEvent.id);
+            const { error } = await supabase
+                .from("calendar")
+                .update({
 
-        if(error){
+                    tutor_approval: "Approved"
 
-            console.log(error);
+                })
+                .eq("id", selectedEvent.id);
 
-            return;
+            if (error) {
+
+                console.log(error);
+
+                return;
+
+            }
+
+            // ==========================================
+            // NOTIFY STUDENT
+            // ==========================================
+
+            await createNotification({
+
+                userId: selectedEvent.student_id,
+
+                title: "Reschedule Approved",
+
+                message:
+                    `${loggedTutor.Name} approved your request to reschedule the class to ${new Date(
+                        selectedEvent.requested_start_datetime
+                    ).toLocaleString()}.`,
+
+                type: "schedule",
+
+                relatedTable: "calendar",
+
+                relatedId: selectedEvent.id,
+
+                actionUrl: "/student/schedule"
+
+            });
+
+            // ==========================================
+            // NOTIFY ADMINS
+            // ==========================================
+
+            const {
+                data: admins,
+                error: adminError
+            } = await supabase
+                .from("users")
+                .select("id, Name")
+                .eq("Role", "Admin");
+
+            if (adminError) {
+
+                console.error(
+                    "Failed to load admins:",
+                    adminError
+                );
+
+            } else {
+
+                for (const admin of admins || []) {
+
+                    await createNotification({
+
+                        userId: admin.id,
+
+                        title: "Reschedule Approved",
+
+                        message:
+                            `${loggedTutor.Name} approved the reschedule request for ${selectedEvent.title}.`,
+
+                        type: "schedule",
+
+                        relatedTable: "calendar",
+
+                        relatedId: selectedEvent.id,
+
+                        actionUrl: "/admin/schedule"
+
+                    });
+
+                }
+
+            }
 
         }
-        alert("Schedule Approved")
+
+        alert("Schedule Approved");
+
         setSelectedEvent(null);
-        await getEvents(loggedTutor.id);
 
-      await loadTodayCount();
-
+        await Promise.all([
+            getEvents(loggedTutor.id),
+            loadUpcomingSessions(),
+            loadTodayCount()
+        ]);
     }
 
     async function rejectReschedule(schedID){
 
-        const confirmed = window.confirm("Are you sure you want to reject this reschedule?");
+        const confirmed = window.confirm(
+            "Are you sure you want to reject this reschedule?"
+        );
 
         if (!confirmed) return;
 
 
+        // Get the schedule first
+        const {
+            data: schedule,
+            error: fetchError
+        } = await supabase
+            .from("calendar")
+            .select("*")
+            .eq("id", schedID)
+            .single();
+
+
+        if(fetchError){
+
+            console.log(fetchError);
+
+            return;
+
+        }
+
+
         const { error } = await supabase
-        .from("calendar")
-        .update({
+            .from("calendar")
+            .update({
 
-            tutor_approval:"Rejected",
+                tutor_approval: "Rejected",
 
-            requested_start_datetime:null,
-            requested_end_datetime:null,
-            reschedule_reason:null,
+                requested_start_datetime: null,
+                requested_end_datetime: null,
+                reschedule_reason: null,
 
-            status:"Confirmed"
+                status: "Confirmed"
 
-        })
-        .eq("id", schedID);
+            })
+            .eq("id", schedID);
+
 
         if(error){
 
@@ -633,14 +1116,96 @@ function TeacherSchedule(){
 
         }
 
-        alert("Schedule Approved")
+
+        // ==========================================
+        // NOTIFY STUDENT
+        // ==========================================
+
+        await createNotification({
+
+            userId: schedule.student_id,
+
+            title: "Reschedule Request Rejected",
+
+            message:
+                `${loggedTutor.Name} has rejected your request to reschedule the class.`,
+
+            type: "schedule",
+
+            relatedTable: "calendar",
+
+            relatedId: schedID,
+
+            actionUrl: "/student/schedule"
+
+        });
+
+
+        // ==========================================
+        // NOTIFY ADMINS
+        // ==========================================
+
+        const {
+            data: admins,
+            error: adminError
+        } = await supabase
+            .from("users")
+            .select("id, Name")
+            .eq("Role", "Admin");
+
+
+        if(adminError){
+
+            console.error(
+                "Failed to load admins:",
+                adminError
+            );
+
+        } else {
+
+            for(const admin of admins || []){
+
+                await createNotification({
+
+                    userId: admin.id,
+
+                    title: "Reschedule Rejected",
+
+                    message:
+                        `${loggedTutor.Name} rejected the reschedule request for ${schedule.title}.`,
+
+                    type: "schedule",
+
+                    relatedTable: "calendar",
+
+                    relatedId: schedID,
+
+                    actionUrl: "/admin/schedule"
+
+                });
+
+            }
+
+        }
+
+
+        alert("Schedule Rejected");
+
+
         setSelectedEvent(null);
-        
-        await getEvents(loggedTutor.id);
 
-        await loadTodayCount();
 
-      
+        await Promise.all([
+
+            getEvents(loggedTutor.id),
+
+            loadTodayCount(),
+
+            loadUpcomingSessions(),
+
+            loadNewScheduleRequest()
+
+        ]);
 
     }
 
@@ -1556,7 +2121,8 @@ function TeacherSchedule(){
 
 
 
-                    {selectedEvent.status==="Pending" && (
+                    {(selectedEvent.status === "Pending" ||
+                        selectedEvent.status === "Confirmed") && (
 
                             <button onClick={cancelSession}>
                                 Cancel Session

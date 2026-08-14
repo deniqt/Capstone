@@ -2,6 +2,7 @@ import './adminMain.css';
 import { supabase } from '../../lib/supabase';
 import { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
+import MainHeader from '../../MainComponent/MainHeader';
 
 function AdminMain() {
 
@@ -561,6 +562,8 @@ function AdminMain() {
             {/* ==================================
                 HEADER
             ================================== */}
+
+            <MainHeader/>
 
             <h1 id="dashboardTitle">
                 Dashboard Overview

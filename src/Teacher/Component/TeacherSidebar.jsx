@@ -27,9 +27,7 @@ return(
     >
         <h2>Yoseff Teacher Side</h2>
 
-        <div>
-            <MainHeader/>
-        </div>
+       
         
 
         <nav style={{

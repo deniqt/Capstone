@@ -36,6 +36,7 @@ import StudentProgressSubject from './Student/Student Navs/StudentProgressSubjec
 import StudentHome from './Student/Student Navs/StudentHome'
 import StudentMessages from './Student/Student Navs/StudentMessages'
 import TeacherMessages from './Teacher/Teacher Navs/TeacherMessages'
+import MainSettings from './MainComponent/MainSettings'
 
 
 
@@ -63,7 +64,7 @@ function App() {
                 element={<TeacherMessages />}
             />
             <Route path="student" element = {<TeacherStudent/>}/>
-            <Route path="settings" element = {<TeacherSettings/>}/>
+            <Route path="settings" element = {<MainSettings/>}/>
         </Route>
 
 
@@ -129,7 +130,7 @@ function App() {
 
           <Route
               path="settings"
-              element={<StudentSettings />}
+              element={<MainSettings />}
           />
       </Route>
 
@@ -147,7 +148,7 @@ function App() {
             <Route path="EditProfile/:id" element = {<AdminEditProfile/>}/>
             <Route path="payment" element = {<AdminPayment/>}/>
             <Route path="report" element = {<AdminReport/>}/>
-            <Route path="settings" element = {<AdminSettings/>}/>
+            <Route path="settings" element = {<MainSettings/>}/>
         </Route>
       </Routes>
       </BrowserRouter>
