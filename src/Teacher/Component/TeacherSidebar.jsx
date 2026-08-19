@@ -2,6 +2,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import MainHeader from "../../MainComponent/MainHeader";
+import "./teacherSidebar.css"
 function TeacherSidebar(){
 
      const navigate = useNavigate();
@@ -17,26 +18,15 @@ function TeacherSidebar(){
 
     }
 return(
-    <div
-    style={{
-        width: "250px",
-        background: "#222",
-        color: "white",
-        padding: "20px",
-      }}
-    >
+    <div className="sidebar">
         <h2>Yoseff Teacher Side</h2>
 
        
         
 
-        <nav style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "15px",  
-        }}>
+        <nav className="sidebar-nav">
 
-               <NavLink to="/teacher">Dashboard</NavLink>
+               <NavLink to="/teacher" end>Dashboard</NavLink>
                <NavLink to="/teacher/material">Material</NavLink>
                <NavLink to="/teacher/schedule">Scheduling</NavLink>
                <NavLink to="/teacher/student">Students</NavLink>

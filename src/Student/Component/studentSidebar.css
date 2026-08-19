@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
+.sidebar{
+ background-color: #2D4F6A;
+ color: white;
+ padding: 20px;
+
+}
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 50px;
+}
+
+.sidebar-nav a {
+    color: white;              /* Default color */
+    text-decoration: none;
+    font-family:"QuickSand", sans-serif;
+    font-weight: 300;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+/* Hover */
+.sidebar-nav a:hover {
+    background-color: #4A6F8E;
+    color: #D4E2FF;
+}
+
+/* Active page */
+.sidebar-nav a.active {
+    background-color: #D4E2FF;
+    color: #2D4F6A;
+    font-weight: bold;
+}

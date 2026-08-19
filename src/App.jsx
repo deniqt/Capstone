@@ -37,6 +37,7 @@ import StudentHome from './Student/Student Navs/StudentHome'
 import StudentMessages from './Student/Student Navs/StudentMessages'
 import TeacherMessages from './Teacher/Teacher Navs/TeacherMessages'
 import MainSettings from './MainComponent/MainSettings'
+import TeacherMain from './Teacher/Teacher Navs/TearcherMain'
 
 
 
@@ -54,7 +55,7 @@ function App() {
 
         {/* for teacher */}
         <Route path="/teacher" element = {<ProtectedRoute allowedRole = "Tutor"><TeacherDashboard/></ProtectedRoute>}>
-            
+                <Route index element = {<TeacherMain/>}/>
             <Route path="material" element = {<TeacherMaterial/>}/>
             <Route path="materials/:studentID" element = {<TeacherSubjects/>}/>
             {/* <Route path="upload/:subjectId" element={<UploadMaterial />}/> */}
