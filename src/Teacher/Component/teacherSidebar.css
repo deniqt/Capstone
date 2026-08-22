@@ -1,10 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
-.sidebar{
- background-color: #2D4F6A;
- color: white;
- padding: 20px;
+.sidebar {
+    background-color: #2D4F6A;
+    color: white;
 
+
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 220px;
+    height: 100vh;
+
+    box-sizing: border-box;
+    overflow-y: auto;
+
+    z-index: 1000;
 }
+
 .sidebar-nav {
     display: flex;
     flex-direction: column;

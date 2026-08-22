@@ -1,24 +1,58 @@
 
 #SATTitle{
     margin-bottom: 20px;
+    color: #2D4961;
 }
 
 .TableOption{
     margin-right: 10px;
 
 }
-.TableHead{
+.TableHead {
     width: 100%;
+    display: flex;
+    position: relative;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.TableHead button {
+    position: relative;
+    padding: 10px 20px;
+    border: none;
+    background-color: transparent;
+    color: #6B7280;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.TableHead button::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #0B74FF;
+
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.TableHead button.active {
+    color: #0B74FF;
+}
+
+.TableHead button.active::after {
+    transform: scaleX(1);
 }
 
 .TableBox{
-    border: 1px solid black;
+    border: 1px solid #00000008;
     padding: 10px;
 }
 
 .mainTable{
     width: 100%;
-    margin-top: 20px;
 }
 
 
@@ -475,4 +509,143 @@
         width: 100%;
     }
 
+}
+
+/* ==========================================
+   PAGINATION
+========================================== */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.pagination-info {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pagination-pages {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pagination-button,
+.pagination-number {
+    min-width: 34px;
+    height: 34px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.pagination-button {
+    padding: 0 10px;
+}
+
+.pagination-number.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.pagination-button:hover:not(:disabled),
+.pagination-number:hover {
+    background: #f3f4f6;
+}
+
+.pagination-number.active:hover {
+    background: #2563eb;
+}
+
+.pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-dots {
+    padding: 0 4px;
+    color: #6b7280;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+
+    border-radius: 50%;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #e8eef7;
+    color: #2f5f9f;
+
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-name {
+    font-weight: 500;
+}
+
+.sat-header{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sat-add-buttons{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+}
+
+.add-user-button{
+    background-color: #3498DB;
+    border: 0px;
+    border-radius: 6px;
+    padding: 10px 20px;
+    color: white;
+    font-size: 14px;
+}
+
+.export-csv-button{
+    background-color: #EAF2FF;
+    border: 1px #00000008 solid;
+    border-radius: 6px;
+    padding: 10px 20px;
+    color: black;
+    font-size: 14px;
+}
+.export-csv-icon {
+    flex-shrink: 0;
 }

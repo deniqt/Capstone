@@ -1,0 +1,525 @@
+/* =========================================================
+   TEACHER STUDENT PAGE
+========================================================= */
+
+.teacher-student-page {
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    color: #1f2937;
+}
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+
+.back-students {
+    border: none;
+    background: none;
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+.back-students:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+/* =========================================================
+   STUDENT PROFILE HEADER
+========================================================= */
+
+.student-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-profile-image {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e5e7eb;
+}
+
+.student-profile-info h1 {
+    margin: 0 0 8px;
+    font-size: 26px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.student-subject-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.student-status {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.student-status.active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.student-status.inactive {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* =========================================================
+   TABS
+========================================================= */
+
+.student-tabs {
+    display: flex;
+    gap: 5px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+}
+
+.student-tab {
+    border: none;
+    background: transparent;
+    padding: 12px 18px;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: 0.2s ease;
+}
+
+.student-tab:hover {
+    color: #2563eb;
+}
+
+.student-tab.active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+}
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.student-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.student-card-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.student-card-header h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.student-card-body {
+    padding: 22px;
+}
+
+/* =========================================================
+   STUDENT INFORMATION
+========================================================= */
+
+.student-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.info-item {
+    min-width: 0;
+}
+
+.info-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.info-item label {
+    display: block;
+    margin-bottom: 5px;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.info-item p {
+    margin: 0;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   SESSIONS
+========================================================= */
+
+.student-sessions-list,
+.student-assignments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.student-session-item,
+.student-assignment-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    transition: 0.2s ease;
+}
+
+.student-session-item:hover,
+.student-assignment-item:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.session-main,
+.assignment-main {
+    flex: 1;
+}
+
+.session-main h3,
+.assignment-main h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: #111827;
+}
+
+.session-main p,
+.assignment-main p {
+    margin: 4px 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.session-meta,
+.assignment-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 7px;
+    min-width: 160px;
+    text-align: right;
+}
+
+.session-meta span,
+.assignment-meta span,
+.assignment-meta strong {
+    font-size: 12px;
+}
+
+.assignment-meta strong {
+    color: #111827;
+}
+
+/* =========================================================
+   STATUS BADGES
+========================================================= */
+
+.student-session-status,
+.student-session-attendance {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+}
+
+/* Session status */
+
+.student-session-status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.student-session-status.confirmed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.student-session-status.cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.student-session-status.reschedule-pending {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* Attendance */
+
+.student-session-attendance.attended {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.student-session-attendance.absent {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.student-session-attendance.late {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.student-session-attendance.tutor-absent {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+/* =========================================================
+   MEETING LINK
+========================================================= */
+
+.session-meta a {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.session-meta a:hover {
+    text-decoration: underline;
+}
+
+/* =========================================================
+   LOADING / EMPTY / ERROR
+========================================================= */
+
+.student-loading,
+.student-not-found {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 40px;
+    text-align: center;
+    margin-top: 30px;
+}
+
+.student-not-found h2 {
+    margin: 0 0 8px;
+    color: #111827;
+}
+
+.student-not-found p {
+    color: #6b7280;
+    margin-bottom: 20px;
+}
+
+.student-not-found button {
+    border: none;
+    background: #2563eb;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.student-not-found button:hover {
+    background: #1d4ed8;
+}
+
+.students-empty {
+    padding: 35px;
+    text-align: center;
+    color: #6b7280;
+    background: #f9fafb;
+    border-radius: 10px;
+}
+
+.students-error {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 15px;
+    border-radius: 8px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 13px;
+}
+
+/* =========================================================
+   MOBILE RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .teacher-student-page {
+        width: 100%;
+        max-width: none;
+        padding: 15px;
+        box-sizing: border-box;
+    }
+
+    /* Profile header */
+
+    .student-profile-header {
+        padding: 18px;
+        gap: 15px;
+    }
+
+    .student-profile-image {
+        width: 70px;
+        height: 70px;
+    }
+
+    .student-profile-info h1 {
+        font-size: 21px;
+    }
+
+    .student-subject-status {
+        font-size: 13px;
+    }
+
+
+    /* Tabs */
+
+    .student-tabs {
+        width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .student-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .student-tab {
+        flex-shrink: 0;
+        padding: 11px 14px;
+        font-size: 13px;
+    }
+
+
+    /* Cards */
+
+    .student-card {
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+
+    .student-card-header {
+        padding: 15px;
+    }
+
+    .student-card-header h2 {
+        font-size: 16px;
+    }
+
+    .student-card-body {
+        padding: 15px;
+    }
+
+
+    /* Information */
+
+    .student-info-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .info-item.full-width {
+        grid-column: auto;
+    }
+
+
+    /* Sessions */
+
+    .student-session-item {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .session-main h3 {
+        font-size: 14px;
+    }
+
+    .session-main p {
+        font-size: 12px;
+    }
+
+    .session-meta {
+        align-items: flex-start;
+        text-align: left;
+        min-width: 0;
+        width: 100%;
+    }
+
+
+    /* Assignments */
+
+    .student-assignment-item {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .assignment-main h3 {
+        font-size: 14px;
+    }
+
+    .assignment-main p {
+        font-size: 12px;
+    }
+
+    .assignment-meta {
+        align-items: flex-start;
+        text-align: left;
+        min-width: 0;
+        width: 100%;
+    }
+
+
+    /* Empty / Error */
+
+    .students-empty {
+        padding: 25px 15px;
+        font-size: 13px;
+    }
+
+    .students-error {
+        font-size: 12px;
+    }
+}

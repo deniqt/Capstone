@@ -2,6 +2,11 @@
 
 #dashboardTitle{
     margin-bottom: 5px;
+    color: #2D4961;
+}
+
+#welcomeText{
+  color: #2D4961
 }
 
 .AdminDashboardNumberPanel{
@@ -9,18 +14,19 @@
     flex-wrap: wrap;
     flex-direction: row;
     margin: 20px 0px;
-    justify-content: space-around;
+    justify-content: space-between;
 }
 
 .NumberBox{
     width: 23%;
     min-height: 50px;
     margin: 5px 0px 5px 0px;
-    border: 1px #6B7280 solid;
+    border: 1px #00000016 solid;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
     padding: 10px 5px;
+    background-color: white;
 }
 
 .AdminLowerDashboardPanel{
@@ -33,21 +39,16 @@
 }
 
 .RecentTransactionPanel{
-margin: 10px 0px;
-border: 1px #6B7280 solid;
-border-radius: 8px;
-width: 67%;
-overflow-y: auto;
+  margin: 10px 0px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  width: 67%;
+
 }
 
-#RecentTransactionBanner{
-   display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px;
-}
+
 
 .TodaySchedulePanel{
 margin: 10px 0px;
@@ -57,11 +58,6 @@ border-radius: 8px;
 overflow-y: auto;
 }
 
-.viewall{
-    color: #0B74FF;
-    font-size: 14px;
-    font-weight: 700;
-}
 
 
 .student-table {
@@ -84,4 +80,231 @@ overflow-y: auto;
 .TodaySchedule-table{
     width: 100%;
   border-collapse: collapse;
+}
+
+.transaction-student {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.transaction-student-image,
+.transaction-student-initials {
+    width: 36px;
+    height: 36px;
+
+    border-radius: 50%;
+
+    flex-shrink: 0;
+}
+
+.transaction-student-image {
+    object-fit: cover;
+}
+
+.transaction-student-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #D4E2FF;
+    color: #2D4F6A;
+
+    font-family: "Quicksand", sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.transaction-student span {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+
+
+.student-table .data-date{
+   padding: 15px 18px;
+
+    font-size: 13px;
+    color: #334155;
+}
+.student-table thead {
+    background: #f8fafc;
+}
+.student-table th {
+    padding: 12px 18px;
+
+    text-align: left;
+
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+
+    color: #64748b;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* ==========================================
+   TODAY'S SCHEDULE CARD
+========================================== */
+
+.TodaySchedulePanel {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+
+    min-width: 0;
+}
+
+/* Header */
+#RecentTransactionBanner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 18px 20px;
+
+    border-bottom: 1px solid #eef0f2;
+    background: #ffffff;
+}
+
+/* button/link */
+ .viewall {
+    color: #2D4F6A;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    padding: 6px 10px;
+    border-radius: 6px;
+
+    transition: 0.2s ease;
+}
+.viewall:hover {
+    background: #eef4f8;
+}
+
+/* Table */
+.TodaySchedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Inter", sans-serif;
+}
+
+
+/* Table header */
+.TodaySchedule-table thead {
+    background: #f8fafc;
+}
+
+.TodaySchedule-table th {
+    padding: 12px 18px;
+
+    text-align: left;
+
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+
+    color: #64748b;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Table cells */
+.TodaySchedule-table td {
+    padding: 15px 18px;
+
+    font-size: 13px;
+    color: #334155;
+
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Remove border from last row */
+.TodaySchedule-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Row hover */
+.TodaySchedule-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Time */
+.TodaySchedule-table td:first-child {
+    font-weight: 600;
+    color: #2D4F6A;
+    white-space: nowrap;
+}
+
+/* Session title */
+.TodaySchedule-table td:nth-child(2) {
+    font-weight: 500;
+    color: #1e293b;
+}
+
+/* Status badge */
+.TodaySchedule-table .status {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    text-transform: capitalize;
+}
+
+/* Confirmed */
+.TodaySchedule-table .status.confirmed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+/* Pending */
+.TodaySchedule-table .status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* Empty state */
+.TodaySchedule-table .empty-schedule {
+    padding: 35px 20px;
+
+    text-align: center;
+
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+
+    .TodaySchedulePanel {
+        width: 100%;
+        border-radius: 12px;
+    }
+
+    .TodaySchedulePanel #RecentTransactionBanner {
+        padding: 15px;
+    }
+
+    .TodaySchedule-table {
+        min-width: 500px;
+    }
+
+    .TodaySchedulePanel {
+        overflow-x: auto;
+    }
+
+    .TodaySchedule-table th,
+    .TodaySchedule-table td {
+        padding: 12px 14px;
+    }
 }

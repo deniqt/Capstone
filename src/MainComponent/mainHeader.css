@@ -5,11 +5,9 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-
+    background-color: transparent;
     padding: 0 25px;
-
-    background: white;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #dddddd91;
 
     box-sizing: border-box;
 }

@@ -1,21 +1,123 @@
-.student-dashboard-layout {
-    display: flex;
+/* =========================================
+   DESKTOP
+========================================= */
 
+.student-dashboard {
+    min-height: 100vh;
     width: 100%;
-    height: 100vh;
+}
 
-    overflow: hidden;
+.student-main-content {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
 
-    background: #f5f8fc;
+.student-mobile-menu-button {
+    display: none;
+}
+
+.student-sidebar-overlay {
+    display: none;
 }
 
 
-.student-dashboard-main {
-    flex: 1;
+/* =========================================
+   TABLET
+========================================= */
 
-    min-width: 0;
+@media (max-width: 900px) {
 
-    height: 100vh;
+    .student-main-content {
+        margin-left: 200px;
+        width: calc(100% - 200px);
+    }
+}
 
-    overflow-y: auto;
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 768px) {
+
+    /*
+       IMPORTANT:
+       Change .student-sidebar to .sidebar
+       if StudentSidebar currently uses
+       className="sidebar"
+    */
+
+    .student-sidebar {
+        width: 220px;
+
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+
+        z-index: 2000;
+    }
+
+    /* Sidebar opens */
+    .sidebar-open .student-sidebar {
+        transform: translateX(0);
+    }
+
+    /* Full mobile width */
+    .student-main-content {
+        margin-left: 0;
+        width: 100%;
+        min-width: 0;
+        min-height: 100vh;
+        padding: 15px;
+        box-sizing: border-box;
+        overflow-x: hidden;
+    }
+
+
+    /* =========================================
+       HAMBURGER
+    ========================================= */
+
+    .student-mobile-menu-button {
+        display: flex;
+
+        position: fixed;
+        top: 15px;
+        left: 15px;
+
+        width: 42px;
+        height: 42px;
+
+        align-items: center;
+        justify-content: center;
+
+        border: none;
+        border-radius: 8px;
+
+        background-color: #2D4F6A;
+        color: white;
+
+        font-size: 22px;
+        cursor: pointer;
+
+        z-index: 1500;
+    }
+
+
+    /* =========================================
+       OVERLAY
+    ========================================= */
+
+    .student-sidebar-overlay {
+        display: block;
+
+        position: fixed;
+        inset: 0;
+
+        background: rgba(0, 0, 0, 0.45);
+
+        z-index: 1900;
+    }
 }

@@ -77,16 +77,13 @@ function AdminSAT() {
         getStudent();
         getTutors();
         getAdmins();
+        getProfileImages();
 
     }, []);
 
 
     async function getUsers() {
-
-        const {
-            data,
-            error
-        } = await supabase
+        const { data, error } = await supabase
             .from("users")
             .select("*")
             .order("id", {
@@ -94,116 +91,91 @@ function AdminSAT() {
             });
 
         if (error) {
-
-            console.error(
-                "Users loading error:",
-                error
-            );
-
+            console.error("Users loading error:", error);
             return;
-
         }
 
         setUsers(data || []);
-
     }
 
 
     async function getStudent() {
-
-        const {
-            data,
-            error
-        } = await supabase
+        const { data, error } = await supabase
             .from("users")
             .select("*")
-            .eq(
-                "Role",
-                "Student"
-            )
+            .eq("Role", "Student")
             .order("id", {
                 ascending: false
             });
 
         if (error) {
-
-            console.error(
-                "Students loading error:",
-                error
-            );
-
+            console.error("Students loading error:", error);
             return;
-
         }
 
         setStudents(data || []);
-
     }
 
 
     async function getTutors() {
-
-        const {
-            data,
-            error
-        } = await supabase
+        const { data, error } = await supabase
             .from("users")
             .select("*")
-            .eq(
-                "Role",
-                "Tutor"
-            )
+            .eq("Role", "Tutor")
             .order("Name", {
                 ascending: true
             });
 
         if (error) {
-
-            console.error(
-                "Tutors loading error:",
-                error
-            );
-
+            console.error("Tutors loading error:", error);
             return;
-
         }
 
         setTutors(data || []);
-
     }
 
 
     async function getAdmins() {
-
-        const {
-            data,
-            error
-        } = await supabase
+        const { data, error } = await supabase
             .from("users")
             .select("*")
-            .eq(
-                "Role",
-                "Admin"
-            )
+            .eq("Role", "Admin")
             .order("id", {
                 ascending: false
             });
 
         if (error) {
-
-            console.error(
-                "Admins loading error:",
-                error
-            );
-
+            console.error("Admins loading error:", error);
             return;
-
         }
 
         setAdmins(data || []);
-
     }
 
+
+    const [profileImages, setProfileImages] = useState({});
+    async function getProfileImages() {
+        const { data, error } = await supabase
+            .from("user_details")
+            .select("detail_id, profile_url");
+
+        if (error) {
+            console.error(
+                "Profile images loading error:",
+                error
+            );
+            return;
+        }
+
+        const detailsMap = {};
+
+        data?.forEach(detail => {
+            detailsMap[detail.detail_id] =
+                detail.profile_url;
+        });
+
+        setProfileImages(detailsMap);
+    }
 
     // ==========================================
     // OPEN ADD MODAL
@@ -690,6 +662,147 @@ function AdminSAT() {
         return users;
 
     }
+    // ==========================================
+    // PAGINATION
+    // ==========================================
+
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const usersPerPage = 7;
+
+
+    // ==========================================
+    // PAGINATION DATA
+    // ==========================================
+
+    const currentUsers = getCurrentUsers();
+
+    const totalPages = Math.ceil(
+        currentUsers.length / usersPerPage
+    );
+
+    const startIndex =
+        (currentPage - 1) * usersPerPage;
+
+    const endIndex =
+        startIndex + usersPerPage;
+
+    const paginatedUsers =
+        currentUsers.slice(
+            startIndex,
+            endIndex
+        );
+
+
+    // ==========================================
+    // USER INITIAL
+    // ==========================================
+
+    function getUserInitial(name) {
+        if (!name || !name.trim()) {
+            return "?";
+        }
+
+        return name.trim().charAt(0).toUpperCase();
+    }    
+
+    // ==========================================
+    // FORMAT DATE
+    // ==========================================
+
+    function formatDate(date) {
+
+        if (!date) {
+            return "—";
+        }
+
+        return new Date(date).toLocaleDateString(
+            "en-US",
+            {
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+            }
+        );
+
+    }
+
+
+    // ==========================================
+    // EXPORT CSV
+    // ==========================================
+    function exportCSV() {
+        const data = getCurrentUsers();
+
+        if (!data || data.length === 0) {
+            alert("No users to export.");
+            return;
+        }
+
+        // CSV columns
+        const headers = [
+            "ID",
+            "Name",
+            "Email",
+            "Role",
+            "Joined Date",
+            "Status"
+        ];
+
+        // Convert users into CSV rows
+        const rows = data.map(user => [
+            user.id ?? "",
+            user.Name ?? "",
+            user.Email ?? "",
+            user.Role ?? "",
+            user.Joined
+                ? new Date(user.Joined).toLocaleDateString("en-US")
+                : "",
+            user.Status ?? ""
+        ]);
+
+        // Escape CSV values
+        const escapeCSV = value => {
+            const stringValue = String(value);
+
+            if (
+                stringValue.includes(",") ||
+                stringValue.includes('"') ||
+                stringValue.includes("\n")
+            ) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+            }
+
+            return stringValue;
+        };
+
+        const csvContent = [
+            headers.map(escapeCSV).join(","),
+            ...rows.map(row =>
+                row.map(escapeCSV).join(",")
+            )
+        ].join("\n");
+
+        // Create downloadable file
+        const blob = new Blob(
+            [csvContent],
+            { type: "text/csv;charset=utf-8;" }
+        );
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+
+        link.download = `${tableActive.toLowerCase()}-users.csv`;
+
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+   
 
 
     // ==========================================
@@ -707,25 +820,22 @@ function AdminSAT() {
 
             <div className="sat-header">
 
-                <div>
-
                     <h1 id="SATTitle">
                         Student & Teacher
                     </h1>
-
-                    <p>
-                        Manage students, tutors,
-                        and administrators.
-                    </p>
-
-                </div>
-
 
                 {/* ==================================
                     ADD BUTTONS
                 ================================== */}
 
                 <div className="sat-add-buttons">
+
+                     <button
+                        className="export-csv-button"
+                        onClick={exportCSV}
+                    >
+                        Export CSV
+                    </button>
 
                     <button
                         className="add-user-button"
@@ -735,7 +845,7 @@ function AdminSAT() {
                             )
                         }
                     >
-                        + Add Student
+                        +  Add Student
                     </button>
 
 
@@ -747,7 +857,7 @@ function AdminSAT() {
                             )
                         }
                     >
-                        + Add Tutor
+                        +  Add Tutor
                     </button>
 
 
@@ -759,8 +869,10 @@ function AdminSAT() {
                             )
                         }
                     >
-                        + Add Admin
+                        +  Add Admin
                     </button>
+
+                   
 
                 </div>
 
@@ -784,8 +896,10 @@ function AdminSAT() {
                                     : ""
                             }`
                         }
-                        onClick={() =>
-                            setTableActive("All")
+                        onClick={() =>{
+                             setTableActive("All");
+                            setCurrentPage(1);
+                        }
                         }
                     >
                         All Users
@@ -800,8 +914,11 @@ function AdminSAT() {
                                     : ""
                             }`
                         }
-                        onClick={() =>
-                            setTableActive("Student")
+                        onClick={() =>{
+                             setTableActive("Student");
+                            setCurrentPage(1);
+                        }
+
                         }
                     >
                         Students
@@ -817,7 +934,10 @@ function AdminSAT() {
                             }`
                         }
                         onClick={() =>
-                            setTableActive("Tutor")
+                            {   
+                                setTableActive("Tutor");
+                                setCurrentPage(1);
+                            }
                         }
                     >
                         Tutors
@@ -833,7 +953,11 @@ function AdminSAT() {
                             }`
                         }
                         onClick={() =>
-                            setTableActive("Admin")
+                            {
+                                setTableActive("Admin")
+                                setCurrentPage(1);
+                            }
+                            
                         }
                     >
                         Admins
@@ -877,7 +1001,7 @@ function AdminSAT() {
 
                         <tbody>
 
-                            {getCurrentUsers().length === 0 ? (
+                            {paginatedUsers.length === 0 ? (
 
                                 <tr>
 
@@ -895,7 +1019,7 @@ function AdminSAT() {
 
                             ) : (
 
-                                getCurrentUsers().map(
+                                paginatedUsers.map(
                                     user => (
 
                                         <tr
@@ -903,10 +1027,31 @@ function AdminSAT() {
                                         >
 
                                             <td>
-                                                {
-                                                    user.Name ||
-                                                    "Unnamed User"
-                                                }
+                                                <div className="user-info">
+
+                                                    <div className="user-avatar">
+
+                                                        {profileImages[user.detail_id] ? (
+                                                            <img
+                                                            src={profileImages[user.detail_id]}
+                                                            alt={user.Name || "User"}
+                                                            onError={(e) => {
+                                                                e.currentTarget.style.display = "none";
+                                                            }}
+                                                        />
+                                                        ) : (
+                                                            <span>
+                                                                {getUserInitial(user.Name)}
+                                                            </span>
+                                                        )}
+
+                                                    </div>
+
+                                                    <span className="user-name">
+                                                        {user.Name || "Unnamed User"}
+                                                    </span>
+
+                                                </div>
                                             </td>
 
 
@@ -917,10 +1062,8 @@ function AdminSAT() {
                                             </td>
 
 
-                                            <td>
-                                                {
-                                                    user.Joined
-                                                }
+                                           <td>
+                                                {formatDate(user.Joined)}
                                             </td>
 
 
@@ -955,6 +1098,123 @@ function AdminSAT() {
                         </tbody>
 
                     </table>
+                    {/* ==================================
+                        PAGINATION
+                    ================================== */}
+                    {totalPages > 0 && (
+                        <div className="pagination-container">
+
+                            {/* LEFT SIDE - SHOWING INFO */}
+                            <div className="pagination-info">
+                                Showing{" "}
+                                {currentUsers.length === 0
+                                    ? 0
+                                    : startIndex + 1}{" "}
+                                to{" "}
+                                {Math.min(
+                                    endIndex,
+                                    currentUsers.length
+                                )}{" "}
+                                of{" "}
+                                {currentUsers.length} users
+                            </div>
+
+                            {/* RIGHT SIDE - PAGINATION */}
+                            {totalPages > 1 && (
+                                <div className="pagination">
+
+                                    {/* PREVIOUS */}
+                                    <button
+                                        className="pagination-button"
+                                        disabled={currentPage === 1}
+                                        onClick={() =>
+                                            setCurrentPage(
+                                                prev => prev - 1
+                                            )
+                                        }
+                                    >
+                                        &lt;
+                                    </button>
+
+                                    <div className="pagination-pages">
+
+                                        {/* PAGE 1 */}
+                                        <button
+                                            className={`pagination-number ${
+                                                currentPage === 1
+                                                    ? "active"
+                                                    : ""
+                                            }`}
+                                            onClick={() =>
+                                                setCurrentPage(1)
+                                            }
+                                        >
+                                            1
+                                        </button>
+
+                                        {/* PAGE 2 */}
+                                        {totalPages >= 2 && (
+                                            <button
+                                                className={`pagination-number ${
+                                                    currentPage === 2
+                                                        ? "active"
+                                                        : ""
+                                                }`}
+                                                onClick={() =>
+                                                    setCurrentPage(2)
+                                                }
+                                            >
+                                                2
+                                            </button>
+                                        )}
+
+                                        {/* DOTS */}
+                                        {totalPages > 3 && (
+                                            <span className="pagination-dots">
+                                                ...
+                                            </span>
+                                        )}
+
+                                        {/* LAST PAGE */}
+                                        {totalPages >= 3 && (
+                                            <button
+                                                className={`pagination-number ${
+                                                    currentPage === totalPages
+                                                        ? "active"
+                                                        : ""
+                                                }`}
+                                                onClick={() =>
+                                                    setCurrentPage(
+                                                        totalPages
+                                                    )
+                                                }
+                                            >
+                                                {totalPages}
+                                            </button>
+                                        )}
+
+                                    </div>
+
+                                    {/* NEXT */}
+                                    <button
+                                        className="pagination-button"
+                                        disabled={
+                                            currentPage === totalPages
+                                        }
+                                        onClick={() =>
+                                            setCurrentPage(
+                                                prev => prev + 1
+                                            )
+                                        }
+                                    >
+                                        &gt;
+                                    </button>
+
+                                </div>
+                            )}
+
+                        </div>
+                    )}
 
                 </div>
 

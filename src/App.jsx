@@ -38,6 +38,7 @@ import StudentMessages from './Student/Student Navs/StudentMessages'
 import TeacherMessages from './Teacher/Teacher Navs/TeacherMessages'
 import MainSettings from './MainComponent/MainSettings'
 import TeacherMain from './Teacher/Teacher Navs/TearcherMain'
+import TeacherStudents from './Teacher/Teacher Navs/TeacherStudents'
 
 
 
@@ -64,7 +65,8 @@ function App() {
                 path="messages"
                 element={<TeacherMessages />}
             />
-            <Route path="student" element = {<TeacherStudent/>}/>
+           <Route path="/teacher/students" element={<TeacherStudents />} />
+           <Route path="/teacher/students/:id" element={<TeacherStudent />} />
             <Route path="settings" element = {<MainSettings/>}/>
         </Route>
 

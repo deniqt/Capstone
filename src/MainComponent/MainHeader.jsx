@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../Services/NotificationContext";
-import "./MainHeader.css";
+import "./mainHeader.css";
 
 function MainHeader() {
 

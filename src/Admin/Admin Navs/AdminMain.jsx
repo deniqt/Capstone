@@ -368,7 +368,9 @@ function AdminMain() {
             .select(`
                 *,
                 student:users!payments_student_id_fkey(
-                    Name
+                    id,
+                    Name,
+                    detail_id
                 )
             `)
             .order(
@@ -392,8 +394,59 @@ function AdminMain() {
         }
 
 
+        const payments = data || [];
+
+        const detailIds = payments
+            .map(payment => payment.student?.detail_id)
+            .filter(Boolean);
+
+        let details = [];
+
+        if (detailIds.length > 0) {
+
+            const {
+                data: detailData,
+                error: detailError
+            } = await supabase
+                .from("user_details")
+                .select(`
+                    detail_id,
+                    profile_url
+                `)
+                .in("detail_id", detailIds);
+
+            if (detailError) {
+                console.error(
+                    "Student profile error:",
+                    detailError
+                );
+            } else {
+                details = detailData || [];
+            }
+        }
+
+        const paymentsWithProfiles = payments.map(payment => {
+
+            const profile = details.find(
+                detail =>
+                    detail.detail_id ===
+                    payment.student?.detail_id
+            );
+
+            return {
+                ...payment,
+
+                student: {
+                    ...payment.student,
+
+                    profile_url:
+                        profile?.profile_url || null
+                }
+            };
+        });
+
         setRecentPayments(
-            data || []
+            paymentsWithProfiles
         );
 
     }
@@ -508,6 +561,28 @@ function AdminMain() {
 
     }
 
+    
+    // ==========================================
+    // FORMAT Date
+    // ==========================================
+
+    function formatDate(date) {
+
+        if (!date) {
+            return "—";
+        }
+
+        return new Date(date).toLocaleDateString(
+            "en-US",
+            {
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+            }
+        );
+
+    }
+
 
     // ==========================================
     // FORMAT CURRENCY
@@ -526,6 +601,30 @@ function AdminMain() {
 
     }
 
+    //=======================
+    //for profile
+    //================
+    function getStudentInitials(name) {
+
+        if (!name) {
+            return "?";
+        }
+
+        const words = name
+            .trim()
+            .split(/\s+/);
+
+        if (words.length === 1) {
+            return words[0]
+                .charAt(0)
+                .toUpperCase();
+        }
+
+        return (
+            words[0].charAt(0) +
+            words[words.length - 1].charAt(0)
+        ).toUpperCase();
+    }
 
     // ==========================================
     // LOADING
@@ -760,14 +859,42 @@ function AdminMain() {
 
 
                                             <td>
-                                                {
-                                                    payment
-                                                        .student
-                                                        ?.Name ??
-                                                    "Unknown Student"
-                                                }
-                                            </td>
 
+                                                <div className="transaction-student">
+
+                                                    {payment.student?.profile_url ? (
+
+                                                        <img
+                                                            src={payment.student.profile_url}
+                                                            alt={
+                                                                payment.student?.Name ||
+                                                                "Student"
+                                                            }
+                                                            className="transaction-student-image"
+                                                        />
+
+                                                    ) : (
+
+                                                        <div className="transaction-student-initials">
+
+                                                            {getStudentInitials(
+                                                                payment.student?.Name
+                                                            )}
+
+                                                        </div>
+
+                                                    )}
+
+                                                    <span>
+                                                        {
+                                                            payment.student?.Name ??
+                                                            "Unknown Student"
+                                                        }
+                                                    </span>
+
+                                                </div>
+
+                                            </td>
 
                                             <td>
 
@@ -778,13 +905,13 @@ function AdminMain() {
                                             </td>
 
 
-                                            <td>
+                                          <td className='data-date'>
 
-                                                {new Date(
+                                                {formatDate(
                                                     payment.payment_date
-                                                ).toLocaleDateString()}
+                                                )}
 
-                                            </td>
+                                          </td>
 
 
                                             <td>
@@ -843,7 +970,7 @@ function AdminMain() {
                             className="viewall"
                             onClick={() =>
                                 navigate(
-                                    "/admin/calendar"
+                                    "/admin/schedule"
                                 )
                             }
                         >

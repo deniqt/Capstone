@@ -29,7 +29,7 @@ return(
                <NavLink to="/teacher" end>Dashboard</NavLink>
                <NavLink to="/teacher/material">Material</NavLink>
                <NavLink to="/teacher/schedule">Scheduling</NavLink>
-               <NavLink to="/teacher/student">Students</NavLink>
+               <NavLink to="/teacher/students">Students</NavLink>
                  <NavLink to="/teacher/messages">
                     Messages
                 </NavLink>
