@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import BackgroundImage from "../assets/LoginImage.png";
 import "./login.css";
 
 function ForgotPassword() {
@@ -10,6 +11,7 @@ function ForgotPassword() {
     const [message, setMessage] = useState("");
 
     const navigate = useNavigate();
+
 
     async function handleForgotPassword(e) {
 
@@ -26,7 +28,8 @@ function ForgotPassword() {
         const { error } = await supabase.auth.resetPasswordForEmail(
             email,
             {
-                redirectTo: `${window.location.origin}/reset-password`,
+                redirectTo:
+                    `${window.location.origin}/reset-password`,
             }
         );
 
@@ -42,52 +45,85 @@ function ForgotPassword() {
         );
     }
 
+
     return (
-        <div className="forgotPage">
+        <div className="authPage">
 
-            <div className="forgotCard">
+            {/* IMAGE */}
 
-                <h1>Forgot Password?</h1>
+            <div className="authImage">
 
-                <p>
-                    Enter your email address and we'll send you
-                    a link to reset your password.
-                </p>
+                <img
+                    src={BackgroundImage}
+                    alt="YOSEF's Tutorial Center"
+                />
 
-                <form onSubmit={handleForgotPassword}>
+            </div>
 
-                    <input
-                        type="email"
-                        placeholder="Email address"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
+
+            {/* CONTENT */}
+
+            <div className="authContent">
+
+                <h2 className="authTitle">
+                    YOSEF's Tutorial Center
+                </h2>
+
+
+                <div className="authCard">
+
+                    <h1>
+                        Forgot Password?
+                    </h1>
+
+                    <p className="authDescription">
+                        Enter your email address and we'll send
+                        you a link to reset your password.
+                    </p>
+
+
+                    <form onSubmit={handleForgotPassword}>
+
+                        <input
+                            type="email"
+                            placeholder="Email address"
+                            value={email}
+                            onChange={(e) =>
+                                setEmail(e.target.value)
+                            }
+                        />
+
+
+                        <button
+                            type="submit"
+                            className="authSubmitButton"
+                            disabled={loading}
+                        >
+                            {loading
+                                ? "Sending..."
+                                : "Send Reset Link"
+                            }
+                        </button>
+
+                    </form>
+
+
+                    {message && (
+                        <p className="resetMessage">
+                            {message}
+                        </p>
+                    )}
+
 
                     <button
-                        type="submit"
-                        disabled={loading}
+                        type="button"
+                        className="backToLogin"
+                        onClick={() => navigate("/")}
                     >
-                        {loading
-                            ? "Sending..."
-                            : "Send Reset Link"
-                        }
+                        ← Back to Login
                     </button>
 
-                </form>
-
-                {message && (
-                    <p className="resetMessage">
-                        {message}
-                    </p>
-                )}
-
-                <button
-                    type="button"
-                    className="backToLogin"
-                    onClick={() => navigate("/")}
-                >
-                    Back to Login
-                </button>
+                </div>
 
             </div>
 
@@ -96,3 +132,4 @@ function ForgotPassword() {
 }
 
 export default ForgotPassword;
+

@@ -1,23 +1,26 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import BackgroundImage from "../assets/LoginImage.png";
 import "./login.css";
 
 function ResetPassword() {
 
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
+
 
     async function handleResetPassword(e) {
 
         e.preventDefault();
 
         if (!password || !confirmPassword) {
-            setMessage("Please fill in both fields.");
+            setMessage("Please fill in both password fields.");
             return;
         }
 
@@ -33,77 +36,115 @@ function ResetPassword() {
             return;
         }
 
+
         setLoading(true);
         setMessage("");
+
 
         const { error } = await supabase.auth.updateUser({
             password: password,
         });
 
+
         setLoading(false);
+
 
         if (error) {
             setMessage(error.message);
             return;
         }
 
+
         setMessage(
             "Your password has been successfully changed."
         );
+
 
         setTimeout(() => {
             navigate("/");
         }, 2000);
     }
 
+
     return (
-        <div className="forgotPage">
+        <div className="authPage">
 
-            <div className="forgotCard">
+            {/* IMAGE */}
 
-                <h1>Reset Password</h1>
+            <div className="authImage">
 
-                <p>
-                    Enter your new password below.
-                </p>
+                <img
+                    src={BackgroundImage}
+                    alt="YOSEF's Tutorial Center"
+                />
 
-                <form onSubmit={handleResetPassword}>
+            </div>
 
-                    <input
-                        type="password"
-                        placeholder="New password"
-                        value={password}
-                        onChange={(e) =>
-                            setPassword(e.target.value)
-                        }
-                    />
 
-                    <input
-                        type="password"
-                        placeholder="Confirm new password"
-                        value={confirmPassword}
-                        onChange={(e) =>
-                            setConfirmPassword(e.target.value)
-                        }
-                    />
+            {/* CONTENT */}
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                    >
-                        {loading
-                            ? "Updating..."
-                            : "Update Password"
-                        }
-                    </button>
+            <div className="authContent">
 
-                </form>
+                <h2 className="authTitle">
+                    YOSEF's Tutorial Center
+                </h2>
 
-                {message && (
-                    <p className="resetMessage">
-                        {message}
+
+                <div className="authCard">
+
+                    <h1>
+                        Reset Password
+                    </h1>
+
+                    <p className="authDescription">
+                        Create a new password for your
+                        account.
                     </p>
-                )}
+
+
+                    <form onSubmit={handleResetPassword}>
+
+                        <input
+                            type="password"
+                            placeholder="New password"
+                            value={password}
+                            onChange={(e) =>
+                                setPassword(e.target.value)
+                            }
+                        />
+
+
+                        <input
+                            type="password"
+                            placeholder="Confirm new password"
+                            value={confirmPassword}
+                            onChange={(e) =>
+                                setConfirmPassword(e.target.value)
+                            }
+                        />
+
+
+                        <button
+                            type="submit"
+                            className="authSubmitButton"
+                            disabled={loading}
+                        >
+                            {loading
+                                ? "Updating..."
+                                : "Update Password"
+                            }
+                        </button>
+
+                    </form>
+
+
+                    {message && (
+                        <p className="resetMessage">
+                            {message}
+                        </p>
+                    )}
+
+                </div>
 
             </div>
 
@@ -112,3 +153,4 @@ function ResetPassword() {
 }
 
 export default ResetPassword;
+

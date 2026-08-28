@@ -491,3 +491,419 @@
     text-decoration: underline;
 }
 
+
+
+
+
+
+/* =========================================================
+   FORGOT PASSWORD / RESET PASSWORD
+   SHARED AUTH PAGE DESIGN
+========================================================= */
+
+.authPage {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    background: #f5f8fa;
+}
+
+
+/* ================================
+   LEFT IMAGE
+================================ */
+
+.authImage {
+    width: 40%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.authImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+
+/* ================================
+   RIGHT SIDE
+================================ */
+
+.authContent {
+    width: 60%;
+    min-height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+
+/* ================================
+   AUTH TITLE
+================================ */
+
+.authTitle {
+    width: 100%;
+    max-width: 500px;
+
+    margin: 0 0 30px 0;
+
+    color: #2D4961;
+
+    font-size: 40px;
+    font-weight: 700;
+
+    line-height: 1.15;
+
+    text-align: left;
+}
+
+
+/* ================================
+   AUTH CARD
+================================ */
+
+.authCard {
+    width: 100%;
+    max-width: 500px;
+
+    padding: 40px;
+
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+
+    background: #ffffff;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 10px 30px rgba(45, 73, 97, 0.08),
+        0 2px 8px rgba(45, 73, 97, 0.04);
+}
+
+
+/* ================================
+   CARD TITLE
+================================ */
+
+.authCard h1 {
+    margin: 0 0 12px 0;
+
+    color: #2D4961;
+
+    font-size: 32px;
+    font-weight: 700;
+}
+
+
+/* ================================
+   CARD DESCRIPTION
+================================ */
+
+.authDescription {
+    margin: 0 0 28px 0;
+
+    color: #7a8792;
+
+    font-size: 15px;
+
+    line-height: 1.6;
+}
+
+
+/* ================================
+   FORM
+================================ */
+
+.authCard form {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ================================
+   INPUT
+================================ */
+
+.authCard input {
+    width: 100%;
+    height: 52px;
+
+    margin-bottom: 18px;
+
+    padding: 0 16px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d9e1e7;
+
+    border-radius: 10px;
+
+    background: #f9fbfc;
+
+    color: #2D4961;
+
+    font-size: 15px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.authCard input::placeholder {
+    color: #9aa7b2;
+}
+
+.authCard input:focus {
+    background: #ffffff;
+
+    border-color: #2D4961;
+
+    box-shadow:
+        0 0 0 3px rgba(45, 73, 97, 0.10);
+}
+
+
+/* ================================
+   SUBMIT BUTTON
+================================ */
+
+.authSubmitButton {
+    width: 100%;
+    height: 52px;
+
+    margin-top: 5px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #2D4961;
+
+    color: white;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.authSubmitButton:hover {
+    background: #243d52;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 6px 15px rgba(45, 73, 97, 0.20);
+}
+
+.authSubmitButton:active {
+    transform: translateY(0);
+}
+
+.authSubmitButton:disabled {
+    opacity: 0.65;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+
+/* ================================
+   MESSAGE
+================================ */
+
+.resetMessage {
+    margin: 18px 0 0 0;
+
+    padding: 12px 14px;
+
+    border-radius: 8px;
+
+    background: #f1f6f9;
+
+    color: #2D4961;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    text-align: center;
+}
+
+
+/* ================================
+   BACK TO LOGIN
+================================ */
+
+.backToLogin {
+    margin-top: 24px;
+
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+
+    color: #2D4961;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.backToLogin:hover {
+    text-decoration: underline;
+}
+
+
+/* ================================
+   TABLET
+================================ */
+
+@media (max-width: 1000px) {
+
+    .authImage {
+        width: 35%;
+    }
+
+    .authContent {
+        width: 65%;
+
+        padding: 30px;
+    }
+
+    .authTitle {
+        font-size: 34px;
+    }
+
+    .authCard {
+        max-width: 450px;
+
+        padding: 35px;
+    }
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 768px) {
+
+    .authPage {
+        flex-direction: column;
+    }
+
+
+    /* Hide image on mobile */
+
+    .authImage {
+        display: none;
+    }
+
+
+    .authContent {
+        width: 100%;
+
+        min-height: 100vh;
+
+        padding: 35px 20px 50px;
+
+        justify-content: flex-start;
+
+        background-color: #2D4F6A;
+
+        box-sizing: border-box;
+    }
+
+
+    .authTitle {
+        max-width: 500px;
+
+        margin-bottom: 25px;
+
+        color: white;
+
+        text-align: center;
+
+        font-size: 32px;
+    }
+
+
+    .authCard {
+        width: 100%;
+
+        max-width: 450px;
+
+        padding: 30px 25px;
+
+        border-radius: 16px;
+
+        background: white;
+    }
+
+
+    .authCard h1 {
+        font-size: 28px;
+
+        text-align: center;
+    }
+
+
+    .authDescription {
+        text-align: center;
+    }
+}
+
+
+/* ================================
+   SMALL MOBILE
+================================ */
+
+@media (max-width: 480px) {
+
+    .authContent {
+        padding: 25px 15px 40px;
+    }
+
+
+    .authTitle {
+        font-size: 27px;
+    }
+
+
+    .authCard {
+        padding: 25px 20px;
+    }
+
+
+    .authCard h1 {
+        font-size: 26px;
+    }
+}
+
