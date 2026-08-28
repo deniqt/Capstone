@@ -19,7 +19,7 @@ import {
 
 import MainHeader from "../../MainComponent/MainHeader";
 
-import "./StudentMessages.css";
+import "./studentMessages.css";
 
 
 function StudentMessages() {

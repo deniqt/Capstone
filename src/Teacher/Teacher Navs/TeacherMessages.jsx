@@ -18,7 +18,7 @@ import {
 
 import MainHeader from "../../MainComponent/MainHeader";
 
-import "./TeacherMessages.css";
+import "./teacherMessages.css";
 
 
 function TeacherMessages() {
