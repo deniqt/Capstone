@@ -373,7 +373,6 @@ function StudentMessages() {
 
             <div className="student-messages-page">
 
-                <MainHeader />
 
                 <div className="messages-empty-state">
 
@@ -405,9 +404,6 @@ function StudentMessages() {
     return (
 
         <div className="student-messages-page">
-
-            <MainHeader />
-
 
             <div className="messages-wrapper">
 

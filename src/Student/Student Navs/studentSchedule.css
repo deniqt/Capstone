@@ -2,6 +2,10 @@
    MAIN LAYOUT
    ========================================= */
 
+   .Main-Sched{
+    padding: 20px;
+   }
+
 .student-lower-panel {
     display: flex;
     flex-wrap: nowrap;

@@ -2,6 +2,7 @@ import { useState } from "react";
 import StudentSidebar from './Component/StudentSidebar';
 import './studentDashboard.css';
 import { Outlet } from "react-router-dom";
+import MainHeader from "../MainComponent/MainHeader";
 
 function StudentDashboard() {
 
@@ -33,6 +34,12 @@ function StudentDashboard() {
                     }
                 />
             )}
+
+              {/* =================================
+                TOP HEADER
+            ================================= */}
+
+            <MainHeader/>
 
             <StudentSidebar />
 

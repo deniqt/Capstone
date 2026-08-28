@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Eye, EyeOff } from "lucide-react";
 import BackgroundImage from "../assets/LoginImage.png";
+import BackgroundImage2 from "../assets/SplashScreen.png";
 
 function Login() {
 
@@ -163,6 +164,12 @@ function Login() {
                     alt="Login"
                 />
 
+                  <img
+                    src={BackgroundImage2}
+                    id="ImageLogin2"
+                    alt="Login"
+                />
+
             </div>
 
 
@@ -279,16 +286,18 @@ function Login() {
 
                         </label>
 
-                    </div>
-
-                    <div className="forgotPassword">
-                      <button
+                         <button
                           type="button"
+                          id='Forgot-Button'
                           onClick={() => navigate("/forgot-password")}
                       >
                           Forgot Password?
                       </button>
-                  </div>
+
+                    </div>
+
+                     
+               
 
 
                     {/* LOGIN BUTTON */}

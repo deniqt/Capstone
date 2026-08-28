@@ -802,7 +802,7 @@ function StudentSchedule(){
             }
         }
 
-    return(<>
+    return(<div className="Main-Sched">
         <h1> STUDENT ATTENDANCE & SCHEDULE</h1>
 
         <div className="student-lower-panel">
@@ -1366,7 +1366,7 @@ function StudentSchedule(){
             </div>
 
         )}
-    </>);
+    </div>);
 }
 
 export default StudentSchedule

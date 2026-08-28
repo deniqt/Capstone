@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import BackgroundImage from "../assets/LoginImage.png";
+import BackgroundImage2 from "../assets/SplashScreen.png";
+import LockImage from "../assets/Lock.svg";
 import "./login.css";
 
 function ForgotPassword() {
@@ -49,21 +51,21 @@ function ForgotPassword() {
     return (
         <div className="authPage">
 
-            {/* IMAGE */}
+              <div className="authImage2">
 
-            <div className="authImage">
-
-                <img
-                    src={BackgroundImage}
+                 <img
+                    src={BackgroundImage2}
                     alt="YOSEF's Tutorial Center"
+                    id="BG2"
                 />
 
             </div>
 
-
             {/* CONTENT */}
 
             <div className="authContent">
+
+                
 
                 <h2 className="authTitle">
                     YOSEF's Tutorial Center
@@ -71,6 +73,12 @@ function ForgotPassword() {
 
 
                 <div className="authCard">
+
+                    <img
+                    src={LockImage}
+                    className="LockLogo"
+                    alt="Password reset"
+                />
 
                     <h1>
                         Forgot Password?
@@ -124,6 +132,19 @@ function ForgotPassword() {
                     </button>
 
                 </div>
+
+            </div>
+
+            
+            {/* IMAGE */}
+
+            <div className="authImage">
+
+                <img
+                    src={BackgroundImage}
+                    alt="YOSEF's Tutorial Center"
+                    id="BG1"
+                />
 
             </div>
 
