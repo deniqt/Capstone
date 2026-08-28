@@ -492,15 +492,17 @@ function TeacherStudents() {
                                                 <td>
                                                     <div className="student-name-cell">
 
-                                                        <img
-                                                            src={getProfileImage(
-                                                                student
-                                                            )}
-                                                            alt={
-                                                                student.Name
-                                                            }
-                                                            className="student-list-image"
-                                                        />
+                                                        {getProfileImage(student) ? (
+                                                            <img
+                                                                src={getProfileImage(student)}
+                                                                alt={student.Name}
+                                                                className="student-list-image"
+                                                            />
+                                                        ) : (
+                                                            <div className="student-list-initials">
+                                                                {getInitials(student.Name)}
+                                                            </div>
+                                                        )}
 
                                                         <span>
                                                             {student.Name ||

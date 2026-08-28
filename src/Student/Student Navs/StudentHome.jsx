@@ -4,6 +4,7 @@ import { useNotifications } from "../../Services/NotificationContext";
 
 import "./studentHome.css";
 import MainHeader from "../../MainComponent/MainHeader";
+import { useNavigate } from "react-router-dom";
 
 function StudentHome() {
 
@@ -26,6 +27,8 @@ function StudentHome() {
     const [recentActivities, setRecentActivities] = useState([]);
 
     const [loading, setLoading] = useState(true);
+
+    const navigate = useNavigate();
 
 
     const {
@@ -965,7 +968,11 @@ function StudentHome() {
                     </p>
 
 
-                    <button>
+                    <button onClick={()=>
+                        {
+                            navigate('/student/materials')
+                        }
+                    }>
 
                         ▶ Resume Learning
 
