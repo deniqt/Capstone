@@ -1,42 +1,500 @@
-.mainPanel{
-    display: flex;
+/* ================================
+   MAIN LOGIN LAYOUT
+================================ */
 
+.mainPanel {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    background: #f5f8fa;
 }
 
-.imageBackground{
-    border: 1px black solid;
+
+/* ================================
+   LEFT IMAGE
+================================ */
+
+.imageBackground {
     width: 40%;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .imageBackground img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center;
+    display: block;
 }
 
 
-#loginTitle{
-    padding: 30px 0px 0px 50px;
-    width: 100%;
-    color: #2D4961;
-    font-size: 48px;
-      margin: 0px;
-}
+/* ================================
+   RIGHT SIDE
+================================ */
 
-.loginPanel{
-    border: 1px black solid;
-    width: 50%;
-    height: 500px;
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: column;
-}
-
-.textfieldPanel{
-    border: 1px black solid;
+.textfieldPanel {
     width: 60%;
     min-height: 100vh;
+
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     justify-content: center;
+    align-items: center;
+
+    padding: 40px;
+    box-sizing: border-box;
 }
+
+
+/* ================================
+   TITLE
+================================ */
+
+#loginTitle {
+    width: 100%;
+    max-width: 600px;
+
+    margin: 0 0 35px 0;
+    padding: 0;
+
+    color: #2D4961;
+    font-size: clamp(32px, 3.5vw, 48px);
+    font-weight: 700;
+    line-height: 1.15;
+}
+
+
+/* ================================
+   LOGIN CARD
+================================ */
+
+.loginPanel {
+    width: 100%;
+    max-width: 500px;
+
+    min-height: auto;
+
+    padding: 40px;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+
+    background: #ffffff;
+
+    border: none;
+    border-radius: 20px;
+
+    box-shadow:
+        0 10px 30px rgba(45, 73, 97, 0.08),
+        0 2px 8px rgba(45, 73, 97, 0.04);
+}
+
+
+/* ================================
+   LOGIN TITLE
+================================ */
+
+.loginPanel h1 {
+    margin: 0 0 30px 0;
+
+    color: #2D4961;
+
+    font-size: 32px;
+    font-weight: 700;
+}
+
+
+/* ================================
+   INPUTS
+================================ */
+
+.loginPanel input {
+    width: 100%;
+    height: 52px;
+
+    margin-bottom: 18px;
+    padding: 0 16px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #d9e1e7;
+    border-radius: 10px;
+
+    background: #f9fbfc;
+
+    color: #2D4961;
+
+    font-size: 15px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.loginPanel input::placeholder {
+    color: #9aa7b2;
+}
+
+.loginPanel input:focus {
+    background: #ffffff;
+
+    border-color: #2D4961;
+
+    box-shadow: 0 0 0 3px rgba(45, 73, 97, 0.10);
+}
+
+
+/* ================================
+   LOGIN BUTTON
+================================ */
+
+.loginPanel > button {
+    width: 100%;
+    height: 52px;
+
+    margin-top: 8px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #2D4961;
+    color: white;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.loginPanel > button:hover {
+    background: #243d52;
+
+    transform: translateY(-1px);
+
+    box-shadow: 0 6px 15px rgba(45, 73, 97, 0.20);
+}
+
+.loginPanel > button:active {
+    transform: translateY(0);
+}
+
+
+/* ================================
+   CREATE ACCOUNT
+================================ */
+
+.loginPanel a {
+    margin-top: 24px;
+
+    text-align: center;
+
+    color: #7a8792;
+
+    font-size: 14px;
+
+    text-decoration: none;
+}
+
+
+/* "Click here" button */
+
+.loginPanel a button {
+    border: none;
+
+    background: transparent;
+
+    color: #2D4961;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    padding: 0;
+}
+
+.loginPanel a button:hover {
+    text-decoration: underline;
+}
+
+
+/* ================================
+   TABLET
+================================ */
+
+@media (max-width: 1000px) {
+
+    .imageBackground {
+        width: 35%;
+    }
+
+    .textfieldPanel {
+        width: 65%;
+        padding: 30px;
+    }
+
+    #loginTitle {
+        font-size: 38px;
+    }
+
+    .loginPanel {
+        max-width: 450px;
+        padding: 35px;
+    }
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 768px) {
+
+    .mainPanel {
+        flex-direction: column;
+    }
+
+    .imageBackground {
+        width: 100%;
+        height: 260px;
+    }
+
+    .imageBackground img {
+        object-fit: cover;
+    }
+
+    .textfieldPanel {
+        width: 100%;
+        min-height: auto;
+
+        padding: 35px 20px 50px;
+    }
+
+    #loginTitle {
+        text-align: center;
+
+        font-size: 32px;
+
+        margin-bottom: 25px;
+    }
+
+    .loginPanel {
+        width: 100%;
+        max-width: 450px;
+
+        padding: 30px 25px;
+
+        border-radius: 16px;
+    }
+
+    .loginPanel h1 {
+        font-size: 28px;
+        text-align: center;
+    }
+}
+
+
+/* ================================
+   SMALL MOBILE
+================================ */
+
+@media (max-width: 480px) {
+
+    .imageBackground {
+        height: 210px;
+    }
+
+    .textfieldPanel {
+        padding: 25px 15px 40px;
+    }
+
+    #loginTitle {
+        font-size: 27px;
+    }
+
+    .loginPanel {
+        padding: 25px 20px;
+    }
+
+    .loginPanel h1 {
+        font-size: 26px;
+    }
+}
+
+
+
+ /* for password */
+
+/* ================================
+   PASSWORD FIELD
+================================ */
+
+.passwordInputWrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.passwordInputWrapper input {
+    width: 100%;
+    margin-bottom: 0 !important;
+    padding-right: 50px;
+}
+
+.passwordToggle {
+    position: absolute;
+
+    right: 14px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: auto !important;
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 4px !important;
+
+    border: none !important;
+
+    background: transparent !important;
+
+    color: #8a98a5;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: none !important;
+}
+
+.passwordToggle:hover {
+    color: #2D4961;
+
+    transform: translateY(-50%);
+}
+
+
+/* ================================
+   REMEMBER ME
+================================ */
+
+.rememberMe {
+    width: 100%;
+
+    margin: 5px 0 20px 0;
+}
+
+.rememberMe label {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    color: #6f7d88;
+
+    font-size: 14px;
+
+    cursor: pointer;
+
+    user-select: none;
+}
+
+.rememberMe input {
+    width: 16px !important;
+    height: 16px !important;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+    accent-color: #2D4961;
+
+    cursor: pointer;
+}
+
+
+/* ================================
+   LOGIN BUTTON
+================================ */
+
+.loginButton {
+    width: 100%;
+    height: 52px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #2D4961;
+    color: white;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.loginButton:hover {
+    background: #243d52;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 6px 15px rgba(45, 73, 97, 0.20);
+}
+
+.loginButton:active {
+    transform: translateY(0);
+}
+
+
+/* ================================
+   CREATE ACCOUNT
+================================ */
+
+.createAccount {
+    margin-top: 24px;
+
+    text-align: center;
+
+    color: #7a8792;
+
+    font-size: 14px;
+}
+
+.createAccount button {
+    border: none;
+
+    background: transparent;
+
+    color: #2D4961;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    padding: 0;
+}
+
+.createAccount button:hover {
+    text-decoration: underline;
+}
+
