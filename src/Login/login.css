@@ -264,37 +264,33 @@
         flex-direction: column;
     }
 
+    /* Hide image on mobile */
     .imageBackground {
-        width: 100%;
-        height: 260px;
-    }
-
-    .imageBackground img {
-        object-fit: cover;
+        display: none;
     }
 
     .textfieldPanel {
         width: 100%;
-        min-height: auto;
-
+        min-height: 100vh;
         padding: 35px 20px 50px;
+        justify-content: start;
+        box-sizing: border-box;
+        background-color: #2D4F6A;
     }
 
     #loginTitle {
         text-align: center;
-
         font-size: 32px;
-
         margin-bottom: 25px;
+        color: white;
     }
 
     .loginPanel {
         width: 100%;
         max-width: 450px;
-
         padding: 30px 25px;
-
         border-radius: 16px;
+        background-color: transparent;
     }
 
     .loginPanel h1 {
@@ -310,12 +306,9 @@
 
 @media (max-width: 480px) {
 
-    .imageBackground {
-        height: 210px;
-    }
-
     .textfieldPanel {
         padding: 25px 15px 40px;
+        justify-content: start;
     }
 
     #loginTitle {

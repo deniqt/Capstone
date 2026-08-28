@@ -281,6 +281,15 @@ function Login() {
 
                     </div>
 
+                    <div className="forgotPassword">
+                      <button
+                          type="button"
+                          onClick={() => navigate("/forgot-password")}
+                      >
+                          Forgot Password?
+                      </button>
+                  </div>
+
 
                     {/* LOGIN BUTTON */}
 
@@ -297,7 +306,7 @@ function Login() {
 
                     <div className="createAccount">
 
-                        Don't Have Account?
+                        Don't Have Account? 
 
                         <button
                             type="button"
@@ -305,7 +314,7 @@ function Login() {
                                 navigate('/landing')
                             }
                         >
-                            Click here
+                             Click here
                         </button>
 
                     </div>
