@@ -181,7 +181,22 @@ function TeacherSchedule(){
                 meeting_link: event.meeting_link,
                 meeting_platform: event.meeting_platform,
 
-                color:
+                 backgroundColor:
+                    event.status === "Pending"
+                    ? "#ffc10741"
+                    : event.status === "Confirmed"
+                    ? "#4caf4f48"
+                    : event.status === "Reschedule Pending"
+                    ? "#9b27b03f"
+                    : event.status === "Cancelled"
+                    ? "#f4433638"
+                    : event.status === "Attended"
+                    ? "#2195f32d"
+                    : event.status === "Absent"
+                    ? "#61616131"
+                    : "#607d8b34",
+
+                    borderColor:
                     event.status === "Pending"
                     ? "#FFC107"
                     : event.status === "Confirmed"
@@ -1315,6 +1330,30 @@ function TeacherSchedule(){
 
                                         
 
+                                    }}
+
+                                    eventContent={(eventInfo) => {
+                                        return (
+                                            <div className="custom-event-content" style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <div className="fc-event-title" style={{ fontWeight: 'bold' }}>
+                                                    {eventInfo.event.title}
+                                                </div>
+                                                <div className="fc-event-time" style={{ fontSize: '0.85em' }}>
+                                                    {eventInfo.timeText}
+                                                </div>
+                                            </div>
+                                        );
+                                    }}    
+                                
+                                    /* ADD THIS HOOK HERE */
+                                    eventDidMount={(info) => {
+                                        // 1. Remove standard borders
+                                        info.el.style.border = 'none';
+                                        
+                                        // 2. Set only the left border using the event's mapped borderColor
+                                        if (info.event.borderColor) {
+                                        info.el.style.borderLeft = `4px solid ${info.event.borderColor}`;
+                                        }
                                     }}
                                 editable={false}
                                

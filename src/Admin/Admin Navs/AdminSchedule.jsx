@@ -406,19 +406,34 @@
                 admin_approval: event.admin_approval,
                 reschedule_requested_by: event.reschedule_requested_by,
 
-                color:
+                backgroundColor:
                     event.status === "Pending"
-                        ? "#FFC107"
+                    ? "#ffc10741"
                     : event.status === "Confirmed"
-                        ? "#4CAF50"
+                    ? "#4caf4f48"
                     : event.status === "Reschedule Pending"
-                        ? "#9C27B0"
+                    ? "#9b27b03f"
                     : event.status === "Cancelled"
-                        ? "#F44336"
+                    ? "#f4433638"
                     : event.status === "Attended"
-                        ? "#2196F3"
+                    ? "#2195f32d"
                     : event.status === "Absent"
-                        ? "#616161"
+                    ? "#61616131"
+                    : "#607d8b34",
+
+                    borderColor:
+                    event.status === "Pending"
+                    ? "#FFC107"
+                    : event.status === "Confirmed"
+                    ? "#4CAF50"
+                    : event.status === "Reschedule Pending"
+                    ? "#9C27B0"
+                    : event.status === "Cancelled"
+                    ? "#F44336"
+                    : event.status === "Attended"
+                    ? "#2196F3"
+                    : event.status === "Absent"
+                    ? "#616161"
                     : "#607D8B"
             }));
 
@@ -924,6 +939,30 @@
                         ...info.event.extendedProps
                     });
                 }}
+
+                /* ADD THIS HOOK HERE */
+                eventDidMount={(info) => {
+                    // 1. Remove standard borders
+                    info.el.style.border = 'none';
+                    
+                    // 2. Set only the left border using the event's mapped borderColor
+                    if (info.event.borderColor) {
+                    info.el.style.borderLeft = `4px solid ${info.event.borderColor}`;
+                    }
+                }}
+
+                 eventContent={(eventInfo) => {
+                    return (
+                        <div className="custom-event-content" style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div className="fc-event-title" style={{ fontWeight: 'bold' }}>
+                                {eventInfo.event.title}
+                            </div>
+                            <div className="fc-event-time" style={{ fontSize: '0.85em' }}>
+                                {eventInfo.timeText}
+                            </div>
+                        </div>
+                    );
+                }} 
 
                 eventAllow={(dropInfo, draggedEvent)=>{
 

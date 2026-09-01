@@ -640,3 +640,13 @@
     }
 
 }
+
+.fc-event-time, .fc-event-title{
+    color: black !important;
+}
+
+.fc-event-title{
+    font-weight: bold !important;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
