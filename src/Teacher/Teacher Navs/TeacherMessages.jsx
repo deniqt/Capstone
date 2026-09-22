@@ -49,7 +49,7 @@ function TeacherMessages() {
 
     const messagesEndRef = useRef(null);
 
-
+    const messagesContainerRef = useRef(null);
     // ==========================================
     // INITIALIZE
     // ==========================================
@@ -633,13 +633,16 @@ function TeacherMessages() {
     // AUTO SCROLL
     // ==========================================
 
-    useEffect(() => {
+ useEffect(() => {
+        if (!messagesEndRef.current) return;
 
-        messagesEndRef.current?.scrollIntoView({
-            behavior: "smooth"
+        requestAnimationFrame(() => {
+            messagesEndRef.current.scrollIntoView({
+                behavior: "smooth",
+                block: "end"
+            });
         });
-
-    }, [messages]);
+    }, [messages, messagesLoading, selectedStudent]);
 
 
     // ==========================================
@@ -794,8 +797,6 @@ function TeacherMessages() {
     return (
 
         <div className="teacher-messages-page">
-
-            <MainHeader />
 
 
             <div className="teacher-messages-wrapper">
@@ -1072,7 +1073,9 @@ function TeacherMessages() {
 
                                 {/* MESSAGES */}
 
-                                <div className="teacher-chat-messages">
+                                <div className="teacher-chat-messages"
+                                    ref={messagesContainerRef}
+                                >
 
                                     {messagesLoading ? (
 

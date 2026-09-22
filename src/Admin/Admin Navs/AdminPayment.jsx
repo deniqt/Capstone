@@ -14,9 +14,14 @@ function AdminPayment(){
     const [loading, setLoading] = useState(false);
     const[paymentLists, setPaymentLists] = useState([]);
     const [selectedPayment, setSelectedPayment] = useState(null);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("CASH");
     const [showRefundModal, setShowRefundModal] = useState(false);
     const [refundReason, setRefundReason] = useState("");
     const [filter,setFilter]=useState("All");
+    const [studentSearch, setStudentSearch] = useState("");
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [paymentToDelete, setPaymentToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
 
         useEffect(() => { 
             getUsers();
@@ -31,7 +36,8 @@ function AdminPayment(){
             *,
             details:user_details!users_detail_id_fkey!inner(*)
             `)
-            .eq("Role", "Student");
+            .eq("Role", "Student")
+            .order("id", { ascending: false }); // newest students first
 
         if (error) {
         alert("Unable to retrieve student.");
@@ -139,7 +145,8 @@ function AdminPayment(){
                 subscription_start: subscriptionStart.toISOString(),
                 subscription_expires: subscriptionExpires.toISOString(),
                 admin_id: admin.id,
-                status:"Completed"
+                status:"Completed",
+                method:selectedPaymentMethod
             });
 
             if(paymentError){
@@ -161,6 +168,7 @@ function AdminPayment(){
 
             setShowModal(false);
             setSelectedStudent(null);
+            setStudentSearch("");
             alert("Payment added successfully.");
             getUsers();
             getPaymentList();
@@ -231,6 +239,13 @@ function AdminPayment(){
         return matchesFilter && matchesSearch;
 
     });
+
+    // Students shown in the "Active User" modal's picker, filtered by the
+    // modal's own search box. `users` is already ordered newest-first from
+    // getUsers(), so this preserves that order.
+    const filteredStudentOptions = users.filter(user =>
+        user.Name.toLowerCase().includes(studentSearch.toLowerCase().trim())
+    );
 
     async function refundPayment(){
 
@@ -364,6 +379,88 @@ function AdminPayment(){
 
         }
 
+    async function deletePayment(){
+
+        if(!paymentToDelete) return;
+
+        setDeleting(true);
+
+        try{
+
+            const { error: deleteError } = await supabase
+                .from("payments")
+                .delete()
+                .eq("payment_id", paymentToDelete.payment_id);
+
+            if(deleteError){
+                console.error(deleteError);
+                alert("Unable to delete transaction.");
+                return;
+            }
+
+            // Recalculate the student's subscription status now that this
+            // payment is gone, the same way a refund does.
+            const { data: remainingPayments, error: remainingError } = await supabase
+                .from("payments")
+                .select("*")
+                .eq("student_id", paymentToDelete.student_id)
+                .eq("status", "Completed")
+                .order("subscription_expires", { ascending: false });
+
+            if (remainingError) {
+                console.error(remainingError);
+            } else if (remainingPayments.length === 0) {
+
+                const { error } = await supabase
+                    .from("users")
+                    .update({
+                        Status: "Inactive",
+                        Subscription_Expires: null
+                    })
+                    .eq("id", paymentToDelete.student_id);
+
+                if (error) console.error(error);
+
+            } else {
+
+                const latestPayment = remainingPayments[0];
+                const latestExpiry = new Date(latestPayment.subscription_expires);
+                const today = new Date();
+
+                const status = latestExpiry > today ? "Active" : "Inactive";
+
+                const { error: userError } = await supabase
+                    .from("users")
+                    .update({
+                        Status: status,
+                        Subscription_Expires: latestPayment.subscription_expires
+                    })
+                    .eq("id", paymentToDelete.student_id);
+
+                if (userError) console.error(userError);
+
+            }
+
+            alert("Transaction deleted.");
+
+            setShowDeleteModal(false);
+            setPaymentToDelete(null);
+
+            getUsers();
+            getPaymentList();
+
+        }catch(err){
+
+            console.error(err);
+            alert("Something went wrong.");
+
+        }finally{
+
+            setDeleting(false);
+
+        }
+    }
+
     return(<>
 
 
@@ -372,6 +469,14 @@ function AdminPayment(){
                     <div className="modal">
                         <h2>Material Details</h2>
 
+                            <input
+                                type="text"
+                                className="student-search-input"
+                                placeholder="Search student..."
+                                value={studentSearch}
+                                onChange={(e) => setStudentSearch(e.target.value)}
+                            />
+
                              <select
                                 value={selectedStudent?.id || ""}
                                 onChange={(e) => getSelectedStudent(e.target.value)}
@@ -379,7 +484,7 @@ function AdminPayment(){
                                 <option value="">
                                     Select a Student
                                 </option>
-                                {users.map(user => (
+                                {filteredStudentOptions.map(user => (
                                     <option
                                         key={user.id}
                                         value={user.id}
@@ -389,10 +494,19 @@ function AdminPayment(){
                                 ))}
                             </select>
 
+                            <select value = {selectedPaymentMethod||"CASH"}
+                                    onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                                >
+                                <option value="CASH">CASH</option>
+                                <option value="PAY MAYA">PAY MAYA</option>
+                                <option value="GCASH">GCASH</option>
+                            </select>
+
                             <button  disabled={!selectedStudent} onClick={addPayment}>  {loading ? "Processing..." : "Activate User"} </button>
 
                         <button onClick={() => { 
                             setSelectedStudent(null);
+                            setStudentSearch("");
                             setShowModal(false);
                         }}>
                             Close
@@ -505,40 +619,51 @@ function AdminPayment(){
                                         <td>{payment.student.Name}</td>
                                         <td>{payment.amount}</td>
                                         <td>{new Date(payment.payment_date).toLocaleDateString()}</td>
-                                        <td>Gcash Muna</td>
+                                        <td>{payment.method||"GCASH"}</td>
                                         <td>
                                             <span className={`status ${payment.status.toLowerCase()}`}>
                                             {payment.status}
                                             </span>
                                         </td>
                                         <td>
-                                            {payment.status === "Completed" &&
-                                            latestRefundable[payment.student_id]?.payment_id === payment.payment_id ? (
+                                            <div className="action-buttons">
+                                                {payment.status === "Completed" &&
+                                                latestRefundable[payment.student_id]?.payment_id === payment.payment_id ? (
+
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedPayment(payment);
+                                                            setRefundReason("");
+                                                            setShowRefundModal(true);
+                                                        }}
+                                                    >
+                                                        Refund
+                                                    </button>
+
+                                                ) : (
+
+                                                   <button disabled>
+
+                                                    {
+                                                    payment.status === "Completed"
+                                                        ? "Cannot Refund"
+                                                        : payment.status
+                                                    }
+
+                                                    </button>
+
+                                                )}
 
                                                 <button
+                                                    className="delete-button"
                                                     onClick={() => {
-                                                        setSelectedPayment(payment);
-                                                        setRefundReason("");
-                                                        setShowRefundModal(true);
+                                                        setPaymentToDelete(payment);
+                                                        setShowDeleteModal(true);
                                                     }}
                                                 >
-                                                    Refund
+                                                    Delete
                                                 </button>
-
-                                            ) : (
-
-                                               <button disabled>
-
-                                                {
-                                                payment.status === "Completed"
-                                                    ? "Cannot Refund"
-                                                    : payment.status
-                                                }
-
-                                                </button>
-
-                                            )}
-
+                                            </div>
                                         </td>
                                     </tr>
                                 )
@@ -596,6 +721,58 @@ function AdminPayment(){
                         onClick={()=>{
                             setShowRefundModal(false);
                             setSelectedPayment(null);
+                        }}
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+            </div>
+
+            )
+            }
+
+        {
+            showDeleteModal && (
+
+            <div className="modal-overlay">
+
+                <div className="modal">
+
+                    <h2>Delete Transaction</h2>
+
+                    <p>
+                        Student:
+                        <strong>
+                            {paymentToDelete?.student.Name}
+                        </strong>
+                    </p>
+
+                    <p>
+                        Amount:
+                        <strong>
+                            ₱{paymentToDelete?.amount}
+                        </strong>
+                    </p>
+
+                    <p>
+                        This permanently removes the transaction and recalculates the
+                        student's subscription status. This cannot be undone.
+                    </p>
+
+                    <button
+                        className="delete-button"
+                        disabled={deleting}
+                        onClick={deletePayment}
+                    >
+                        {deleting ? "Deleting..." : "Confirm Delete"}
+                    </button>
+
+                    <button
+                        onClick={()=>{
+                            setShowDeleteModal(false);
+                            setPaymentToDelete(null);
                         }}
                     >
                         Cancel

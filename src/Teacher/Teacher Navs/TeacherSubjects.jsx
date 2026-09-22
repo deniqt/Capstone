@@ -195,6 +195,17 @@ function TeacherSubjects(){
             }
         }
 
+        
+    function convertPHTimeToUTC(dateTimeLocal) {
+        if (!dateTimeLocal) return null;
+
+        const [date, time] = dateTimeLocal.split("T");
+
+        return new Date(
+            `${date}T${time}:00+08:00`
+        ).toISOString();
+    }
+
     async function uploadMaterial() {
 
             const { data: { user }, error } = await supabase.auth.getUser();
@@ -395,7 +406,7 @@ function TeacherSubjects(){
                                 assignmentType,
 
                             Due_Date:
-                                dueDate,
+                                    convertPHTimeToUTC(dueDate),
 
                             Total_Points:
                                 Number(totalPoints)
@@ -559,7 +570,7 @@ function TeacherSubjects(){
                 .from("Assignments")
                 .update({
                     Assignment_Type: editAssignmentType,
-                    Due_Date: editDueDate,
+                    Due_Date: convertPHTimeToUTC(editDueDate),
                     Total_Points: Number(editTotalPoints),
                     Updated_At: new Date().toISOString()
                 })

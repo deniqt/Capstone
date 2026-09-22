@@ -149,3 +149,14 @@ color:#555;
     flex-direction: column;
     padding: 10px 5px;
 }
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.delete-button {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
