@@ -1,8 +1,37 @@
 import { useEffect, useState } from "react";
 import "./mainSettings.css";
 import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 function MainSettings() {
+
+    const navigate = useNavigate();
+    // ==========================================
+    // LOGOUT
+    // ==========================================
+
+    async function handleLogout() {
+        const confirmed = window.confirm(
+            "Are you sure you want to Log out?"
+        );
+        if (!confirmed) {
+            return;
+        }
+
+        const { error } =
+            await supabase.auth.signOut();
+
+
+        if (error) {
+
+            alert(error.message);
+            return;
+
+        }
+
+        navigate("/");
+
+    }
 
     // ==========================================
     // ACCORDION
@@ -1962,6 +1991,23 @@ function MainSettings() {
                 </div>
 
                 )}
+
+            </div>
+
+            {/* 
+            ///////////////////
+                 logout 
+            //////////////////
+            */}
+
+            <div id="LogOut-Container">
+                
+                <button
+                    onClick={handleLogout}
+                >
+                    Log Out
+                </button>
+
 
             </div>
 

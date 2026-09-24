@@ -444,3 +444,15 @@
     }
 
 }
+
+.Type-Title{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.Type-Logo{
+    margin-right: 5px;
+}

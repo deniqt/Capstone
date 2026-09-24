@@ -13,6 +13,9 @@
 }
 
 .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    justify-content: start;
     color: white;              /* Default color */
     text-decoration: none;
     font-family:"QuickSand", sans-serif;
@@ -33,6 +36,10 @@
     background-color: #D4E2FF;
     color: #2D4F6A;
     font-weight: bold;
+}
+
+.sideBar-logo{
+    margin-right: 5px;
 }
 
 

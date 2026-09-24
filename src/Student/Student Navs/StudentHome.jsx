@@ -6,6 +6,12 @@ import "./studentHome.css";
 import MainHeader from "../../MainComponent/MainHeader";
 import { useNavigate } from "react-router-dom";
 
+import {Target
+        ,Clock3
+        ,Calendar
+        ,Book
+} from "lucide-react";
+
 function StudentHome() {
 
     const [student, setStudent] = useState(null);
@@ -602,34 +608,29 @@ function StudentHome() {
         // ==========================================
 
         const {
-            data: submissions,
-            error: submissionError
-        } = await supabase
-
-            .from("Assignment_Submissions")
-
-            .select(`
-                Submission_ID,
+        data: submissions,
+        error: submissionError
+    } = await supabase
+        .from("Assignment_Submissions")
+        .select(`
+            Submission_ID,
+            Assignment_ID,
+            Submitted_At,
+            Score,
+            Status,
+            Assignments(
                 Assignment_ID,
-                Submitted_At,
-                Score,
-                Status
-            `)
-
-            .eq(
-                "Student_ID",
-                studentId
+                Total_Points,
+                Materials(
+                    Material_Name
+                )
             )
-
-            .order(
-                "Submitted_At",
-                {
-                    ascending: false
-                }
-            )
-
-            .limit(5);
-
+        `)
+        .eq("Student_ID", studentId)
+        .order("Submitted_At", {
+            ascending: false
+        })
+        .limit(5);
 
         if (submissionError) {
 
@@ -670,52 +671,41 @@ function StudentHome() {
                 );
 
 
-            submissions.forEach(
-                submission => {
+            submissions.forEach(submission => {
 
-                    const assignment =
-                        assignments?.find(
-                            item =>
-                                item.Assignment_ID ===
-                                submission.Assignment_ID
-                        );
+                const assignment = submission.Assignments;
 
-
-                    if (!assignment) {
-                        return;
-                    }
-
-
-                    activities.push({
-
-                        id:
-                            `submission-${submission.Submission_ID}`,
-
-                        title:
-                            assignment.Materials?.Material_Name ||
-                            "Assignment",
-
-                        description:
-                            submission.Score !== null
-                                ? "Assignment graded"
-                                : "Assignment submitted",
-
-                        score:
-                            submission.Score,
-
-                        date:
-                            submission.Submitted_At,
-
-                        icon:
-                            submission.Score !== null
-                                ? "✓"
-                                : "📝"
-
-                    });
-
+                if (!assignment) {
+                    return;
                 }
-            );
 
+                activities.push({
+
+                    id: `submission-${submission.Submission_ID}`,
+
+                    title:
+                        assignment.Materials?.Material_Name ||
+                        "Assignment",
+
+                    description:
+                        submission.Score !== null
+                            ? "Assignment graded"
+                            : "Assignment submitted",
+
+                    score: submission.Score,
+
+                    total: assignment.Total_Points,
+
+                    date: submission.Submitted_At,
+
+                    icon:
+                        submission.Score !== null
+                            ? "✓"
+                            : "📝"
+
+                });
+
+            });
         }
 
 
@@ -785,6 +775,8 @@ function StudentHome() {
                         "Learning material assigned",
 
                     score:
+                        null,
+                    total:
                         null,
 
                     date:
@@ -1002,7 +994,7 @@ function StudentHome() {
                         Overall Progress
 
                         <span>
-                            ◎
+                            <Target color="Blue"/>
                         </span>
 
                     </div>
@@ -1033,7 +1025,7 @@ function StudentHome() {
                         Attendance Rate
 
                         <span>
-                            ◷
+                            <Clock3 color="Green"/>
                         </span>
 
                     </div>
@@ -1072,7 +1064,7 @@ function StudentHome() {
                         Next Class
 
                         <span>
-                            ▣
+                            <Calendar color="Orange"/>
                         </span>
 
                     </div>
@@ -1152,6 +1144,7 @@ function StudentHome() {
                                         subject.Subject_ID ||
                                         index
                                     }
+                                    onClick={()=>navigate(`/student/materials/subject/${subject.Subject_ID}`)}
                                 >
 
                                     <div className="subject-icon">
@@ -1272,6 +1265,10 @@ function StudentHome() {
 
                                                 {
                                                     activity.score
+                                                }   
+                                                /
+                                                {
+                                                    activity.total
                                                 }
 
                                             </strong>

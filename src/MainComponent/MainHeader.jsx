@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../Services/NotificationContext";
+import {Bell} from "lucide-react"
 import "./mainHeader.css";
 
 function MainHeader() {
@@ -51,7 +52,7 @@ function MainHeader() {
                     }
                 >
 
-                    🔔
+                    <Bell/>
 
                     {unreadCount > 0 && (
 

@@ -756,10 +756,6 @@ function TeacherMain() {
 
                     </div>
 
-                    <span className="subject-tag">
-                      {schedule.subject}
-                    </span>
-
                     <button
                       className="details-button"
                       onClick={() =>

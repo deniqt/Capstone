@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
+import { LayoutDashboard,
+        File,
+        TrendingUp,
+        CalendarCheck,
+        MessageSquare,
+        Settings} from "lucide-react";
 import "./studentSidebar.css";
 
 function StudentSidebar() {
@@ -118,27 +124,7 @@ function StudentSidebar() {
     }, []);
 
 
-    // ==========================================
-    // LOGOUT
-    // ==========================================
-
-    async function handleLogout() {
-
-        const { error } =
-            await supabase.auth.signOut();
-
-
-        if (error) {
-
-            alert(error.message);
-            return;
-
-        }
-
-
-        navigate("/");
-
-    }
+    
 
 
     return (
@@ -152,10 +138,12 @@ function StudentSidebar() {
 
             <nav className="sidebar-nav">
 
+
                 <NavLink
                     to="/student"
                     end
                 >
+                    <LayoutDashboard className="sideBar-logo"/>
                     Dashboard
                 </NavLink>
 
@@ -163,6 +151,7 @@ function StudentSidebar() {
                 <NavLink
                     to="/student/materials"
                 >
+                    <File className="sideBar-logo"/>
                     Material
                 </NavLink>
 
@@ -170,6 +159,7 @@ function StudentSidebar() {
                 <NavLink
                     to="/student/progress"
                 >
+                    <TrendingUp className="sideBar-logo"/>
                     Progress
                 </NavLink>
 
@@ -177,6 +167,7 @@ function StudentSidebar() {
                 <NavLink
                     to="/student/schedule"
                 >
+                    <CalendarCheck className="sideBar-logo"/>
                     Schedule
                 </NavLink>
 
@@ -184,6 +175,7 @@ function StudentSidebar() {
                 <NavLink
                     to="/student/messages"
                 >
+                    <MessageSquare className="sideBar-logo"/>
                     Messages
                 </NavLink>
 
@@ -191,15 +183,11 @@ function StudentSidebar() {
                 <NavLink
                     to="/student/settings"
                 >
+                    <Settings className="sideBar-logo"/>
                     Settings
                 </NavLink>
 
 
-                <button
-                    onClick={handleLogout}
-                >
-                    Log Out
-                </button>
 
             </nav>
 

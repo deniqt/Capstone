@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, useParams } from "react-router-dom";
+import {FileText,
+        Presentation,
+        File,
+        Film,
+        Image,
+        ClipboardList
+} from "lucide-react";
 import './studentMaterial.css'
 
 function StudentSubject() {
@@ -294,9 +301,13 @@ function StudentSubject() {
                     >
 
                         <h2>
-                            {type === "Assignments"
-                                ? "📝 Assignments"
-                                : `📁 ${type}`}
+                            {type === "Assignments" ? (<div className="Type-Title"><ClipboardList color="Green" className="Type-Logo"/> Assignment</div>)
+                                    : type ==="PDF"? (<div className="Type-Title"><FileText color="red" className="Type-Logo"/> PDF</div>)
+                                        : type ==="PowerPoint"? (<div className="Type-Title"><Presentation color="Yellow" className="Type-Logo"/> Power Point</div>)
+                                            : type ==="Video"? (<div className="Type-Title"><Film color="Purple" className="Type-Logo"/> Video Recording</div>)
+                                                : type ==="Image"? (<div className="Type-Title"><Image color="Black" className="Type-Logo"/> Image</div>)
+                                                    : type ==="Word"? (<div className="Type-Title"><File color="Blue" className="Type-Logo"/> Document</div>)
+                                                     :`📁 ${type}`}
                         </h2>
 
                         {files.map(material => {
@@ -333,13 +344,13 @@ function StudentSubject() {
 
                                         <h3>
 
-                                            {assignment
-                                                ? "📝"
-                                                : "📄"}
-
-                                            {" "}
-
-                                            {material.Material_Name}
+                                            {type === "Assignments" ? (<div className="Type-Title"><ClipboardList color="Green" className="Type-Logo"/> {material.Material_Name}</div>)
+                                                : type ==="PDF"? (<div className="Type-Title"><FileText color="red" className="Type-Logo"/> {material.Material_Name}</div>)
+                                                    : type ==="PowerPoint"? (<div className="Type-Title"><Presentation color="Yellow" className="Type-Logo"/> {material.Material_Name}</div>)
+                                                        : type ==="Video"? (<div className="Type-Title"><Film color="Purple" className="Type-Logo"/> {material.Material_Name}</div>)
+                                                            : type ==="Image"? (<div className="Type-Title"><Image color="Black" className="Type-Logo"/> {material.Material_Name}</div>)
+                                                                : type ==="Word"? (<div className="Type-Title"><File color="Blue" className="Type-Logo"/> {material.Material_Name}</div>)
+                                                                :`📁 ${material.Material_Name}`}
 
                                         </h3>
 

@@ -181,8 +181,8 @@ function StudentMaterial() {
                                 <p>
                                     {subject.materialCount}{" "}
                                     {subject.materialCount === 1
-                                        ? "material"
-                                        : "materials"}
+                                        ? "material Available"
+                                        : "materials Available"}
                                 </p>
 
                             </div>

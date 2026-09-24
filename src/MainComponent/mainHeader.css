@@ -19,6 +19,8 @@
 
 .notification-container {
     position: relative;
+    display: flex;
+
 }
 
 
@@ -32,11 +34,10 @@
     width: 45px;
     height: 45px;
 
-    border: none;
-    background: transparent;
-
-    font-size: 24px;
-
+    border: rgba(128, 128, 128, 0.377) 1px solid;
+    border-radius: 4px;
+    background: white;
+    padding-bottom: -10px;
     cursor: pointer;
 }
 
