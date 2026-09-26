@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, useParams } from "react-router-dom";
 import "./studentMaterial.css";
+import {File} from "lucide-react";
 
 function StudentMaterialDetails() {
 
@@ -210,7 +211,7 @@ function StudentMaterialDetails() {
                     </p>
 
                     <h1>
-                        📄 {material.Material_Name}
+                        <File color="Red"/> {material.Material_Name}
                     </h1>
 
                     <p>

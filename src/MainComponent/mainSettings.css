@@ -164,3 +164,165 @@
     color: black;
      transform: scale(1.05);
 }
+
+.settings-section {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* -------------------------------- */
+/* Section Header (toggle button) */
+/* -------------------------------- */
+
+.settings-section-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: none;
+    border: none;
+    padding: 18px 22px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.settings-section-header:hover {
+    background: #f9fafb;
+}
+
+.settings-section-header span:last-child {
+    color: #9ca3af;
+    font-size: 0.8rem;
+}
+
+/* -------------------------------- */
+/* Section Content */
+/* -------------------------------- */
+
+.settings-section-content {
+    padding: 4px 22px 24px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.settings-section-content h3 {
+    margin: 18px 0 4px;
+    font-size: 1.05rem;
+    color: #111827;
+}
+
+.settings-section-content > p {
+    margin: 0 0 18px;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+/* -------------------------------- */
+/* Notification Preferences List */
+/* -------------------------------- */
+
+.notification-preferences {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px 32px;
+}
+
+.notification-preference-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.notification-preference-item strong {
+    display: block;
+    font-size: 0.95rem;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.notification-preference-item p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.notification-preference-item input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    accent-color: #4f46e5;
+    cursor: pointer;
+}
+
+.notification-preference-item input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* -------------------------------- */
+/* Save Box */
+/* -------------------------------- */
+
+.settings-save-box {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.settings-save-box button {
+    background: #4f46e5;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.settings-save-box button:hover:not(:disabled) {
+    background: #4338ca;
+}
+
+.settings-save-box button:disabled {
+    background: #a5b4fc;
+    cursor: not-allowed;
+}
+
+/* -------------------------------- */
+/* Responsive */
+/* -------------------------------- */
+
+@media (max-width: 600px) {
+
+    .notification-preferences {
+        grid-template-columns: 1fr;
+    }
+
+    .notification-preference-item {
+        align-items: flex-start;
+    }
+
+    .settings-section-header {
+        padding: 16px;
+    }
+
+    .settings-section-content {
+        padding: 4px 16px 20px;
+    }
+
+}
