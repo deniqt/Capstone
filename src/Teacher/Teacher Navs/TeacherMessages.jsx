@@ -18,6 +18,12 @@ import {
 
 import MainHeader from "../../MainComponent/MainHeader";
 
+import {
+    MessageAttachment,
+    SelectedFilePreview,
+    validateAttachment
+} from "../../MainComponent/MessageAttachment";
+
 import "./teacherMessages.css";
 
 
@@ -39,6 +45,8 @@ function TeacherMessages() {
 
     const [messageText, setMessageText] = useState("");
 
+    const [selectedFile, setSelectedFile] = useState(null);
+
     const [loading, setLoading] = useState(true);
 
     const [messagesLoading, setMessagesLoading] = useState(false);
@@ -50,6 +58,10 @@ function TeacherMessages() {
     const messagesEndRef = useRef(null);
 
     const messagesContainerRef = useRef(null);
+
+    const fileInputRef = useRef(null);
+
+
     // ==========================================
     // INITIALIZE
     // ==========================================
@@ -59,8 +71,6 @@ function TeacherMessages() {
         initializeMessaging();
 
     }, []);
-
-    
 
 
     async function initializeMessaging() {
@@ -273,11 +283,62 @@ function TeacherMessages() {
 
     }
 
+
+    // ==========================================
+    // FILE SELECTION
+    // ==========================================
+
+    function handleFileChange(event) {
+
+        const file =
+            event.target.files?.[0];
+
+
+        if (!file) {
+            return;
+        }
+
+
+        const validationError =
+            validateAttachment(file);
+
+
+        if (validationError) {
+
+            alert(validationError);
+
+            event.target.value = "";
+
+            return;
+
+        }
+
+
+        setSelectedFile(file);
+
+    }
+
+
+    function clearSelectedFile() {
+
+        setSelectedFile(null);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+
+    }
+
+
     // ==========================================
     // SELECT STUDENT
     // ==========================================
 
     async function handleSelectStudent(student) {
+
+        // Don't carry a pending file over to another student
+
+        clearSelectedFile();
 
         setSelectedStudent(
             student
@@ -633,15 +694,19 @@ function TeacherMessages() {
     // AUTO SCROLL
     // ==========================================
 
- useEffect(() => {
+    useEffect(() => {
+
         if (!messagesEndRef.current) return;
 
         requestAnimationFrame(() => {
-            messagesEndRef.current.scrollIntoView({
+
+            messagesEndRef.current?.scrollIntoView({
                 behavior: "smooth",
                 block: "end"
             });
+
         });
+
     }, [messages, messagesLoading, selectedStudent]);
 
 
@@ -655,7 +720,7 @@ function TeacherMessages() {
 
 
         if (
-            !messageText.trim() ||
+            (!messageText.trim() && !selectedFile) ||
             !conversation ||
             !teacher
         ) {
@@ -680,7 +745,10 @@ function TeacherMessages() {
                         teacher.id,
 
                     message:
-                        messageText
+                        messageText,
+
+                    file:
+                        selectedFile
 
                 });
 
@@ -711,6 +779,8 @@ function TeacherMessages() {
 
 
             setMessageText("");
+
+            clearSelectedFile();
 
         } catch (error) {
 
@@ -786,8 +856,6 @@ function TeacherMessages() {
         );
 
     });
-
-
 
 
     // ==========================================
@@ -1130,11 +1198,19 @@ function TeacherMessages() {
 
                                                         <div className="teacher-message-bubble">
 
-                                                            <p>
-                                                                {
-                                                                    message.message
-                                                                }
-                                                            </p>
+                                                            <MessageAttachment
+                                                                message={message}
+                                                            />
+
+                                                            {message.message && (
+
+                                                                <p>
+                                                                    {
+                                                                        message.message
+                                                                    }
+                                                                </p>
+
+                                                            )}
 
                                                             <small>
 
@@ -1173,6 +1249,14 @@ function TeacherMessages() {
                                 </div>
 
 
+                                {/* SELECTED FILE PREVIEW */}
+
+                                <SelectedFilePreview
+                                    file={selectedFile}
+                                    onClear={clearSelectedFile}
+                                />
+
+
                                 {/* INPUT */}
 
                                 <form
@@ -1181,6 +1265,27 @@ function TeacherMessages() {
                                         handleSendMessage
                                     }
                                 >
+
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        style={{ display: "none" }}
+                                    />
+
+
+                                    <button
+                                        type="button"
+                                        className="attach-button"
+                                        onClick={() =>
+                                            fileInputRef.current?.click()
+                                        }
+                                        disabled={sending}
+                                        title="Attach a file"
+                                    >
+                                        📎
+                                    </button>
+
 
                                     <input
                                         type="text"
@@ -1204,7 +1309,8 @@ function TeacherMessages() {
                                         type="submit"
                                         disabled={
                                             sending ||
-                                            !messageText.trim()
+                                            (!messageText.trim() &&
+                                                !selectedFile)
                                         }
                                     >
 

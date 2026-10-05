@@ -7,6 +7,7 @@ import { createNotification } from "./notificationService";
 // ============================================
 
 export async function getCurrentSystemUser() {
+    
 
     const {
         data: { user },
@@ -176,10 +177,6 @@ export async function getOrCreateConversation(
 }
 
 
-// ============================================
-// GET MESSAGES
-// ============================================
-
 export async function getMessages(conversationId) {
 
     const {
@@ -192,6 +189,10 @@ export async function getMessages(conversationId) {
             conversation_id,
             sender_id,
             message,
+            attachment_url,
+            attachment_name,
+            attachment_type,
+            attachment_size,
             is_read,
             created_at
         `)
@@ -214,12 +215,6 @@ export async function getMessages(conversationId) {
 
     return data || [];
 }
-
-
-// ============================================
-// SEND MESSAGE
-// ============================================
-
 // ============================================
 // SEND MESSAGE
 // ============================================
@@ -227,15 +222,21 @@ export async function getMessages(conversationId) {
 export async function sendMessage({
     conversationId,
     senderId,
-    message
+    message = "",
+    file = null
 }) {
 
     const cleanMessage =
-        message.trim();
+        message?.trim() || "";
 
-    if (!cleanMessage) {
+
+    // ============================================
+    // VALIDATE
+    // ============================================
+
+    if (!cleanMessage && !file) {
         throw new Error(
-            "Message cannot be empty."
+            "Message or file is required."
         );
     }
 
@@ -303,6 +304,83 @@ export async function sendMessage({
 
 
     // ============================================
+    // FILE VARIABLES
+    // ============================================
+
+    let attachmentUrl = null;
+    let attachmentName = null;
+    let attachmentType = null;
+    let attachmentSize = null;
+
+
+    // ============================================
+    // UPLOAD FILE
+    // ============================================
+
+    if (file) {
+
+        attachmentName = file.name;
+        attachmentType = file.type || "application/octet-stream";
+        attachmentSize = file.size;
+
+
+        // Create a unique filename
+        const fileExtension =
+            file.name.includes(".")
+                ? file.name.substring(
+                    file.name.lastIndexOf(".")
+                )
+                : "";
+
+
+        const uniqueFileName =
+            `${Date.now()}-${crypto.randomUUID()}${fileExtension}`;
+
+
+        const filePath =
+            `${conversationId}/${senderId}/${uniqueFileName}`;
+
+
+        const {
+            error: uploadError
+        } = await supabase
+            .storage
+            .from("message-attachments")
+            .upload(
+                filePath,
+                file,
+                {
+                    cacheControl: "3600",
+                    upsert: false,
+                    contentType: attachmentType
+                }
+            );
+
+
+        if (uploadError) {
+            throw uploadError;
+        }
+
+
+        // ============================================
+        // GET PUBLIC URL
+        // ============================================
+
+        const {
+            data: publicUrlData
+        } = supabase
+            .storage
+            .from("message-attachments")
+            .getPublicUrl(filePath);
+
+
+        attachmentUrl =
+            publicUrlData.publicUrl;
+
+    }
+
+
+    // ============================================
     // INSERT MESSAGE
     // ============================================
 
@@ -312,6 +390,7 @@ export async function sendMessage({
     } = await supabase
         .from("messages")
         .insert({
+
             conversation_id:
                 conversationId,
 
@@ -319,13 +398,30 @@ export async function sendMessage({
                 senderId,
 
             message:
-                cleanMessage
+                cleanMessage,
+
+            attachment_url:
+                attachmentUrl,
+
+            attachment_name:
+                attachmentName,
+
+            attachment_type:
+                attachmentType,
+
+            attachment_size:
+                attachmentSize
+
         })
         .select(`
             message_id,
             conversation_id,
             sender_id,
             message,
+            attachment_url,
+            attachment_name,
+            attachment_type,
+            attachment_size,
             is_read,
             created_at
         `)
@@ -359,6 +455,14 @@ export async function sendMessage({
 
     try {
 
+        const notificationMessage =
+            cleanMessage
+                ? cleanMessage.length > 80
+                    ? `${cleanMessage.substring(0, 80)}...`
+                    : cleanMessage
+                : `Sent a file: ${attachmentName}`;
+
+
         await createNotification({
 
             userId:
@@ -368,9 +472,7 @@ export async function sendMessage({
                 `New message from ${sender.Name}`,
 
             message:
-                cleanMessage.length > 80
-                    ? `${cleanMessage.substring(0, 80)}...`
-                    : cleanMessage,
+                notificationMessage,
 
             type:
                 "Message",
@@ -390,9 +492,6 @@ export async function sendMessage({
 
     } catch (notificationError) {
 
-        // Do not fail the actual message
-        // if notification creation fails.
-
         console.error(
             "Message notification error:",
             notificationError
@@ -403,8 +502,6 @@ export async function sendMessage({
 
     return data;
 }
-
-
 // ============================================
 // MARK MESSAGES AS READ
 // ============================================
