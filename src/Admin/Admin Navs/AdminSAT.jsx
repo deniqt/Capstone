@@ -81,6 +81,37 @@ function AdminSAT() {
 
     }, []);
 
+// ==========================================
+// LOAD USERS (check expired students first)
+// ==========================================
+
+    useEffect(() => {
+
+        async function load() {
+
+            // Inactivate students whose subscription expired before today
+            const { error } = await supabase.rpc(
+                "deactivate_expired_students"
+            );
+
+            if (error) {
+                console.error("Expiry check error:", error);
+            }
+
+            // Then load fresh data
+            await Promise.all([
+                getUsers(),
+                getStudent(),
+                getTutors(),
+                getAdmins(),
+                getProfileImages()
+            ]);
+
+        }
+
+        load();
+
+}, []);
 
     async function getUsers() {
         const { data, error } = await supabase
