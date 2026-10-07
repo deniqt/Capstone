@@ -37,10 +37,6 @@ import StudentHome from './Student/Student Navs/StudentHome'
 import StudentMessages from './Student/Student Navs/StudentMessages'
 import TeacherMessages from './Teacher/Teacher Navs/TeacherMessages'
 import MainSettings from './MainComponent/MainSettings'
-import TeacherMain from './Teacher/Teacher Navs/TeacherMain'
-import TeacherStudents from './Teacher/Teacher Navs/TeacherStudents'
-import ForgotPassword from './Login/ForgotPassword'
-import ResetPassword from './Login/ResetPassword'
 
 
 
@@ -55,12 +51,10 @@ function App() {
         {/* After Login */}
         <Route path="/landing" element = {<LandingPage/>}/>
          <Route path="/register" element = {<Register/>}/>
-         <Route path='forgot-password' element = {<ForgotPassword/>}/>
-         <Route path="/reset-password" element={<ResetPassword/>}/>
 
         {/* for teacher */}
         <Route path="/teacher" element = {<ProtectedRoute allowedRole = "Tutor"><TeacherDashboard/></ProtectedRoute>}>
-                <Route index element = {<TeacherMain/>}/>
+            
             <Route path="material" element = {<TeacherMaterial/>}/>
             <Route path="materials/:studentID" element = {<TeacherSubjects/>}/>
             {/* <Route path="upload/:subjectId" element={<UploadMaterial />}/> */}
@@ -69,8 +63,7 @@ function App() {
                 path="messages"
                 element={<TeacherMessages />}
             />
-           <Route path="/teacher/students" element={<TeacherStudents />} />
-           <Route path="/teacher/students/:id" element={<TeacherStudent />} />
+            <Route path="student" element = {<TeacherStudent/>}/>
             <Route path="settings" element = {<MainSettings/>}/>
         </Route>
 

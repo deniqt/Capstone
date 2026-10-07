@@ -787,7 +787,7 @@ function TeacherMain() {
               className="upload-button"
               onClick={() =>
                 navigate(
-                  "/teacher/subjects"
+                  "/teacher/material"
                 )
               }
             >
