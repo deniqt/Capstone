@@ -439,8 +439,6 @@ function AdminEditProfile() {
                     Grade_Level:
                         otherInfos.Grade_Level,
 
-                    Subjects:
-                        otherInfos.Subjects,
 
                     phone_number:
                         otherInfos.phone_number
@@ -980,29 +978,6 @@ function AdminEditProfile() {
 
                         )}
 
-
-                        {/* SUBJECTS */}
-
-                        <div className="labelbox">
-
-                            <label>
-                                Subjects
-                            </label>
-
-                            <input
-                                type="text"
-                                name="Subjects"
-                                className="input-style"
-                                value={
-                                    otherInfos?.Subjects ||
-                                    ""
-                                }
-                                onChange={
-                                    handleOtherInfoChange
-                                }
-                            />
-
-                        </div>
 
 
                         {/* USERNAME */}

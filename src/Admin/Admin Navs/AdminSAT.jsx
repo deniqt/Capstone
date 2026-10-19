@@ -777,6 +777,7 @@ function AdminSAT() {
             "Email",
             "Role",
             "Joined Date",
+            "Subscription Expiration",
             "Status"
         ];
 
@@ -1018,6 +1019,10 @@ function AdminSAT() {
                                 </th>
 
                                 <th>
+                                    Subsription Expiration Date
+                                </th>
+
+                                <th>
                                     Status
                                 </th>
 
@@ -1095,6 +1100,11 @@ function AdminSAT() {
 
                                            <td>
                                                 {formatDate(user.Joined)}
+                                            </td>
+
+                                            
+                                           <td>
+                                                {formatDate(user.Subscription_Expires)}
                                             </td>
 
 

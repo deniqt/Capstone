@@ -127,32 +127,28 @@ function TeacherSubjects() {
             setSubmittedAssignments(submissionMap);
         }
 
-        // Group: subject -> type -> materials
+        // Group all files globally by category, regardless of subject.
         const grouped = data.reduce((acc, item) => {
             const material = item.Materials;
             if (!material) return acc;
 
-            const subject = material.Subjects;
             const assignment = material.Assignments?.[0];
             const type = getGroupType(material, assignment);
 
-            if (!acc[subject.Subject_ID]) {
-                acc[subject.Subject_ID] = {
-                    Subject_ID: subject.Subject_ID,
-                    Subject_Name: subject.Subject_Name,
-                    fileTypes: {}
-                };
+            if (!acc[type]) {
+                acc[type] = [];
             }
 
-            if (!acc[subject.Subject_ID].fileTypes[type]) {
-                acc[subject.Subject_ID].fileTypes[type] = [];
-            }
-
-            acc[subject.Subject_ID].fileTypes[type].push(material);
+            acc[type].push(material);
             return acc;
         }, {});
 
-        setSubjects(Object.values(grouped));
+        // Keep the existing state shape so the total-material counter still works.
+        setSubjects(
+            Object.keys(grouped).length > 0
+                ? [{ fileTypes: grouped }]
+                : []
+        );
 
         // Student
         const { data: UserData, error: UserError } = await supabase
@@ -189,7 +185,6 @@ function TeacherSubjects() {
             !title.trim() ||
             !description.trim() ||
             !file ||
-            !selectedSubject ||
             !contentType
         ) {
             alert("Fill up all fields.");
@@ -248,7 +243,6 @@ function TeacherSubjects() {
                 .from("Materials")
                 .insert({
                     Tutor_ID: tutor.id,
-                    Subject_ID: selectedSubject,
                     Material_Name: title,
                     Material_Description: description,
                     Material_URL: urlData.publicUrl,
@@ -536,14 +530,10 @@ function TeacherSubjects() {
                 </div>
             )}
 
-            {subjects.map(subject => (
-                <div key={subject.Subject_ID} className="teacher-subject-section">
-
-                    <h2>📚 {subject.Subject_Name}</h2>
-
-                    {Object.entries(subject.fileTypes).map(([type, materials]) => (
+            {subjects.length > 0 && (
+                <div className="teacher-subject-section">
+                    {Object.entries(subjects[0].fileTypes).map(([type, materials]) => (
                         <div key={type} className="material-type-section">
-
                             <h3><TypeTitle type={type} /></h3>
 
                             {materials.map(material => {
@@ -562,12 +552,18 @@ function TeacherSubjects() {
                                                 />
                                             </h4>
 
+                                            <p>
+                                                Subject: {material.Subjects?.Subject_Name || "Unknown Subject"}
+                                            </p>
+
                                             {assignment ? (
                                                 <p>
                                                     {assignment.Assignment_Type}
                                                     {" • "}
                                                     Due:{" "}
-                                                    {new Date(assignment.Due_Date).toLocaleString()}
+                                                    {assignment.Due_Date
+                                                        ? new Date(assignment.Due_Date).toLocaleString()
+                                                        : "No due date"}
                                                     {" • "}
                                                     {assignment.Total_Points} points
                                                 </p>
@@ -612,7 +608,7 @@ function TeacherSubjects() {
                         </div>
                     ))}
                 </div>
-            ))}
+            )}
 
             {/* UPLOAD MODAL */}
             {showModal && (
@@ -637,17 +633,6 @@ function TeacherSubjects() {
                             onChange={(e) => setFile(e.target.files[0])}
                         />
 
-                        <label>Subject</label>
-                        <select
-                            value={selectedSubject}
-                            onChange={(e) => setSelectedSubject(e.target.value)}
-                        >
-                            {allSubjects.map(subject => (
-                                <option key={subject.Subject_ID} value={subject.Subject_ID}>
-                                    {subject.Subject_Name}
-                                </option>
-                            ))}
-                        </select>
 
                         <label>Content Type</label>
                         <select

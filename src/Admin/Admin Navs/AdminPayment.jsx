@@ -139,7 +139,7 @@ function AdminPayment(){
             .from("payments")
             .insert({
                 student_id: selectedStudent.id,
-                amount: 1500,
+                amount: 3200,
                 months: 1,
                 payment_date: new Date().toISOString(),
                 subscription_start: subscriptionStart.toISOString(),
