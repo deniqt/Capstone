@@ -1,4 +1,4 @@
-    import FullCalendar from "@fullcalendar/react";
+import FullCalendar from "@fullcalendar/react";
 
     import dayGridPlugin from "@fullcalendar/daygrid";
     import timeGridPlugin from "@fullcalendar/timegrid";
@@ -397,6 +397,8 @@
                 status: event.status,
 
                 created_by: event.created_by,
+
+                proof_url: event.proof_url,
 
                 requested_start_datetime: event.requested_start_datetime,
                 requested_end_datetime: event.requested_end_datetime,
@@ -1174,13 +1176,13 @@
                         <p>
                             <strong>Start:</strong>
                             {" "}
-                            {selectedEvent.start.toLocaleString()}
+                            {new Date(selectedEvent.start).toLocaleString()}
                         </p>
 
                         <p>
                             <strong>End:</strong>
                             {" "}
-                            {selectedEvent.end.toLocaleString()}
+                            {new Date(selectedEvent.end).toLocaleString()}
                         </p>
 
                         <p>
@@ -1210,6 +1212,48 @@
                             >
                                 Open Meeting
                             </a>
+
+                        )}
+
+                        {/* ===== Attendance proof uploaded by the tutor ===== */}
+                        {selectedEvent.status === "Attended" && (
+
+                            <div className="attendance-proof">
+
+                                <strong>Attendance Proof:</strong>
+                                <br/>
+
+                                {selectedEvent.proof_url ? (
+
+                                    <>
+                                        <a
+                                            href={selectedEvent.proof_url}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                        >
+                                            <img
+                                                src={selectedEvent.proof_url}
+                                                alt="Attendance proof"
+                                                style={{
+                                                    maxWidth: "100%",
+                                                    maxHeight: 240,
+                                                    borderRadius: 8,
+                                                    marginTop: 8,
+                                                    cursor: "zoom-in"
+                                                }}
+                                            />
+                                        </a>
+                                        <br/>
+                                        <small>Click the image to open it full size.</small>
+                                    </>
+
+                                ) : (
+
+                                    <p>No proof uploaded.</p>
+
+                                )}
+
+                            </div>
 
                         )}
 

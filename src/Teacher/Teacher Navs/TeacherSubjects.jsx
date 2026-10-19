@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, useParams } from "react-router-dom";
@@ -28,6 +27,13 @@ const TYPE_META = {
     Word: { Icon: File, color: "Blue", label: "Documents" },
     Others: { Icon: FileText, color: "gray", label: "Other Files" },
 };
+
+const TABS = [
+    { id: "materials", label: "Materials" },
+    { id: "assignments", label: "Assignments" },
+];
+
+const ASSIGNMENT_TYPES = ["Due", "Overdue", "Not Graded", "Graded"];
 
 function TypeTitle({ type, text }) {
     const meta = TYPE_META[type];
@@ -109,6 +115,7 @@ function TeacherSubjects() {
     const [student, setStudent] = useState(null);
     const [allSubjects, setAllSubjects] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState("");
+    const [activeTab, setActiveTab] = useState("materials");
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -479,6 +486,11 @@ function TeacherSubjects() {
 
             await LoadData();
 
+            // Jump to the tab where the new upload lives.
+            setActiveTab(
+                contentType === "Assignment" ? "assignments" : "materials"
+            );
+
             setTitle("");
             setDescription("");
             setFile(null);
@@ -656,15 +668,30 @@ function TeacherSubjects() {
         </>
     );
 
-    const totalMaterials = subjects.reduce(
-        (total, subject) =>
-            total +
-            Object.values(subject.fileTypes).reduce(
-                (sum, files) => sum + files.length,
-                0
-            ),
-        0
-    );
+    // Split the grouped data into the two tabs.
+    const allGroups = subjects[0]?.fileTypes
+        ? Object.entries(subjects[0].fileTypes)
+        : [];
+
+    const tabGroups = {
+        materials: allGroups.filter(
+            ([type]) => !ASSIGNMENT_TYPES.includes(type)
+        ),
+        assignments: allGroups.filter(([type]) =>
+            ASSIGNMENT_TYPES.includes(type)
+        ),
+    };
+
+    const countFiles = (groups) =>
+        groups.reduce((total, [, files]) => total + files.length, 0);
+
+    const counts = {
+        materials: countFiles(tabGroups.materials),
+        assignments: countFiles(tabGroups.assignments),
+    };
+
+    const totalMaterials = counts.materials + counts.assignments;
+    const visibleGroups = tabGroups[activeTab];
 
     return (
         <div className="teacher-subject-container">
@@ -688,25 +715,49 @@ function TeacherSubjects() {
                 </button>
             </div>
 
-            {subjects.length === 0 ? (
-                <div className="empty-state">
-                    No files yet. Upload a material or assignment to get started.
-                </div>
-            ) : (
-                <div className="teacher-subject-section">
-                    {Object.entries(subjects[0].fileTypes).map(
-                        ([type, materials]) => (
-                            <div key={type} className="material-type-section">
-                                
+            <div className="material-tabs" role="tablist" aria-label="Files">
+                {TABS.map((tab) => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        role="tab"
+                        id={`tab-${tab.id}`}
+                        aria-selected={activeTab === tab.id}
+                        aria-controls={`panel-${tab.id}`}
+                        className={`material-tab ${
+                            activeTab === tab.id ? "material-tab-active" : ""
+                        }`}
+                        onClick={() => setActiveTab(tab.id)}
+                    >
+                        {tab.label}
+                        <span className="material-tab-count">
+                            {counts[tab.id]}
+                        </span>
+                    </button>
+                ))}
+            </div>
 
+            <div
+                role="tabpanel"
+                id={`panel-${activeTab}`}
+                aria-labelledby={`tab-${activeTab}`}
+            >
+                {visibleGroups.length === 0 ? (
+                    <div className="empty-state">
+                        {activeTab === "materials"
+                            ? "No materials yet. Upload a file to get started."
+                            : "No assignments yet. Upload a file and set it as an assignment."}
+                    </div>
+                ) : (
+                    <div className="teacher-subject-section">
+                        {visibleGroups.map(([type, materials]) => (
+                            <div key={type} className="material-type-section">
                                 <div className="typeTitleContainer">
                                     <h3>
-                                    <TypeTitle type={type} />
+                                        <TypeTitle type={type} />
                                     </h3>
 
-                                    <h3>
-                                          {" "}({materials.length})
-                                    </h3>
+                                    <h3> ({materials.length})</h3>
                                 </div>
 
                                 {materials.map((material) => {
@@ -831,10 +882,10 @@ function TeacherSubjects() {
                                     );
                                 })}
                             </div>
-                        )
-                    )}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
+            </div>
 
             {/* UPLOAD MODAL */}
             {showModal && (

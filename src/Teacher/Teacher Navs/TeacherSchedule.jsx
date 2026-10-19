@@ -36,6 +36,12 @@ function TeacherSchedule(){
 
     const [todayHours, setTodayHours] = useState(0);
 
+    // ===== Attendance proof =====
+    const [showAttendedModal, setShowAttendedModal] = useState(false);
+    const [proofFile, setProofFile] = useState(null);
+    const [proofPreview, setProofPreview] = useState(null);
+    const [uploadingProof, setUploadingProof] = useState(false);
+
     useEffect(()=>{
 
         getTutor();
@@ -180,6 +186,7 @@ function TeacherSchedule(){
                 reschedule_requested_by: event.reschedule_requested_by,
                 meeting_link: event.meeting_link,
                 meeting_platform: event.meeting_platform,
+                proof_url: event.proof_url,
 
                  backgroundColor:
                     event.status === "Pending"
@@ -238,6 +245,7 @@ function TeacherSchedule(){
                 notes: data.notes,
                 student_id: data.student_id,
                 tutor_id: data.tutor_id,
+                created_by: data.created_by,
                 requested_start_datetime: data.requested_start_datetime,
                 requested_end_datetime: data.requested_end_datetime,
                 reschedule_reason: data.reschedule_reason,
@@ -247,6 +255,7 @@ function TeacherSchedule(){
                 reschedule_requested_by: data.reschedule_requested_by,
                 meeting_link: data.meeting_link,
                 meeting_platform: data.meeting_platform,
+                proof_url: data.proof_url,
 
                 color:
                     data.status === "Pending"
@@ -758,19 +767,98 @@ function TeacherSchedule(){
         setSelectedEvent(null);
     }
 
+    // ==========================================
+    // ATTENDANCE PROOF
+    // ==========================================
+
+    function handleProofChange(e) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            alert("Please upload an image file.");
+            e.target.value = "";
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert("Image must be 5MB or smaller.");
+            e.target.value = "";
+            return;
+        }
+
+        if (proofPreview) URL.revokeObjectURL(proofPreview);
+
+        setProofFile(file);
+        setProofPreview(URL.createObjectURL(file));
+    }
+
+    function closeAttendedModal() {
+        if (proofPreview) URL.revokeObjectURL(proofPreview);
+        setShowAttendedModal(false);
+        setProofFile(null);
+        setProofPreview(null);
+    }
+
     async function markAttended(){
 
+        // 1. must be a past session
+        if (new Date(selectedEvent.end) > new Date()) {
+            alert("You can only mark a session as attended after it has ended.");
+            return;
+        }
+
+        // 2. must have proof
+        if (!proofFile) {
+            alert("Please upload a picture as proof.");
+            return;
+        }
+
+        setUploadingProof(true);
+
+        // 3. upload image
+        const ext = proofFile.name.split(".").pop();
+        const filePath = `${selectedEvent.id}/${Date.now()}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from("attendance-proofs")
+            .upload(filePath, proofFile, {
+                cacheControl: "3600",
+                upsert: false
+            });
+
+        if (uploadError) {
+            console.log(uploadError);
+            alert("Failed to upload proof: " + uploadError.message);
+            setUploadingProof(false);
+            return;
+        }
+
+        const { data: urlData } = supabase.storage
+            .from("attendance-proofs")
+            .getPublicUrl(filePath);
+
+        // 4. update the session
         const { error } = await supabase
             .from("calendar")
             .update({
-                status: "Attended"
+                status: "Attended",
+                proof_url: urlData.publicUrl
             })
-            .eq("id", selectedEvent.id);
+            .eq("id", selectedEvent.id)
+            .eq("status", "Confirmed");
 
         if(error){
 
             console.log(error);
+            alert(error.message);
 
+            // remove the orphaned upload
+            await supabase.storage
+                .from("attendance-proofs")
+                .remove([filePath]);
+
+            setUploadingProof(false);
             return;
 
         }
@@ -805,6 +893,10 @@ function TeacherSchedule(){
         await loadUpcomingSessions();
 
         await loadTodayCount();
+
+        setUploadingProof(false);
+
+        closeAttendedModal();
 
         setSelectedEvent(null);
 
@@ -1871,13 +1963,13 @@ function TeacherSchedule(){
                         <p>
                             <strong>Start:</strong>
                             {" "}
-                            {selectedEvent.start.toLocaleString()}
+                            {new Date(selectedEvent.start).toLocaleString()}
                         </p>
 
                         <p>
                             <strong>End:</strong>
                             {" "}
-                            {selectedEvent.end.toLocaleString()}
+                            {new Date(selectedEvent.end).toLocaleString()}
                         </p>
 
                         <p>
@@ -1917,6 +2009,28 @@ function TeacherSchedule(){
                             {selectedEvent.notes || "No notes"}
                         </p>
 
+                    )}
+
+
+                    {selectedEvent.status === "Attended" && selectedEvent.proof_url && (
+                        <div>
+                            <strong>Proof:</strong><br/>
+                            <a
+                                href={selectedEvent.proof_url}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                <img
+                                    src={selectedEvent.proof_url}
+                                    alt="Attendance proof"
+                                    style={{
+                                        maxWidth: "100%",
+                                        maxHeight: 200,
+                                        borderRadius: 8
+                                    }}
+                                />
+                            </a>
+                        </div>
                     )}
 
 
@@ -2112,9 +2226,9 @@ function TeacherSchedule(){
                 !selectedEvent.requested_start_datetime && (
                     <button
                         onClick={()=>{
-                                setNewScheduleDate(selectedEvent.start);
+                                setNewScheduleDate(new Date(selectedEvent.start));
                                 const hours =
-                                    (selectedEvent.end - selectedEvent.start) /
+                                    (new Date(selectedEvent.end) - new Date(selectedEvent.start)) /
                                     (1000 * 60 * 60);
 
                                 setRescheduleDuration(hours);
@@ -2136,7 +2250,7 @@ function TeacherSchedule(){
                         new Date(selectedEvent.end) < new Date() && (
 
                             <>
-                                <button onClick={markAttended}>
+                                <button onClick={() => setShowAttendedModal(true)}>
                                     Mark Attended
                                 </button>
 
@@ -2253,6 +2367,55 @@ function TeacherSchedule(){
 
                     <button
                             onClick={()=>{setShowRescheduleModal(false)}}
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+            </div>
+
+        )}
+
+
+        {showAttendedModal && (
+
+            <div className="modal-overlay">
+                <div className="modal">
+                    <h2>Mark as Attended</h2>
+
+                    <p>
+                        Upload a picture as proof that the session took place.
+                    </p>
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProofChange}
+                    />
+
+                    {proofPreview && (
+                        <img
+                            src={proofPreview}
+                            alt="Proof preview"
+                            style={{
+                                maxWidth: "100%",
+                                maxHeight: 220,
+                                borderRadius: 8,
+                                marginTop: 10
+                            }}
+                        />
+                    )}
+
+                    <button
+                        onClick={markAttended}
+                        disabled={!proofFile || uploadingProof}
+                    >
+                        {uploadingProof ? "Uploading..." : "Confirm Attended"}
+                    </button>
+
+                    <button
+                        onClick={closeAttendedModal}
+                        disabled={uploadingProof}
                     >
                         Cancel
                     </button>

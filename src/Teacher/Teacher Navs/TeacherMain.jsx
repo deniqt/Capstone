@@ -2,7 +2,7 @@ import "./teacherMain.css";
 import {
   UserRoundPlus,
   CalendarCheck,
-  FolderOpen,
+  CalendarDays,
   FileText,
   MoreVertical,
 } from "lucide-react";
@@ -18,7 +18,7 @@ function TeacherMain() {
   const [stats, setStats] = useState({
     students: 0,
     sessions: 0,
-    records: 0,
+    monthSessions: 0,
   });
 
   const [upcomingSchedule, setUpcomingSchedule] = useState([]);
@@ -116,7 +116,6 @@ function TeacherMain() {
       setStats((prev) => ({
         ...prev,
         students: assignedStudents.length,
-        records: assignedStudents.length,
       }));
 
       /*
@@ -165,10 +164,7 @@ function TeacherMain() {
         .order("start_datetime", { ascending: true });
 
       if (scheduleError) {
-        console.error(
-          "Calendar query error:",
-          scheduleError
-        );
+        console.error("Calendar query error:", scheduleError);
 
         throw scheduleError;
       }
@@ -181,17 +177,15 @@ function TeacherMain() {
 
       const now = new Date();
 
-      const futureSchedules = (schedules || []).filter(
-        (schedule) => {
-          if (!schedule.start_datetime) return false;
+      const futureSchedules = (schedules || []).filter((schedule) => {
+        if (!schedule.start_datetime) return false;
 
-          const endDate = schedule.end_datetime
-            ? new Date(schedule.end_datetime)
-            : new Date(schedule.start_datetime);
+        const endDate = schedule.end_datetime
+          ? new Date(schedule.end_datetime)
+          : new Date(schedule.start_datetime);
 
-          return endDate >= now;
-        }
-      );
+        return endDate >= now;
+      });
 
       /*
        * =========================================================
@@ -223,173 +217,127 @@ function TeacherMain() {
         }
 
         /*
-        * Get Grade Level + Profile Image
-        */
+         * Get Grade Level + Profile Image
+         */
 
         const scheduleDetailIds = [
-        ...new Set(
+          ...new Set(
             (scheduleStudents || [])
-            .map((student) => student.detail_id)
-            .filter(Boolean)
-        ),
+              .map((student) => student.detail_id)
+              .filter(Boolean)
+          ),
         ];
 
         let scheduleDetailMap = {};
 
         if (scheduleDetailIds.length > 0) {
-        const {
+          const {
             data: scheduleDetails,
             error: scheduleDetailsError,
-        } = await supabase
+          } = await supabase
             .from("user_details")
-            .select(
-            "detail_id, Grade_Level, profile_url"
-            )
-            .in(
-            "detail_id",
-            scheduleDetailIds
-            );
+            .select("detail_id, Grade_Level, profile_url")
+            .in("detail_id", scheduleDetailIds);
 
-        if (scheduleDetailsError) {
+          if (scheduleDetailsError) {
             throw scheduleDetailsError;
-        }
+          }
 
-        (scheduleDetails || []).forEach(
-            (detail) => {
-            scheduleDetailMap[
-                detail.detail_id
-            ] = detail;
-            }
-        );
+          (scheduleDetails || []).forEach((detail) => {
+            scheduleDetailMap[detail.detail_id] = detail;
+          });
         }
 
         /*
-        * Build student map
-        */
+         * Build student map
+         */
 
-        (scheduleStudents || []).forEach(
-        (student) => {
+        (scheduleStudents || []).forEach((student) => {
+          const detail = scheduleDetailMap[student.detail_id];
 
-            const detail =
-            scheduleDetailMap[
-                student.detail_id
-            ];
-
-            scheduleStudentMap[
-            student.id
-            ] = {
-
+          scheduleStudentMap[student.id] = {
             ...student,
 
-            Grade_Level:
-                detail?.Grade_Level ||
-                "Grade N/A",
+            Grade_Level: detail?.Grade_Level || "Grade N/A",
 
-            profile_url:
-                detail?.profile_url ||
-                null,
+            profile_url: detail?.profile_url || null,
+          };
+        });
+      }
 
-            };
-
-        }
-        );
-    }
       /*
        * =========================================================
        * 8. FORMAT UPCOMING SCHEDULE
        * =========================================================
        */
 
-      const formattedSchedules =
-        futureSchedules
-          .slice(0, 5)
-          .map((schedule) => {
-            const student =
-              scheduleStudentMap[
-                schedule.student_id
-              ];
+      const formattedSchedules = futureSchedules
+        .slice(0, 5)
+        .map((schedule) => {
+          const student = scheduleStudentMap[schedule.student_id];
 
-            const startDate = new Date(
-              schedule.start_datetime
-            );
+          const startDate = new Date(schedule.start_datetime);
 
-            const endDate = schedule.end_datetime
-              ? new Date(schedule.end_datetime)
-              : startDate;
+          const endDate = schedule.end_datetime
+            ? new Date(schedule.end_datetime)
+            : startDate;
 
-            const durationMinutes = Math.max(
-              0,
-              Math.round(
-                (endDate.getTime() -
-                  startDate.getTime()) /
-                  60000
-              )
-            );
+          const durationMinutes = Math.max(
+            0,
+            Math.round(
+              (endDate.getTime() - startDate.getTime()) / 60000
+            )
+          );
 
-            const time =
-              startDate.toLocaleTimeString([], {
-                hour: "numeric",
-                minute: "2-digit",
-              });
+          const time = startDate.toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit",
+          });
 
-            const initials = student?.Name
-            ? student.Name
-                .trim()
+          const initials = student?.Name
+            ? student.Name.trim()
                 .split(/\s+/)
-                .map((name) =>
-                    name.charAt(0)
-                )
+                .map((name) => name.charAt(0))
                 .slice(0, 2)
                 .join("")
                 .toUpperCase()
             : "ST";
 
-            return {
-              id: schedule.id,
+          return {
+            id: schedule.id,
 
-              time,
+            time,
 
-              duration:
-                durationMinutes > 0
-                  ? `${durationMinutes} mins`
-                  : "Session",
+            duration:
+              durationMinutes > 0
+                ? `${durationMinutes} mins`
+                : "Session",
 
-              student:
-                student?.Name ||
-                "Unknown Student",
+            student: student?.Name || "Unknown Student",
 
-              grade:
-                student?.Grade_Level ||
-                "Grade N/A",
+            grade: student?.Grade_Level || "Grade N/A",
 
-              /*
-               * TeacherSchedule stores the schedule
-               * title rather than a guaranteed `subject`
-               * column.
-               *
-               * If title is the subject/session title,
-               * use it here.
-               */
-              subject:
-                schedule.title ||
-                "Tutorial Session",
+            /*
+             * TeacherSchedule stores the schedule
+             * title rather than a guaranteed `subject`
+             * column.
+             *
+             * If title is the subject/session title,
+             * use it here.
+             */
+            subject: schedule.title || "Tutorial Session",
 
-              mode:
-                schedule.meeting_platform ||
-                "Face to Face",
+            mode: schedule.meeting_platform || "Face to Face",
 
-              avatar: initials,
+            avatar: initials,
 
-                profileUrl:
-                student?.profile_url || null,
+            profileUrl: student?.profile_url || null,
 
-              status: schedule.status,
-            };
-          });
+            status: schedule.status,
+          };
+        });
 
-      setUpcomingSchedule(
-        formattedSchedules
-      );
+      setUpcomingSchedule(formattedSchedules);
 
       /*
        * =========================================================
@@ -399,8 +347,36 @@ function TeacherMain() {
 
       setStats((prev) => ({
         ...prev,
-        sessions:
-          futureSchedules.length,
+        sessions: futureSchedules.length,
+      }));
+
+      /*
+       * =========================================================
+       * 9B. TOTAL SESSIONS THIS MONTH
+       * =========================================================
+       */
+
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const nextMonthStart = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        1
+      );
+
+      const { count: monthCount, error: monthError } = await supabase
+        .from("calendar")
+        .select("id", { count: "exact", head: true })
+        .eq("tutor_id", tutor.id)
+        .in("status", ["Pending", "Confirmed", "Completed"])
+        .gte("start_datetime", monthStart.toISOString())
+        .lt("start_datetime", nextMonthStart.toISOString());
+
+      if (monthError) throw monthError;
+
+      setStats((prev) => ({
+        ...prev,
+        monthSessions: monthCount || 0,
       }));
 
       /*
@@ -443,34 +419,30 @@ function TeacherMain() {
        */
 
       const materialIds = materialList
-        .map(
-          (material) =>
-            material.Material_ID
-        )
+        .map((material) => material.Material_ID)
         .filter(Boolean);
 
       let materialAssignments = [];
 
       if (materialIds.length > 0) {
         const {
-        data: assignments,
-        error: assignmentsError,
+          data: assignments,
+          error: assignmentsError,
         } = await supabase
-        .from("Material_Assignment")
-        .select("Material_ID, Student_ID")
-        .in("Material_ID", materialIds);
+          .from("Material_Assignment")
+          .select("Material_ID, Student_ID")
+          .in("Material_ID", materialIds);
 
         if (assignmentsError) {
-        console.error(
+          console.error(
             "Material assignment query error:",
             assignmentsError
-        );
+          );
 
-        throw assignmentsError;
+          throw assignmentsError;
         }
 
-        materialAssignments =
-          assignments || [];
+        materialAssignments = assignments || [];
       }
 
       /*
@@ -482,40 +454,28 @@ function TeacherMain() {
       const materialStudentIds = [
         ...new Set(
           materialAssignments
-            .map(
-              (assignment) =>
-                assignment.Student_ID
-            )
+            .map((assignment) => assignment.Student_ID)
             .filter(Boolean)
         ),
       ];
 
       let materialStudentMap = {};
 
-      if (
-        materialStudentIds.length > 0
-      ) {
+      if (materialStudentIds.length > 0) {
         const {
           data: materialStudents,
           error: materialStudentsError,
         } = await supabase
           .from("users")
           .select("id, Name")
-          .in(
-            "id",
-            materialStudentIds
-          );
+          .in("id", materialStudentIds);
 
         if (materialStudentsError) {
           throw materialStudentsError;
         }
 
-        (
-          materialStudents || []
-        ).forEach((student) => {
-          materialStudentMap[
-            student.id
-          ] = student;
+        (materialStudents || []).forEach((student) => {
+          materialStudentMap[student.id] = student;
         });
       }
 
@@ -525,60 +485,44 @@ function TeacherMain() {
        * =========================================================
        */
 
-      const formattedMaterials =
-        materialList.map((material) => {
-          const assignments =
-            materialAssignments.filter(
-              (assignment) =>
-                assignment.Material_ID ===
-                material.Material_ID
-            );
+      const formattedMaterials = materialList.map((material) => {
+        const assignments = materialAssignments.filter(
+          (assignment) =>
+            assignment.Material_ID === material.Material_ID
+        );
 
-          const studentNames =
-            assignments
-              .map(
-                (assignment) =>
-                  materialStudentMap[
-                    assignment.Student_ID
-                  ]?.Name
-              )
-              .filter(Boolean);
+        const studentNames = assignments
+          .map(
+            (assignment) =>
+              materialStudentMap[assignment.Student_ID]?.Name
+          )
+          .filter(Boolean);
 
-          let sharedText =
-            "Not assigned";
+        let sharedText = "Not assigned";
 
-          if (
-            studentNames.length === 1
-          ) {
-            sharedText = `Shared with ${studentNames[0]}`;
-          } else if (
-            studentNames.length > 1
-          ) {
-            sharedText = `Shared with ${studentNames.length} students`;
-          }
+        if (studentNames.length === 1) {
+          sharedText = `Shared with ${studentNames[0]}`;
+        } else if (studentNames.length > 1) {
+          sharedText = `Shared with ${studentNames.length} students`;
+        }
 
-          return {
-            id: material.Material_ID,
+        return {
+          id: material.Material_ID,
 
-            name:
-              material.file_name ||
-              material.Material_Name ||
-              "Untitled Material",
+          name:
+            material.file_name ||
+            material.Material_Name ||
+            "Untitled Material",
 
-            shared: sharedText,
+          shared: sharedText,
 
-            size: "File",
-          };
-        });
+          size: "File",
+        };
+      });
 
-      setRecentMaterials(
-        formattedMaterials
-      );
+      setRecentMaterials(formattedMaterials);
     } catch (error) {
-      console.error(
-        "Error loading teacher dashboard:",
-        error
-      );
+      console.error("Error loading teacher dashboard:", error);
 
       setUpcomingSchedule([]);
       setRecentMaterials([]);
@@ -586,7 +530,7 @@ function TeacherMain() {
       setStats({
         students: 0,
         sessions: 0,
-        records: 0,
+        monthSessions: 0,
       });
     } finally {
       setLoading(false);
@@ -617,9 +561,7 @@ function TeacherMain() {
 
           <div className="teacher-stat-info">
             <strong>
-              {loading
-                ? "..."
-                : stats.students}
+              {loading ? "..." : stats.students}
             </strong>
 
             <span>Total Enrollees</span>
@@ -635,9 +577,7 @@ function TeacherMain() {
 
           <div className="teacher-stat-info">
             <strong>
-              {loading
-                ? "..."
-                : stats.sessions}
+              {loading ? "..." : stats.sessions}
             </strong>
 
             <span>Schedule Sessions</span>
@@ -648,17 +588,15 @@ function TeacherMain() {
         <div className="teacher-stat-card">
 
           <div className="teacher-stat-icon red">
-            <FolderOpen size={23} />
+            <CalendarDays size={23} />
           </div>
 
           <div className="teacher-stat-info">
             <strong>
-              {loading
-                ? "..."
-                : stats.records}
+              {loading ? "..." : stats.monthSessions}
             </strong>
 
-            <span>Student Records</span>
+            <span>Total Sessions This Month</span>
           </div>
 
         </div>
@@ -677,11 +615,7 @@ function TeacherMain() {
 
             <button
               className="view-calendar-button"
-              onClick={() =>
-                navigate(
-                  "/teacher/schedule"
-                )
-              }
+              onClick={() => navigate("/teacher/schedule")}
             >
               View Calendar
             </button>
@@ -694,82 +628,68 @@ function TeacherMain() {
               <div className="empty-dashboard">
                 Loading schedule...
               </div>
-            ) : upcomingSchedule.length ===
-              0 ? (
+            ) : upcomingSchedule.length === 0 ? (
               <div className="empty-dashboard">
                 No upcoming sessions.
               </div>
             ) : (
-              upcomingSchedule.map(
-                (schedule) => (
-                  <div
-                    className="schedule-row"
-                    key={schedule.id}
-                  >
+              upcomingSchedule.map((schedule) => (
+                <div
+                  className="schedule-row"
+                  key={schedule.id}
+                >
 
-                    <div className="schedule-time">
+                  <div className="schedule-time">
 
-                      <strong>
-                        {schedule.time}
-                      </strong>
+                    <strong>{schedule.time}</strong>
 
-                      <span>
-                        {schedule.duration}
-                      </span>
-
-                    </div>
-
-                    <div className="schedule-student">
-
-                      <div className="student-avatar">
-
-                        {schedule.profileUrl ? (
-                            <img
-                            src={schedule.profileUrl}
-                            alt={schedule.student}
-                            className="student-profile-image"
-                            />
-                        ) : (
-                            schedule.avatar
-                        )}
-
-                        </div>
-                      <div className="student-details">
-
-                        <strong>
-                          {schedule.student}
-                        </strong>
-
-                        <span>
-                          {schedule.grade}
-                        </span>
-
-                      </div>
-
-                    </div>
-
-                    <div className="schedule-mode">
-
-                      <span className="mode-dot"></span>
-
-                      {schedule.mode}
-
-                    </div>
-
-                    <button
-                      className="details-button"
-                      onClick={() =>
-                        navigate(
-                          "/teacher/schedule"
-                        )
-                      }
-                    >
-                      Details
-                    </button>
+                    <span>{schedule.duration}</span>
 
                   </div>
-                )
-              )
+
+                  <div className="schedule-student">
+
+                    <div className="student-avatar">
+
+                      {schedule.profileUrl ? (
+                        <img
+                          src={schedule.profileUrl}
+                          alt={schedule.student}
+                          className="student-profile-image"
+                        />
+                      ) : (
+                        schedule.avatar
+                      )}
+
+                    </div>
+
+                    <div className="student-details">
+
+                      <strong>{schedule.student}</strong>
+
+                      <span>{schedule.grade}</span>
+
+                    </div>
+
+                  </div>
+
+                  <div className="schedule-mode">
+
+                    <span className="mode-dot"></span>
+
+                    {schedule.mode}
+
+                  </div>
+
+                  <button
+                    className="details-button"
+                    onClick={() => navigate("/teacher/schedule")}
+                  >
+                    Details
+                  </button>
+
+                </div>
+              ))
             )}
 
           </div>
@@ -785,11 +705,7 @@ function TeacherMain() {
 
             <button
               className="upload-button"
-              onClick={() =>
-                navigate(
-                  "/teacher/material"
-                )
-              }
+              onClick={() => navigate("/teacher/material")}
             >
               Upload
             </button>
@@ -802,48 +718,40 @@ function TeacherMain() {
               <div className="empty-dashboard">
                 Loading materials...
               </div>
-            ) : recentMaterials.length ===
-              0 ? (
+            ) : recentMaterials.length === 0 ? (
               <div className="empty-dashboard">
                 No recent materials.
               </div>
             ) : (
-              recentMaterials.map(
-                (material) => (
-                  <div
-                    className="material-row"
-                    key={material.id}
-                  >
+              recentMaterials.map((material) => (
+                <div
+                  className="material-row"
+                  key={material.id}
+                >
 
-                    <div className="material-file-icon">
-                      <FileText size={17} />
-                    </div>
+                  <div className="material-file-icon">
+                    <FileText size={17} />
+                  </div>
 
-                    <div className="material-info">
+                  <div className="material-info">
 
-                      <strong>
-                        {material.name}
-                      </strong>
+                    <strong>{material.name}</strong>
 
-                      <span>
-                        {material.shared} •{" "}
-                        {material.size}
-                      </span>
-
-                    </div>
-
-                    <button
-                      className="material-menu"
-                      type="button"
-                    >
-                      <MoreVertical
-                        size={17}
-                      />
-                    </button>
+                    <span>
+                      {material.shared} • {material.size}
+                    </span>
 
                   </div>
-                )
-              )
+
+                  <button
+                    className="material-menu"
+                    type="button"
+                  >
+                    <MoreVertical size={17} />
+                  </button>
+
+                </div>
+              ))
             )}
 
           </div>
