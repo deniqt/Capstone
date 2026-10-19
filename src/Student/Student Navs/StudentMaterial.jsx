@@ -1,47 +1,49 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import './studentMaterial.css'
+import {
+    FileText,
+    Presentation,
+    File,
+    Film,
+    Image,
+    ClipboardList,
+    Clock,
+    CheckCircle2,
+    AlertCircle,
+} from "lucide-react";
+import "./studentMaterial.css";
 
 function StudentMaterial() {
-
-    const [subjects, setSubjects] = useState([]);
+    const [materials, setMaterials] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        loadSubjects();
+        loadMaterials();
     }, []);
 
-    async function loadSubjects() {
-
+    async function loadMaterials() {
         setLoading(true);
 
         try {
-
-            // --------------------------------
-            // Get logged-in user
-            // --------------------------------
-
+            // Get authenticated user
             const {
                 data: { user },
-                error: authError
+                error: authError,
             } = await supabase.auth.getUser();
 
             if (authError || !user) {
-                console.log(authError);
+                console.error(authError || "No authenticated user.");
                 return;
             }
 
-
-            // --------------------------------
-            // Get student
-            // --------------------------------
-
+            // Get student account
             const {
                 data: student,
-                error: studentError
+                error: studentError,
             } = await supabase
                 .from("users")
                 .select("id")
@@ -49,159 +51,390 @@ function StudentMaterial() {
                 .single();
 
             if (studentError) {
-                console.log(studentError);
+                console.error(studentError);
                 return;
             }
 
-
-            // --------------------------------
-            // Get student's materials
-            // --------------------------------
-
+            // Get assigned materials, assignments, and submissions
             const {
                 data,
-                error
+                error,
             } = await supabase
                 .from("Material_Assignment")
                 .select(`
                     ID,
-
-                    Materials(
+                    Materials (
                         Material_ID,
-
-                        Subjects(
-                            Subject_ID,
-                            Subject_Name
+                        Material_Name,
+                        Material_URL,
+                        Material_Description,
+                        file_name,
+                        Assignments (
+                            Assignment_ID,
+                            Assignment_Type,
+                            Due_Date,
+                            Total_Points,
+                            Assignment_Submissions (
+                                Submission_ID,
+                                Student_ID,
+                                Status,
+                                Submitted_At,
+                                Is_Late
+                            )
                         )
                     )
                 `)
                 .eq("Student_ID", student.id);
 
             if (error) {
-                console.log(error);
+                console.error("Error loading materials:", error);
                 return;
             }
 
+            const grouped = {};
 
-            // --------------------------------
-            // Group by subject
-            // --------------------------------
-
-            const subjectMap = {};
-
-            data.forEach(item => {
-
+            (data || []).forEach((item) => {
                 const material = item.Materials;
 
-                if (!material || !material.Subjects) {
+                if (!material) return;
+
+                const assignments = Array.isArray(material.Assignments)
+                    ? material.Assignments
+                    : material.Assignments
+                        ? [material.Assignments]
+                        : [];
+
+                // An assigned material can have multiple assignments.
+                // Process each assignment independently.
+                if (assignments.length > 0) {
+                    assignments.forEach((assignment) => {
+                        const submissions = Array.isArray(
+                            assignment.Assignment_Submissions
+                        )
+                            ? assignment.Assignment_Submissions
+                            : [];
+
+                        // Only use submissions belonging to this student.
+                        const studentSubmissions = submissions
+                            .filter(
+                                (submission) =>
+                                    String(submission.Student_ID) ===
+                                    String(student.id)
+                            )
+                            .sort((a, b) => {
+                                return (
+                                    new Date(b.Submitted_At || b.Submission_ID) -
+                                    new Date(a.Submitted_At || a.Submission_ID)
+                                );
+                            });
+
+                        const submission = studentSubmissions[0] || null;
+
+                        const status = String(submission?.Status || "")
+                            .trim()
+                            .toLowerCase();
+
+                        // Adjust these values if your database uses
+                        // different submission status names.
+                        const completedStatuses = [
+                            "submitted",
+                            "completed",
+                            "graded",
+                            "returned",
+                        ];
+
+                        let type;
+
+                        if (completedStatuses.includes(status)) {
+                            type = "Completed";
+                        } else {
+                            const dueDate = assignment.Due_Date
+                                ? new Date(assignment.Due_Date)
+                                : null;
+
+                            if (
+                                dueDate &&
+                                !Number.isNaN(dueDate.getTime()) &&
+                                dueDate.getTime() < Date.now()
+                            ) {
+                                type = "Overdue";
+                            } else {
+                                type = "Due";
+                            }
+                        }
+
+                        if (!grouped[type]) {
+                            grouped[type] = [];
+                        }
+
+                        grouped[type].push({
+                            ...material,
+                            assignment,
+                            submission,
+                            assignmentID: item.ID,
+                            uniqueKey: `${item.ID}-${assignment.Assignment_ID}`,
+                        });
+                    });
+
                     return;
                 }
 
-                const subject = material.Subjects;
+                // Non-assignment materials are grouped by file type.
+                const extension =
+                    material.file_name
+                        ?.split(".")
+                        .pop()
+                        .toLowerCase() || "";
 
-                if (!subjectMap[subject.Subject_ID]) {
+                let type = "Others";
 
-                    subjectMap[subject.Subject_ID] = {
-                        Subject_ID: subject.Subject_ID,
-                        Subject_Name: subject.Subject_Name,
-                        materialCount: 0
-                    };
-
+                if (extension === "pdf") {
+                    type = "PDF";
+                } else if (
+                    ["mp4", "mov", "avi", "mkv", "webm"].includes(extension)
+                ) {
+                    type = "Video";
+                } else if (
+                    ["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(extension)
+                ) {
+                    type = "Image";
+                } else if (["doc", "docx"].includes(extension)) {
+                    type = "Word";
+                } else if (["ppt", "pptx"].includes(extension)) {
+                    type = "PowerPoint";
                 }
 
-                subjectMap[subject.Subject_ID]
-                    .materialCount++;
+                if (!grouped[type]) {
+                    grouped[type] = [];
+                }
 
+                grouped[type].push({
+                    ...material,
+                    assignment: null,
+                    assignmentID: item.ID,
+                    uniqueKey: `${item.ID}-${material.Material_ID}`,
+                });
             });
 
+            // Display assignment groups first, followed by file categories.
+            const categoryOrder = [
+                "Due",
+                "Overdue",
+                "Completed",
+                "PDF",
+                "Word",
+                "PowerPoint",
+                "Video",
+                "Image",
+                "Others",
+            ];
 
-            setSubjects(
-                Object.values(subjectMap)
-            );
+            const sortedGroups = categoryOrder
+                .filter((type) => grouped[type]?.length)
+                .map((type) => [type, grouped[type]]);
 
+            setMaterials(sortedGroups);
         } catch (error) {
-
-            console.log(error);
-
+            console.error("Unexpected error loading materials:", error);
         } finally {
-
             setLoading(false);
-
         }
     }
 
+    function renderCategoryIcon(type) {
+        switch (type) {
+            case "Due":
+                return <Clock color="#2563eb" className="Type-Logo" />;
+
+            case "Overdue":
+                return <AlertCircle color="#dc2626" className="Type-Logo" />;
+
+            case "Completed":
+                return <CheckCircle2 color="#16a34a" className="Type-Logo" />;
+
+            case "PDF":
+                return <FileText color="red" className="Type-Logo" />;
+
+            case "PowerPoint":
+                return <Presentation color="orange" className="Type-Logo" />;
+
+            case "Video":
+                return <Film color="purple" className="Type-Logo" />;
+
+            case "Image":
+                return <Image color="black" className="Type-Logo" />;
+
+            case "Word":
+                return <File color="blue" className="Type-Logo" />;
+
+            default:
+                return <FileText className="Type-Logo" />;
+        }
+    }
+
+    function renderCategoryTitle(type) {
+        switch (type) {
+            case "Due":
+                return "Due Assignments";
+
+            case "Overdue":
+                return "Overdue Assignments";
+
+            case "Completed":
+                return "Completed Assignments";
+
+            case "PDF":
+                return "PDF Files";
+
+            case "PowerPoint":
+                return "PowerPoint Presentations";
+
+            case "Video":
+                return "Video Recordings";
+
+            case "Image":
+                return "Images";
+
+            case "Word":
+                return "Documents";
+
+            default:
+                return "Other Files";
+        }
+    }
 
     if (loading) {
         return <h2>Loading materials...</h2>;
     }
 
+    const totalMaterials = materials.reduce(
+        (total, [, files]) => total + files.length,
+        0
+    );
 
     return (
-
-        <div className="student-material-container">
-
-            <h1>
-                My Learning Materials
-            </h1>
+        <div className="student-subject-container">
+            <h1>📚 My Learning Materials</h1>
 
             <p>
-                Choose a subject
+                {totalMaterials}{" "}
+                {totalMaterials === 1 ? "material" : "materials"} available
             </p>
 
-
-            {subjects.length === 0 ? (
-
-                <h3>
-                    No materials assigned yet.
-                </h3>
-
+            {materials.length === 0 ? (
+                <h3>No materials assigned yet.</h3>
             ) : (
-
-                <div className="subject-list">
-
-                    {subjects.map(subject => (
-
-                        <div
-                            key={subject.Subject_ID}
-                            className="student-subject-card"
-
-                            onClick={() =>
-                                navigate(
-                                    `/student/materials/subject/${subject.Subject_ID}`
-                                )
-                            }
-                        >
-
-                            <div>
-
-                                <h2>
-                                    📚 {subject.Subject_Name}
-                                </h2>
-
-                                <p>
-                                    {subject.materialCount}{" "}
-                                    {subject.materialCount === 1
-                                        ? "material Available"
-                                        : "materials Available"}
-                                </p>
-
+                materials.map(([type, files]) => (
+                    <div key={type} className="material-type-section">
+                        <h2>
+                            <div className="Type-Title">
+                                {renderCategoryIcon(type)}
+                                {renderCategoryTitle(type)}
+                                <span className="material-count">
+                                    ({files.length})
+                                </span>
                             </div>
+                        </h2>
 
+                        {files.map((material) => {
+                            const assignment = material.assignment;
 
-                            <span className="subject-arrow">
-                                ›
-                            </span>
+                            return (
+                                <div
+                                    key={material.uniqueKey}
+                                    className="material-list-card"
+                                    onClick={() => {
+                                        if (assignment) {
+                                            navigate(
+                                                `/student/materials/assignment/${assignment.Assignment_ID}`
+                                            );
+                                        } else {
+                                            navigate(
+                                                `/student/materials/material/${material.Material_ID}`
+                                            );
+                                        }
+                                    }}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(event) => {
+                                        if (
+                                            event.key === "Enter" ||
+                                            event.key === " "
+                                        ) {
+                                            event.preventDefault();
 
-                        </div>
+                                            if (assignment) {
+                                                navigate(
+                                                    `/student/materials/assignment/${assignment.Assignment_ID}`
+                                                );
+                                            } else {
+                                                navigate(
+                                                    `/student/materials/material/${material.Material_ID}`
+                                                );
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <div>
+                                        <h3>
+                                            <div className="Type-Title">
+                                                {renderCategoryIcon(type)}
+                                                {material.Material_Name}
+                                            </div>
+                                        </h3>
 
-                    ))}
+                                        {assignment ? (
+                                            <>
+                                                <p>
+                                                    {assignment.Assignment_Type ||
+                                                        "Assignment"}
+                                                    {" • "}
+                                                    Due:{" "}
+                                                    {assignment.Due_Date
+                                                        ? new Date(
+                                                              assignment.Due_Date
+                                                          ).toLocaleString()
+                                                        : "No due date"}
+                                                    {" • "}
+                                                    {assignment.Total_Points ?? 0}
+                                                    {" points"}
+                                                </p>
 
-                </div>
+                                                {material.submission?.Status && (
+                                                    <p>
+                                                        Status:{" "}
+                                                        {material.submission.Status}
+                                                    </p>
+                                                )}
 
+                                                {type === "Overdue" && (
+                                                    <p className="assignment-overdue">
+                                                        Deadline has passed
+                                                    </p>
+                                                )}
+
+                                                {type === "Completed" && (
+                                                    <p className="assignment-completed">
+                                                        Assignment submitted
+                                                    </p>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <p>
+                                                {material.Material_Description ||
+                                                    "No description available."}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <span>›</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ))
             )}
-
         </div>
-
     );
 }
 

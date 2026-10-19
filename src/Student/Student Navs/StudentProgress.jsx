@@ -1,121 +1,92 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
-import { useNavigate } from "react-router-dom";
 import "./studentProgress.css";
 
 function StudentProgress() {
-
-    const navigate = useNavigate();
-
-    const [subjects, setSubjects] = useState([]);
     const [overallGrade, setOverallGrade] = useState(0);
     const [loading, setLoading] = useState(true);
     const [tutorName, setTutorName] = useState("");
+    const [evaluations, setEvaluations] = useState([]);
 
     useEffect(() => {
         loadProgress();
     }, []);
 
-
     async function loadProgress() {
-
         setLoading(true);
 
         try {
-
-            // --------------------------------
             // Get logged-in student
-            // --------------------------------
-
             const {
                 data: { user },
                 error: authError
             } = await supabase.auth.getUser();
 
             if (authError || !user) {
-                console.log(authError);
+                console.error(authError || "No authenticated user found.");
                 return;
             }
 
-
-            // --------------------------------
-            // Get student
-            // --------------------------------
-
-           const {
+            // Get student account
+            const {
                 data: student,
                 error: studentError
             } = await supabase
                 .from("users")
-                .select(`
-                    id,
-                    Name,
-                    detail_id
-                `)
+                .select("id, Name, detail_id")
                 .eq("auth_id", user.id)
                 .single();
 
             if (studentError) {
-                console.log(studentError);
+                console.error(studentError);
                 return;
             }
 
-            const {
-                data: studentDetails,
-                error: detailsError
-            } = await supabase
-                .from("user_details")
-                .select(`
-                    Tutor_ID
-                `)
-                .eq("detail_id", student.detail_id)
-                .single();
+            // Get assigned tutor
+            if (student.detail_id) {
+                const {
+                    data: studentDetails,
+                    error: detailsError
+                } = await supabase
+                    .from("user_details")
+                    .select("Tutor_ID")
+                    .eq("detail_id", student.detail_id)
+                    .maybeSingle();
 
-            if (detailsError) {
-                console.log(detailsError);
-                return;
+                if (detailsError) {
+                    console.error(detailsError);
+                } else if (studentDetails?.Tutor_ID) {
+                    const {
+                        data: tutor,
+                        error: tutorError
+                    } = await supabase
+                        .from("users")
+                        .select("id, Name")
+                        .eq("id", studentDetails.Tutor_ID)
+                        .maybeSingle();
+
+                    if (tutorError) {
+                        console.error(tutorError);
+                    } else {
+                        setTutorName(tutor?.Name || "No tutor assigned");
+                    }
+                } else {
+                    setTutorName("No tutor assigned");
+                }
             }
 
-
+            // Get all assignments assigned to this student
             const {
-                data: tutor,
-                error: tutorError
-            } = await supabase
-                .from("users")
-                .select(`
-                    id,
-                    Name
-                `)
-                .eq("id", studentDetails.Tutor_ID)
-                .single();
-
-            if (tutorError) {
-                console.log(tutorError);
-                return;
-            }
-
-            setTutorName(tutor.Name);
-
-            // --------------------------------
-            // Get assigned materials
-            // --------------------------------
-
-            const {
-                data: assignments,
+                data: assignedMaterials,
                 error: assignmentError
             } = await supabase
                 .from("Material_Assignment")
                 .select(`
                     ID,
-
                     Materials(
                         Material_ID,
-
-                        Subjects(
-                            Subject_ID,
-                            Subject_Name
-                        ),
-
+                        Material_Name,
                         Assignments(
                             Assignment_ID,
                             Assignment_Type,
@@ -126,17 +97,12 @@ function StudentProgress() {
                 `)
                 .eq("Student_ID", student.id);
 
-
             if (assignmentError) {
-                console.log(assignmentError);
+                console.error(assignmentError);
                 return;
             }
 
-
-            // --------------------------------
-            // Get student's submissions
-            // --------------------------------
-
+            // Get all student submissions
             const {
                 data: submissions,
                 error: submissionError
@@ -153,443 +119,291 @@ function StudentProgress() {
                 `)
                 .eq("Student_ID", student.id);
 
-
             if (submissionError) {
-                console.log(submissionError);
+                console.error(submissionError);
                 return;
             }
 
+            // Build one general list of assignments
+            const submissionMap = new Map();
 
-            // --------------------------------
-            // Group assignments by subject
-            // --------------------------------
+            (submissions || []).forEach((submission) => {
+                const key = String(submission.Assignment_ID);
+                const existing = submissionMap.get(key);
 
-            const subjectMap = {};
+                // Keep the latest submission if duplicates exist
+                if (
+                    !existing ||
+                    new Date(
+                        submission.Submitted_At ||
+                        submission.Graded_At ||
+                        0
+                    ) >= new Date(
+                        existing.Submitted_At ||
+                        existing.Graded_At ||
+                        0
+                    )
+                ) {
+                    submissionMap.set(key, submission);
+                }
+            });
 
+            const evaluationList = [];
 
-            assignments.forEach(item => {
-
+            (assignedMaterials || []).forEach((item) => {
                 const material = item.Materials;
 
-                if (!material) {
-                    return;
-                }
+                if (!material) return;
 
-                const subject = material.Subjects;
+                const materialAssignments = Array.isArray(
+                    material.Assignments
+                )
+                    ? material.Assignments
+                    : material.Assignments
+                        ? [material.Assignments]
+                        : [];
 
-                if (!subject) {
-                    return;
-                }
+                materialAssignments.forEach((assignment) => {
+                    if (!assignment?.Assignment_ID) return;
 
-                const assignment =
-                    material.Assignments?.[0];
-
-                // Ignore normal materials
-                if (!assignment) {
-                    return;
-                }
-
-
-                if (!subjectMap[subject.Subject_ID]) {
-
-                    subjectMap[subject.Subject_ID] = {
-
-                        Subject_ID:
-                            subject.Subject_ID,
-
-                        Subject_Name:
-                            subject.Subject_Name,
-
-                        assignments: [],
-
-                        gradedCount: 0,
-
-                        totalScore: 0,
-
-                        totalPoints: 0
-
-                    };
-
-                }
-
-
-                const submission =
-                    submissions.find(
-                        sub =>
-                            String(sub.Assignment_ID) ===
-                            String(assignment.Assignment_ID)
+                    const submission = submissionMap.get(
+                        String(assignment.Assignment_ID)
                     );
 
+                    const score =
+                        submission?.Score !== null &&
+                        submission?.Score !== undefined
+                            ? Number(submission.Score)
+                            : null;
 
-                subjectMap[
-                    subject.Subject_ID
-                ].assignments.push({
+                    const totalPoints =
+                        Number(assignment.Total_Points) || 0;
 
-                    ...assignment,
+                    const isGraded =
+                        score !== null &&
+                        submission?.Graded_At != null;
 
-                    submission
-
+                    evaluationList.push({
+                        Assignment_ID: assignment.Assignment_ID,
+                        Assignment_Name:
+                            material.Material_Name || "Untitled Assignment",
+                        Assignment_Type:
+                            assignment.Assignment_Type || "Assignment",
+                        Due_Date: assignment.Due_Date,
+                        Total_Points: totalPoints,
+                        Score: score,
+                        Status: submission?.Status || "Pending",
+                        Submitted_At: submission?.Submitted_At || null,
+                        Graded_At: submission?.Graded_At || null,
+                        Is_Late: submission?.Is_Late || false,
+                        Is_Graded: isGraded
+                    });
                 });
-
-
-                // --------------------------------
-                // Calculate grade
-                // --------------------------------
-
-                if (
-                    submission &&
-                    submission.Score !== null &&
-                    submission.Score !== undefined
-                ) {
-
-                    subjectMap[
-                        subject.Subject_ID
-                    ].gradedCount++;
-
-                    subjectMap[
-                        subject.Subject_ID
-                    ].totalScore +=
-                        Number(submission.Score);
-
-                    subjectMap[
-                        subject.Subject_ID
-                    ].totalPoints +=
-                        Number(assignment.Total_Points);
-
-                }
-
             });
 
+            // Show the most recent assignments first
+            evaluationList.sort((a, b) => {
+                const dateA = new Date(
+                    a.Graded_At || a.Submitted_At || a.Due_Date || 0
+                );
 
-            // --------------------------------
-            // Calculate subject grades
-            // --------------------------------
+                const dateB = new Date(
+                    b.Graded_At || b.Submitted_At || b.Due_Date || 0
+                );
 
-            const subjectResults =
-                Object.values(subjectMap).map(subject => {
-
-                    let grade = 0;
-
-                    if (subject.totalPoints > 0) {
-
-                        grade =
-                            (
-                                subject.totalScore /
-                                subject.totalPoints
-                            ) * 100;
-
-                    }
-
-                    return {
-
-                        ...subject,
-
-                        grade:
-                            Math.round(grade * 10) / 10
-
-                    };
-
-                });
-
-
-            // --------------------------------
-            // Calculate overall grade
-            // --------------------------------
-
-            let totalScore = 0;
-            let totalPoints = 0;
-
-            subjectResults.forEach(subject => {
-
-                totalScore += subject.totalScore;
-                totalPoints += subject.totalPoints;
-
+                return dateB - dateA;
             });
 
+            // Calculate the overall grade using graded assignments only
+            const gradedEvaluations = evaluationList.filter(
+                (evaluation) =>
+                    evaluation.Is_Graded &&
+                    evaluation.Total_Points > 0
+            );
 
-            const calculatedOverall =
+            const totalScore = gradedEvaluations.reduce(
+                (sum, evaluation) => sum + evaluation.Score,
+                0
+            );
+
+            const totalPoints = gradedEvaluations.reduce(
+                (sum, evaluation) => sum + evaluation.Total_Points,
+                0
+            );
+
+            const calculatedGrade =
                 totalPoints > 0
                     ? (totalScore / totalPoints) * 100
                     : 0;
 
-
             setOverallGrade(
-                Math.round(
-                    calculatedOverall * 10
-                ) / 10
+                Math.round(calculatedGrade * 10) / 10
             );
 
-
-            setSubjects(subjectResults);
-
-
+            setEvaluations(evaluationList);
         } catch (error) {
-
-            console.log(error);
-
+            console.error("Error loading student progress:", error);
         } finally {
-
             setLoading(false);
-
         }
-
     }
 
+    const gradedEvaluations = evaluations.filter(
+        (evaluation) =>
+            evaluation.Is_Graded &&
+            evaluation.Total_Points > 0
+    );
+
+    const pendingEvaluations = evaluations.filter(
+        (evaluation) => !evaluation.Is_Graded
+    );
+
+    const totalScore = gradedEvaluations.reduce(
+        (sum, evaluation) => sum + evaluation.Score,
+        0
+    );
+
+    const totalPoints = gradedEvaluations.reduce(
+        (sum, evaluation) => sum + evaluation.Total_Points,
+        0
+    );
+
+    function formatDate(date) {
+        if (!date) return "—";
+
+        const parsedDate = new Date(date);
+
+        if (Number.isNaN(parsedDate.getTime())) return "—";
+
+        return parsedDate.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+        });
+    }
 
     if (loading) {
-
         return (
             <div className="progress-loading">
                 Loading progress...
             </div>
         );
-
     }
 
-
     return (
-
         <div className="student-progress-container">
-
-            {/* -------------------------------- */}
-            {/* PAGE HEADER */}
-            {/* -------------------------------- */}
-
             <div className="progress-header">
-
-                <h1>
-                    Progress & Grades
-                </h1>
-
-                <p>
-                    👤 Tutor: {tutorName}
-                </p>
-
+                <h1>Progress & Grades</h1>
+                <p>👤 Tutor: {tutorName || "No tutor assigned"}</p>
             </div>
-
 
             <div className="progress-layout">
-
-
-                {/* ================================= */}
-                {/* LEFT SIDE */}
-                {/* ================================= */}
-
+                {/* OVERALL PROGRESS */}
                 <div className="subject-breakdown">
 
-                    <h3>
-                        Subject Breakdown
-                    </h3>
+                    <div className="evaluations">
+                        <h3>All Assignments</h3>
 
-
-                    {subjects.length === 0 ? (
-
-                        <div className="empty-progress">
-
-                            <h3>
-                                No graded assignments yet.
-                            </h3>
-
-                            <p>
-                                Your grades will appear here
-                                once your tutor grades your work.
-                            </p>
-
-                        </div>
-
-                    ) : (
-
-                        <div className="subject-progress-grid">
-
-                            {subjects.map(subject => (
-
-                                <div
-                                    key={subject.Subject_ID}
-                                    className="progress-subject-card"
-
-                                    onClick={() =>
-                                        navigate(
-                                            `/student/progress/subject/${subject.Subject_ID}`
-                                        )
-                                    }
-                                >
-
-                                    <div className="subject-icon">
-                                        📚
-                                    </div>
-
-
-                                    <div className="subject-card-content">
-
-                                        <h3>
-                                            {subject.Subject_Name}
-                                        </h3>
-
-                                        <p className="tutor-name">
-                                            👤 {tutorName}
-                                        </p>
-
-
-                                        <div className="grade-row">
-
-                                            <span>
-                                                Grade
-                                            </span>
-
-                                            <strong>
-                                                {subject.grade}%
-                                            </strong>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    <span className="progress-arrow">
-                                        ›
-                                    </span>
-
+                        {evaluations.length === 0 ? (
+                            <div className="empty-progress">
+                                <h3>No assignments yet.</h3>
+                                <p>
+                                    Your assignments and grades will appear
+                                    here once your tutor assigns work.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="evaluation-table">
+                                <div className="evaluation-header">
+                                    <span>DATE</span>
+                                    <span>ASSIGNMENT</span>
+                                    <span>SCORE</span>
                                 </div>
 
-                            ))}
+                                {evaluations.map((evaluation) => (
+                                    <div
+                                        key={evaluation.Assignment_ID}
+                                        className="evaluation-row"
+                                    >
+                                        <span>
+                                            {formatDate(
+                                                evaluation.Graded_At ||
+                                                evaluation.Submitted_At ||
+                                                evaluation.Due_Date
+                                            )}
+                                        </span>
 
-                        </div>
+                                        <div>
+                                            <strong>
+                                                {evaluation.Assignment_Name}
+                                            </strong>
 
-                    )}
+                                            <small>
+                                                {evaluation.Assignment_Type}
+                                            </small>
 
+                                            <small>
+                                                {evaluation.Is_Graded
+                                                    ? "Graded"
+                                                    : evaluation.Submitted_At
+                                                        ? "Submitted — awaiting grade"
+                                                        : "Not submitted"}
+                                            </small>
+                                        </div>
+
+                                        <span>
+                                            {evaluation.Is_Graded ? (
+                                                <strong>
+                                                    {evaluation.Score} /{" "}
+                                                    {evaluation.Total_Points}
+                                                </strong>
+                                            ) : (
+                                                <span className="pending-score">
+                                                    — / {evaluation.Total_Points}
+                                                </span>
+                                            )}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-
-                {/* ================================= */}
-                {/* RIGHT SIDE */}
-                {/* ================================= */}
-
+                {/* OVERALL PERFORMANCE */}
                 <div className="progress-overview">
-
-                    <h3>
-                        Overview
-                    </h3>
-
-
-                    {/* Overall Grade */}
+                    <h3>Overview</h3>
 
                     <div className="overall-grade-card">
-
-                        <span>
-                            Average Overall Grade
-                        </span>
-
-                        <strong>
-                            {overallGrade}%
-                        </strong>
-
-                        <p>
-                            Based on graded assignments
-                        </p>
-
+                        <span>Average Overall Grade</span>
+                        <strong>{overallGrade}%</strong>
+                        <p>Based on graded assignments</p>
                     </div>
-
-
-                    {/* Performance Highlights */}
 
                     <div className="performance-card">
+                        <h3>Performance Highlights</h3>
 
-                        <h3>
-                            Performance Highlights
-                        </h3>
+                        <div className="highlight-item">
+                            <span>GRADED ASSIGNMENTS</span>
+                            <strong>{gradedEvaluations.length}</strong>
+                        </div>
 
+                        <div className="highlight-item">
+                            <span>AWAITING GRADES</span>
+                            <strong>{pendingEvaluations.length}</strong>
+                        </div>
 
-                        {subjects.length > 0 && (() => {
-
-                            const strongest =
-                                [...subjects]
-                                    .sort(
-                                        (a, b) =>
-                                            b.grade - a.grade
-                                    )[0];
-
-
-                            const needsAttention =
-                                [...subjects]
-                                    .sort(
-                                        (a, b) =>
-                                            a.grade - b.grade
-                                    )[0];
-
-
-                            return (
-
-                                <>
-
-                                    <div className="highlight-item">
-
-                                        <span>
-                                            STRONGEST SUBJECT
-                                        </span>
-
-                                        <div>
-
-                                            <strong>
-                                                {
-                                                    strongest
-                                                        ?.Subject_Name
-                                                }
-                                            </strong>
-
-                                            <b>
-                                                {
-                                                    strongest
-                                                        ?.grade
-                                                }%
-                                            </b>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    <div className="highlight-item">
-
-                                        <span>
-                                            NEEDS ATTENTION
-                                        </span>
-
-                                        <div>
-
-                                            <strong>
-                                                {
-                                                    needsAttention
-                                                        ?.Subject_Name
-                                                }
-                                            </strong>
-
-                                            <b>
-                                                {
-                                                    needsAttention
-                                                        ?.grade
-                                                }%
-                                            </b>
-
-                                        </div>
-
-                                    </div>
-
-                                </>
-
-                            );
-
-                        })()}
-
+                        <div className="highlight-item">
+                            <span>OVERALL POINTS</span>
+                            <strong>
+                                {totalScore} / {totalPoints}
+                            </strong>
+                        </div>
                     </div>
-
                 </div>
-
             </div>
-
         </div>
-
     );
-
 }
 
 export default StudentProgress;

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate, useParams } from "react-router-dom";
@@ -7,44 +8,97 @@ import {
     File,
     Film,
     Image,
-    ClipboardList
+    ClipboardList,
+    Clock,
+    AlertCircle,
+    CheckCircle2,
 } from "lucide-react";
 import "./teacherSubjects.css";
 import { createNotification } from "../../Services/notificationService";
 
-// Icon + label per group (same look as StudentSubject)
 const TYPE_META = {
-    Assignments: { Icon: ClipboardList, color: "Green", label: "Assignment" },
-    PDF: { Icon: FileText, color: "red", label: "PDF" },
-    PowerPoint: { Icon: Presentation, color: "Goldenrod", label: "Power Point" },
-    Video: { Icon: Film, color: "Purple", label: "Video Recording" },
-    Image: { Icon: Image, color: "Black", label: "Image" },
-    Word: { Icon: File, color: "Blue", label: "Document" }
+    Due: { Icon: Clock, color: "#2563eb", label: "Due Assignments" },
+    Overdue: { Icon: AlertCircle, color: "#dc2626", label: "Overdue Assignments" },
+    "Not Graded": { Icon: ClipboardList, color: "#d97706", label: "Not Graded" },
+    Graded: { Icon: CheckCircle2, color: "#16a34a", label: "Graded Assignments" },
+    PDF: { Icon: FileText, color: "red", label: "PDF Files" },
+    PowerPoint: { Icon: Presentation, color: "Goldenrod", label: "PowerPoint Presentations" },
+    Video: { Icon: Film, color: "Purple", label: "Video Recordings" },
+    Image: { Icon: Image, color: "Black", label: "Images" },
+    Word: { Icon: File, color: "Blue", label: "Documents" },
+    Others: { Icon: FileText, color: "gray", label: "Other Files" },
 };
 
 function TypeTitle({ type, text }) {
     const meta = TYPE_META[type];
+
     if (!meta) return <>📁 {text ?? type}</>;
+
     const { Icon, color, label } = meta;
+
     return (
         <div className="Type-Title">
-            <Icon color={color} className="Type-Logo" /> {text ?? label}
+            <Icon color={color} className="Type-Logo" />
+            {text ?? label}
         </div>
     );
 }
 
-function getGroupType(material, assignment) {
-    if (assignment) return "Assignments";
-
+function getGroupType(material) {
     const extension =
         material.file_name?.split(".").pop().toLowerCase() || "";
 
     if (extension === "pdf") return "PDF";
-    if (["mp4", "mov", "avi", "mkv"].includes(extension)) return "Video";
-    if (["png", "jpg", "jpeg"].includes(extension)) return "Image";
+
+    if (["mp4", "mov", "avi", "mkv", "webm"].includes(extension)) {
+        return "Video";
+    }
+
+    if (["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(extension)) {
+        return "Image";
+    }
+
     if (["doc", "docx"].includes(extension)) return "Word";
+
     if (["ppt", "pptx"].includes(extension)) return "PowerPoint";
+
     return "Others";
+}
+
+// Determine the tutor-side assignment panel.
+function getAssignmentPanel(assignment, submission) {
+    if (submission) {
+        const status = String(submission.Status || "")
+            .trim()
+            .toLowerCase();
+
+        const hasGrade =
+            submission.Score !== null &&
+            submission.Score !== undefined &&
+            submission.Score !== "";
+
+        if (status === "graded" || hasGrade) {
+            return "Graded";
+        }
+
+        // A submitted assignment without a grade belongs here.
+        if (status !== "draft") {
+            return "Not Graded";
+        }
+    }
+
+    if (assignment.Due_Date) {
+        const deadline = new Date(assignment.Due_Date);
+
+        if (
+            !Number.isNaN(deadline.getTime()) &&
+            deadline.getTime() < Date.now()
+        ) {
+            return "Overdue";
+        }
+    }
+
+    return "Due";
 }
 
 function TeacherSubjects() {
@@ -52,10 +106,11 @@ function TeacherSubjects() {
     const navigate = useNavigate();
 
     const [subjects, setSubjects] = useState([]);
-    const [student, setStudent] = useState([]);
-    const [title, setTitle] = useState("");
+    const [student, setStudent] = useState(null);
     const [allSubjects, setAllSubjects] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState("");
+
+    const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [file, setFile] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -73,7 +128,8 @@ function TeacherSubjects() {
     const [editTotalPoints, setEditTotalPoints] = useState("");
 
     const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
-    const [selectedAssignmentForGrading, setSelectedAssignmentForGrading] = useState(null);
+    const [selectedAssignmentForGrading, setSelectedAssignmentForGrading] =
+        useState(null);
     const [submissions, setSubmissions] = useState([]);
     const [loadingSubmissions, setLoadingSubmissions] = useState(false);
 
@@ -86,94 +142,193 @@ function TeacherSubjects() {
 
     useEffect(() => {
         LoadData();
-    }, []);
+    }, [studentID]);
 
     async function LoadData() {
+        // Get assigned materials and their assignments.
         const { data, error } = await supabase
             .from("Material_Assignment")
             .select(`
                 ID,
-                Materials(
+                Materials (
                     Material_ID,
                     Material_Name,
                     Material_URL,
                     Material_Description,
                     file_name,
-                    users(Name),
-                    Subjects(Subject_ID, Subject_Name),
-                    Assignments(Assignment_ID, Assignment_Type, Due_Date, Total_Points)
+                    users (Name),
+                    Subjects (Subject_ID, Subject_Name),
+                    Assignments (
+                        Assignment_ID,
+                        Assignment_Type,
+                        Due_Date,
+                        Total_Points
+                    )
                 )
             `)
             .eq("Student_ID", studentID);
 
         if (error) {
-            console.log(error);
+            console.error("Error loading materials:", error);
             return;
         }
 
-        // Student's submissions
-        const { data: submissionData, error: submissionError } = await supabase
+        // Get all submissions for this student.
+        const {
+            data: submissionData,
+            error: submissionError,
+        } = await supabase
             .from("Assignment_Submissions")
-            .select(`Submission_ID, Assignment_ID, Student_ID`)
+            .select(`
+                Submission_ID,
+                Assignment_ID,
+                Student_ID,
+                Submission_URL,
+                file_name,
+                Submitted_At,
+                Status,
+                Score,
+                Feedback,
+                Graded_At,
+                Is_Late
+            `)
             .eq("Student_ID", studentID);
 
         if (submissionError) {
-            console.log("SUBMISSION CHECK ERROR:", submissionError);
-        } else {
-            const submissionMap = {};
-            submissionData.forEach(s => {
-                submissionMap[s.Assignment_ID] = true;
-            });
-            setSubmittedAssignments(submissionMap);
+            console.error("Error loading submissions:", submissionError);
+            return;
         }
 
-        // Group all files globally by category, regardless of subject.
-        const grouped = data.reduce((acc, item) => {
+        // Keep the latest submission for each assignment.
+        const submissionMap = {};
+
+        (submissionData || []).forEach((submission) => {
+            const key = String(submission.Assignment_ID);
+
+            if (
+                !submissionMap[key] ||
+                new Date(submission.Submitted_At || submission.created_at || 0) >
+                    new Date(
+                        submissionMap[key].Submitted_At ||
+                        submissionMap[key].created_at ||
+                        0
+                    )
+            ) {
+                submissionMap[key] = submission;
+            }
+        });
+
+        const submittedMap = {};
+
+        Object.keys(submissionMap).forEach((assignmentID) => {
+            submittedMap[assignmentID] = true;
+        });
+
+        setSubmittedAssignments(submittedMap);
+
+        // Group assignments by status and other materials by file category.
+        const grouped = {};
+
+        (data || []).forEach((item) => {
             const material = item.Materials;
-            if (!material) return acc;
 
-            const assignment = material.Assignments?.[0];
-            const type = getGroupType(material, assignment);
+            if (!material) return;
 
-            if (!acc[type]) {
-                acc[type] = [];
+            const assignments = Array.isArray(material.Assignments)
+                ? material.Assignments
+                : material.Assignments
+                    ? [material.Assignments]
+                    : [];
+
+            if (assignments.length > 0) {
+                assignments.forEach((assignment) => {
+                    const submission =
+                        submissionMap[String(assignment.Assignment_ID)] || null;
+
+                    const type = getAssignmentPanel(assignment, submission);
+
+                    if (!grouped[type]) {
+                        grouped[type] = [];
+                    }
+
+                    grouped[type].push({
+                        ...material,
+                        assignment,
+                        submission,
+                        assignmentID: item.ID,
+                        uniqueKey: `${item.ID}-${assignment.Assignment_ID}`,
+                    });
+                });
+
+                return;
             }
 
-            acc[type].push(material);
-            return acc;
-        }, {});
+            const type = getGroupType(material);
 
-        // Keep the existing state shape so the total-material counter still works.
+            if (!grouped[type]) {
+                grouped[type] = [];
+            }
+
+            grouped[type].push({
+                ...material,
+                assignment: null,
+                submission: null,
+                assignmentID: item.ID,
+                uniqueKey: `${item.ID}-${material.Material_ID}`,
+            });
+        });
+
+        const categoryOrder = [
+            "Due",
+            "Overdue",
+            "Not Graded",
+            "Graded",
+            "PDF",
+            "Word",
+            "PowerPoint",
+            "Video",
+            "Image",
+            "Others",
+        ];
+
+        const sortedGroups = categoryOrder
+            .filter((type) => grouped[type]?.length)
+            .map((type) => [type, grouped[type]]);
+
         setSubjects(
-            Object.keys(grouped).length > 0
-                ? [{ fileTypes: grouped }]
+            sortedGroups.length > 0
+                ? [{ fileTypes: Object.fromEntries(sortedGroups) }]
                 : []
         );
 
-        // Student
-        const { data: UserData, error: UserError } = await supabase
+        // Get student details.
+        const { data: userData, error: userError } = await supabase
             .from("users")
             .select("*")
             .eq("id", studentID)
             .single();
 
-        if (UserError) return;
-        setStudent(UserData);
+        if (userError) {
+            console.error("Error loading student:", userError);
+            return;
+        }
 
-        // Subjects
+        setStudent(userData);
+
+        // Preserve existing subject data.
         const { data: subjectData, error: subjectError } = await supabase
             .from("Subjects")
             .select("*")
             .order("Subject_Name");
 
         if (subjectError) {
-            console.log(subjectError);
+            console.error(subjectError);
             return;
         }
 
-        setAllSubjects(subjectData);
+        setAllSubjects(subjectData || []);
 
-        if (subjectData.length > 0) {
+        if (subjectData?.length > 0) {
             setSelectedSubject(subjectData[0].Subject_ID);
         }
     }
@@ -181,34 +336,36 @@ function TeacherSubjects() {
     async function uploadMaterial() {
         if (isUploading) return;
 
-        if (
-            !title.trim() ||
-            !description.trim() ||
-            !file ||
-            !contentType
-        ) {
+        if (!title.trim() || !description.trim() || !file || !contentType) {
             alert("Fill up all fields.");
             return;
         }
 
-        if (contentType === "Assignment") {
-            if (!assignmentType || !dueDate || !totalPoints || Number(totalPoints) <= 0) {
-                alert("Fill up all fields.");
-                return;
-            }
+        if (
+            contentType === "Assignment" &&
+            (!assignmentType ||
+                !dueDate ||
+                !totalPoints ||
+                Number(totalPoints) <= 0)
+        ) {
+            alert("Fill up all assignment fields.");
+            return;
         }
 
         setIsUploading(true);
 
         try {
-            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            const {
+                data: { user },
+                error: authError,
+            } = await supabase.auth.getUser();
 
             if (authError || !user) {
-                console.log(authError);
+                console.error(authError);
+                alert("Unable to identify the logged-in tutor.");
                 return;
             }
 
-            // 1. Upload file
             const fileName = `${Date.now()}-${file.name}`;
 
             const { error: uploadError } = await supabase.storage
@@ -216,7 +373,7 @@ function TeacherSubjects() {
                 .upload(fileName, file);
 
             if (uploadError) {
-                console.log(uploadError);
+                console.error(uploadError);
                 alert("Failed to upload file.");
                 return;
             }
@@ -225,7 +382,6 @@ function TeacherSubjects() {
                 .from("Material_Storage")
                 .getPublicUrl(fileName);
 
-            // 2. Tutor
             const { data: tutor, error: tutorError } = await supabase
                 .from("users")
                 .select("id")
@@ -233,12 +389,11 @@ function TeacherSubjects() {
                 .single();
 
             if (tutorError) {
-                console.log(tutorError);
+                console.error(tutorError);
                 alert("Unable to find tutor.");
                 return;
             }
 
-            // 3. Material
             const { data: material, error: materialError } = await supabase
                 .from("Materials")
                 .insert({
@@ -246,48 +401,47 @@ function TeacherSubjects() {
                     Material_Name: title,
                     Material_Description: description,
                     Material_URL: urlData.publicUrl,
-                    file_name: file.name
+                    file_name: file.name,
                 })
                 .select()
                 .single();
 
             if (materialError) {
-                console.log(materialError);
+                console.error(materialError);
                 alert("Failed to create material.");
                 return;
             }
 
-            // 4. Assign to student
             const { error: assignmentError } = await supabase
                 .from("Material_Assignment")
                 .insert({
                     Material_ID: material.Material_ID,
-                    Student_ID: studentID
+                    Student_ID: studentID,
                 });
 
             if (assignmentError) {
-                console.log(assignmentError);
+                console.error(assignmentError);
                 alert("Failed to assign material.");
                 return;
             }
 
-            // 5. Assignment
             let createdAssignment = null;
 
             if (contentType === "Assignment") {
-                const { data: assignment, error: gradedAssignmentError } = await supabase
-                    .from("Assignments")
-                    .insert({
-                        Material_ID: material.Material_ID,
-                        Assignment_Type: assignmentType,
-                        Due_Date: dueDate,
-                        Total_Points: Number(totalPoints)
-                    })
-                    .select()
-                    .single();
+                const { data: assignment, error: createAssignmentError } =
+                    await supabase
+                        .from("Assignments")
+                        .insert({
+                            Material_ID: material.Material_ID,
+                            Assignment_Type: assignmentType,
+                            Due_Date: new Date(dueDate).toISOString(),
+                            Total_Points: Number(totalPoints),
+                        })
+                        .select()
+                        .single();
 
-                if (gradedAssignmentError) {
-                    console.log(gradedAssignmentError);
+                if (createAssignmentError) {
+                    console.error(createAssignmentError);
                     alert("Failed to create assignment.");
                     return;
                 }
@@ -295,7 +449,6 @@ function TeacherSubjects() {
                 createdAssignment = assignment;
             }
 
-            // 6. Notification
             if (contentType === "Assignment") {
                 await createNotification({
                     userId: Number(studentID),
@@ -304,7 +457,7 @@ function TeacherSubjects() {
                     type: "Assignment",
                     relatedTable: "Assignments",
                     relatedId: createdAssignment.Assignment_ID,
-                    actionUrl: `/student/materials`
+                    actionUrl: "/student/materials",
                 });
             } else {
                 await createNotification({
@@ -314,14 +467,14 @@ function TeacherSubjects() {
                     type: "Material",
                     relatedTable: "Materials",
                     relatedId: material.Material_ID,
-                    actionUrl: `/student/materials`
+                    actionUrl: "/student/materials",
                 });
             }
 
             alert(
                 contentType === "Assignment"
-                    ? "Assignment Uploaded!"
-                    : "Material Uploaded!"
+                    ? "Assignment uploaded!"
+                    : "Material uploaded!"
             );
 
             await LoadData();
@@ -334,9 +487,8 @@ function TeacherSubjects() {
             setDueDate("");
             setTotalPoints("");
             setShowModal(false);
-
         } catch (error) {
-            console.log(error);
+            console.error(error);
             alert("Something went wrong.");
         } finally {
             setIsUploading(false);
@@ -346,13 +498,13 @@ function TeacherSubjects() {
     async function updateAssignment() {
         if (!editingAssignment) return;
 
-        if (!editAssignmentType || !editDueDate || !editTotalPoints) {
-            alert("Fill up all fields.");
-            return;
-        }
-
-        if (Number(editTotalPoints) <= 0) {
-            alert("Fill up all fields.");
+        if (
+            !editAssignmentType ||
+            !editDueDate ||
+            !editTotalPoints ||
+            Number(editTotalPoints) <= 0
+        ) {
+            alert("Fill up all fields correctly.");
             return;
         }
 
@@ -360,14 +512,14 @@ function TeacherSubjects() {
             .from("Assignments")
             .update({
                 Assignment_Type: editAssignmentType,
-                Due_Date: editDueDate,
+                Due_Date: new Date(editDueDate).toISOString(),
                 Total_Points: Number(editTotalPoints),
-                Updated_At: new Date().toISOString()
+                Updated_At: new Date().toISOString(),
             })
             .eq("Assignment_ID", editingAssignment.Assignment_ID);
 
         if (error) {
-            console.log(error);
+            console.error(error);
             alert("Failed to update assignment.");
             return;
         }
@@ -382,9 +534,18 @@ function TeacherSubjects() {
 
     function openEditAssignment(assignment) {
         setEditingAssignment(assignment);
-        setEditAssignmentType(assignment.Assignment_Type);
-        setEditDueDate(assignment.Due_Date ? assignment.Due_Date.slice(0, 16) : "");
-        setEditTotalPoints(assignment.Total_Points);
+        setEditAssignmentType(assignment.Assignment_Type || "");
+        setEditDueDate(
+            assignment.Due_Date
+                ? new Date(
+                      new Date(assignment.Due_Date).getTime() -
+                      new Date(assignment.Due_Date).getTimezoneOffset() * 60000
+                  )
+                      .toISOString()
+                      .slice(0, 16)
+                : ""
+        );
+        setEditTotalPoints(assignment.Total_Points ?? "");
         setShowEditModal(true);
     }
 
@@ -408,10 +569,11 @@ function TeacherSubjects() {
                 Is_Late
             `)
             .eq("Assignment_ID", assignment.Assignment_ID)
-            .eq("Student_ID", studentID);
+            .eq("Student_ID", studentID)
+            .order("Submitted_At", { ascending: false });
 
         if (error) {
-            console.log("SUBMISSION ERROR:", error);
+            console.error("Submission error:", error);
             alert("Failed to load submissions.");
             setLoadingSubmissions(false);
             return;
@@ -426,11 +588,13 @@ function TeacherSubjects() {
         if (isGrading || !selectedSubmission) return;
 
         if (score === "" || Number(score) < 0) {
-            alert("Fill up all fields.");
+            alert("Enter a valid score.");
             return;
         }
 
-        const maxPoints = Number(selectedAssignmentForGrading.Total_Points);
+        const maxPoints = Number(
+            selectedAssignmentForGrading?.Total_Points
+        );
 
         if (Number(score) > maxPoints) {
             alert(`Score cannot exceed ${maxPoints} points.`);
@@ -446,12 +610,12 @@ function TeacherSubjects() {
                     Score: Number(score),
                     Feedback: feedback,
                     Graded_At: new Date().toISOString(),
-                    Status: "Graded"
+                    Status: "Graded",
                 })
                 .eq("Submission_ID", selectedSubmission.Submission_ID);
 
             if (error) {
-                console.log(error);
+                console.error(error);
                 alert("Failed to save grade.");
                 return;
             }
@@ -463,7 +627,7 @@ function TeacherSubjects() {
                 type: "Grade",
                 relatedTable: "Assignment_Submissions",
                 relatedId: selectedSubmission.Submission_ID,
-                actionUrl: "/student/materials"
+                actionUrl: "/student/materials",
             });
 
             alert("Grade saved successfully!");
@@ -474,9 +638,9 @@ function TeacherSubjects() {
             setFeedback("");
 
             await loadSubmissions(selectedAssignmentForGrading);
-
+            await LoadData();
         } catch (error) {
-            console.log(error);
+            console.error(error);
             alert("Something went wrong.");
         } finally {
             setIsGrading(false);
@@ -504,109 +668,171 @@ function TeacherSubjects() {
 
     return (
         <div className="teacher-subject-container">
-
-            {/* Breadcrumb */}
             <div className="breadcrumb">
                 <button onClick={() => navigate(-1)}>Students</button>
                 <span>›</span>
                 <span>{student?.Name || "Unknown"}</span>
             </div>
 
-            {/* Header */}
             <div className="teacher-header">
                 <div>
                     <h1>📚 Files ni {student?.Name || "Unknown"}</h1>
                     <p>{totalMaterials} materials</p>
                 </div>
 
-                <button className="btn-primary" onClick={() => setShowModal(true)}>
+                <button
+                    className="btn-primary"
+                    onClick={() => setShowModal(true)}
+                >
                     Upload File
                 </button>
             </div>
 
-            {subjects.length === 0 && (
+            {subjects.length === 0 ? (
                 <div className="empty-state">
                     No files yet. Upload a material or assignment to get started.
                 </div>
-            )}
-
-            {subjects.length > 0 && (
+            ) : (
                 <div className="teacher-subject-section">
-                    {Object.entries(subjects[0].fileTypes).map(([type, materials]) => (
-                        <div key={type} className="material-type-section">
-                            <h3><TypeTitle type={type} /></h3>
+                    {Object.entries(subjects[0].fileTypes).map(
+                        ([type, materials]) => (
+                            <div key={type} className="material-type-section">
+                                
 
-                            {materials.map(material => {
-                                const assignment = material.Assignments?.[0];
+                                <div className="typeTitleContainer">
+                                    <h3>
+                                    <TypeTitle type={type} />
+                                    </h3>
 
-                                return (
-                                    <div
-                                        key={material.Material_ID}
-                                        className="material-list-card"
-                                    >
-                                        <div>
-                                            <h4>
-                                                <TypeTitle
-                                                    type={type}
-                                                    text={material.Material_Name}
-                                                />
-                                            </h4>
+                                    <h3>
+                                          {" "}({materials.length})
+                                    </h3>
+                                </div>
 
-                                            <p>
-                                                Subject: {material.Subjects?.Subject_Name || "Unknown Subject"}
-                                            </p>
+                                {materials.map((material) => {
+                                    const assignment = material.assignment;
+                                    const submission = material.submission;
 
-                                            {assignment ? (
-                                                <p>
-                                                    {assignment.Assignment_Type}
-                                                    {" • "}
-                                                    Due:{" "}
-                                                    {assignment.Due_Date
-                                                        ? new Date(assignment.Due_Date).toLocaleString()
-                                                        : "No due date"}
-                                                    {" • "}
-                                                    {assignment.Total_Points} points
-                                                </p>
-                                            ) : (
-                                                <p>{material.Material_Description}</p>
-                                            )}
-                                        </div>
+                                    return (
+                                        <div
+                                            key={material.uniqueKey}
+                                            className="material-list-card"
+                                        >
+                                            <div>
+                                                <h4>
+                                                    <TypeTitle
+                                                        type={type}
+                                                        text={material.Material_Name}
+                                                    />
+                                                </h4>
 
-                                        <div className="material-actions">
-                                            <a
-                                                href={material.Material_URL}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                <button className="btn-secondary btn-small">
-                                                    Open
-                                                </button>
-                                            </a>
+                                                {assignment ? (
+                                                    <>
+                                                        <p>
+                                                            {assignment.Assignment_Type}
+                                                            {" • "}
+                                                            Due:{" "}
+                                                            {assignment.Due_Date
+                                                                ? new Date(
+                                                                      assignment.Due_Date
+                                                                  ).toLocaleString()
+                                                                : "No due date"}
+                                                            {" • "}
+                                                            {assignment.Total_Points} points
+                                                        </p>
 
-                                            {assignment && (
-                                                <button
-                                                    className="btn-secondary btn-small"
-                                                    onClick={() => openEditAssignment(assignment)}
-                                                >
-                                                    ✏️ Edit
-                                                </button>
-                                            )}
+                                                        {submission && (
+                                                            <p>
+                                                                Submission status:{" "}
+                                                                {submission.Status || "Submitted"}
+                                                                {submission.Score !== null &&
+                                                                    submission.Score !== undefined &&
+                                                                    ` • Score: ${submission.Score}/${assignment.Total_Points}`}
+                                                            </p>
+                                                        )}
 
-                                            {assignment &&
-                                                submittedAssignments[assignment.Assignment_ID] && (
-                                                    <button
-                                                        className="btn-primary btn-small"
-                                                        onClick={() => loadSubmissions(assignment)}
+                                                        {type === "Due" && (
+                                                            <p className="assignment-due">
+                                                                Awaiting submission
+                                                            </p>
+                                                        )}
+
+                                                        {type === "Overdue" && (
+                                                            <p className="assignment-overdue">
+                                                                Deadline passed — no submission
+                                                            </p>
+                                                        )}
+
+                                                        {type === "Not Graded" && (
+                                                            <p className="assignment-not-graded">
+                                                                Submitted — awaiting grading
+                                                            </p>
+                                                        )}
+
+                                                        {type === "Graded" && (
+                                                            <p className="assignment-graded">
+                                                                Graded
+                                                            </p>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <p>
+                                                            Subject:{" "}
+                                                            {material.Subjects?.Subject_Name ||
+                                                                "Unspecified"}
+                                                        </p>
+                                                        <p>
+                                                            {material.Material_Description}
+                                                        </p>
+                                                    </>
+                                                )}
+                                            </div>
+
+                                            <div className="material-actions">
+                                                {material.Material_URL && (
+                                                    <a
+                                                        href={material.Material_URL}
+                                                        target="_blank"
+                                                        rel="noreferrer"
                                                     >
-                                                        👁️ View Submission
+                                                        <button className="btn-secondary btn-small">
+                                                            Open
+                                                        </button>
+                                                    </a>
+                                                )}
+
+                                                {assignment && (
+                                                    <button
+                                                        className="btn-secondary btn-small"
+                                                        onClick={() =>
+                                                            openEditAssignment(assignment)
+                                                        }
+                                                    >
+                                                        ✏️ Edit
                                                     </button>
                                                 )}
+
+                                                {assignment &&
+                                                    submittedAssignments[
+                                                        assignment.Assignment_ID
+                                                    ] && (
+                                                        <button
+                                                            className="btn-primary btn-small"
+                                                            onClick={() =>
+                                                                loadSubmissions(assignment)
+                                                            }
+                                                        >
+                                                            👁️ View Submission
+                                                        </button>
+                                                    )}
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ))}
+                                    );
+                                })}
+                            </div>
+                        )
+                    )}
                 </div>
             )}
 
@@ -630,9 +856,10 @@ function TeacherSubjects() {
 
                         <input
                             type="file"
-                            onChange={(e) => setFile(e.target.files[0])}
+                            onChange={(e) =>
+                                setFile(e.target.files?.[0] || null)
+                            }
                         />
-
 
                         <label>Content Type</label>
                         <select
@@ -648,7 +875,9 @@ function TeacherSubjects() {
                                 <label>Assignment Type</label>
                                 <select
                                     value={assignmentType}
-                                    onChange={(e) => setAssignmentType(e.target.value)}
+                                    onChange={(e) =>
+                                        setAssignmentType(e.target.value)
+                                    }
                                 >
                                     {assignmentOptions}
                                 </select>
@@ -665,7 +894,9 @@ function TeacherSubjects() {
                                     type="number"
                                     min="1"
                                     value={totalPoints}
-                                    onChange={(e) => setTotalPoints(e.target.value)}
+                                    onChange={(e) =>
+                                        setTotalPoints(e.target.value)
+                                    }
                                     placeholder="e.g. 20"
                                 />
                             </div>
@@ -678,6 +909,7 @@ function TeacherSubjects() {
                             >
                                 Close
                             </button>
+
                             <button
                                 className="btn-primary"
                                 onClick={uploadMaterial}
@@ -690,7 +922,7 @@ function TeacherSubjects() {
                 </div>
             )}
 
-            {/* EDIT MODAL */}
+            {/* EDIT ASSIGNMENT MODAL */}
             {showEditModal && (
                 <div className="modal-overlay">
                     <div className="modal">
@@ -699,7 +931,9 @@ function TeacherSubjects() {
                         <label>Assignment Type</label>
                         <select
                             value={editAssignmentType}
-                            onChange={(e) => setEditAssignmentType(e.target.value)}
+                            onChange={(e) =>
+                                setEditAssignmentType(e.target.value)
+                            }
                         >
                             {assignmentOptions}
                         </select>
@@ -729,7 +963,11 @@ function TeacherSubjects() {
                             >
                                 Cancel
                             </button>
-                            <button className="btn-primary" onClick={updateAssignment}>
+
+                            <button
+                                className="btn-primary"
+                                onClick={updateAssignment}
+                            >
                                 Save Changes
                             </button>
                         </div>
@@ -743,32 +981,45 @@ function TeacherSubjects() {
                     <div className="modal">
                         <h2>Student Submissions</h2>
 
-                        <h3>{selectedAssignmentForGrading?.Assignment_Type}</h3>
+                        <h3>
+                            {selectedAssignmentForGrading?.Assignment_Type}
+                        </h3>
 
-                        <p>Total Points: {selectedAssignmentForGrading?.Total_Points}</p>
+                        <p>
+                            Total Points:{" "}
+                            {selectedAssignmentForGrading?.Total_Points}
+                        </p>
 
                         {loadingSubmissions ? (
                             <p>Loading submissions...</p>
                         ) : submissions.length === 0 ? (
-                            <p>No students have submitted yet.</p>
+                            <p>No submissions yet.</p>
                         ) : (
-                            submissions.map(submission => (
+                            submissions.map((submission) => (
                                 <div
                                     key={submission.Submission_ID}
                                     className="submission-card"
                                 >
                                     <h4>👤 {student?.Name}</h4>
 
-                                    <p>Status: {submission.Status}</p>
+                                    <p>
+                                        Status: {submission.Status || "Submitted"}
+                                    </p>
 
                                     <p>
                                         Submission:{" "}
-                                        {submission.Is_Late ? "⚠️ Late" : "✅ On Time"}
+                                        {submission.Is_Late
+                                            ? "⚠️ Late"
+                                            : "✅ On Time"}
                                     </p>
 
                                     <p>
                                         Submitted:{" "}
-                                        {new Date(submission.Submitted_At).toLocaleString()}
+                                        {submission.Submitted_At
+                                            ? new Date(
+                                                  submission.Submitted_At
+                                              ).toLocaleString()
+                                            : "Not available"}
                                     </p>
 
                                     {submission.Submission_URL && (
@@ -788,6 +1039,10 @@ function TeacherSubjects() {
                                             ? `${submission.Score} / ${selectedAssignmentForGrading.Total_Points}`
                                             : "Not graded"}
                                     </p>
+
+                                    {submission.Feedback && (
+                                        <p>Feedback: {submission.Feedback}</p>
+                                    )}
 
                                     <button
                                         className="btn-primary btn-small"
@@ -833,23 +1088,32 @@ function TeacherSubjects() {
 
                         <p>File: {selectedSubmission?.file_name}</p>
                         <p>Status: {selectedSubmission?.Status}</p>
+
                         <p>
                             Submission:{" "}
-                            {selectedSubmission?.Is_Late ? "⚠️ Late" : "✅ On Time"}
-                        </p>
-                        <p>
-                            Submitted:{" "}
-                            {selectedSubmission &&
-                                new Date(selectedSubmission.Submitted_At).toLocaleString()}
+                            {selectedSubmission?.Is_Late
+                                ? "⚠️ Late"
+                                : "✅ On Time"}
                         </p>
 
-                        <a
-                            href={selectedSubmission?.Submission_URL}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            📄 Open Student Submission
-                        </a>
+                        <p>
+                            Submitted:{" "}
+                            {selectedSubmission?.Submitted_At
+                                ? new Date(
+                                      selectedSubmission.Submitted_At
+                                  ).toLocaleString()
+                                : "Not available"}
+                        </p>
+
+                        {selectedSubmission?.Submission_URL && (
+                            <a
+                                href={selectedSubmission.Submission_URL}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
+                                📄 Open Student Submission
+                            </a>
+                        )}
 
                         <label>Score</label>
                         <input
@@ -880,6 +1144,7 @@ function TeacherSubjects() {
                             >
                                 Cancel
                             </button>
+
                             <button
                                 className="btn-primary"
                                 onClick={gradeSubmission}

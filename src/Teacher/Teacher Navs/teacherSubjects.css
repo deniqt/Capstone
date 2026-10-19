@@ -319,3 +319,15 @@
         justify-content: flex-start;
     }
 }
+
+
+.typeTitleContainer{
+    display: flex;
+    flex-direction: row;
+    align-content: center;
+    align-items: center;
+}
+
+.typeTitleContainer h3{
+ margin-right: 5px;
+}

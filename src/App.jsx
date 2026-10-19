@@ -29,7 +29,6 @@ import LandingPage from './Login/LandingPage'
 import Register from './Login/Register'
 import UploadMaterial from './Teacher/Teacher Navs/UploadMaterial'
 import TeacherSubjects from './Teacher/Teacher Navs/TeacherSubjects'
-import StudentSubject from './Student/Student Navs/StudentSubject'
 import StudentAssignment from './Student/Student Navs/StudentAssignment'
 import StudentMaterialDetails from './Student/Student Navs/StudentMaterialDetails'
 import StudentProgressSubject from './Student/Student Navs/StudentProgressSubject'
@@ -107,11 +106,6 @@ function App() {
           <Route
               path="progress/subject/:subjectID"
               element={<StudentProgressSubject />}
-          />
-
-          <Route
-              path="materials/subject/:subjectID"
-              element={<StudentSubject />}
           />
 
           <Route
