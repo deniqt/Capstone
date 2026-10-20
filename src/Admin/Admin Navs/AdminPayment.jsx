@@ -3,6 +3,8 @@ import './adminPayment.css'
 import { data } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 
+// Preset prices shown as quick-pick buttons in the "Add Sales" modal
+const SALE_PRESETS = [200, 3500, 300, 80];
 
 function AdminPayment(){
 
@@ -22,6 +24,14 @@ function AdminPayment(){
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [paymentToDelete, setPaymentToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
+
+    // Add Sales modal
+    const [showSaleModal, setShowSaleModal] = useState(false);
+    const [saleName, setSaleName] = useState("");
+    const [saleService, setSaleService] = useState("");
+    const [salePrice, setSalePrice] = useState("");
+    const [saleMethod, setSaleMethod] = useState("CASH");
+    const [savingSale, setSavingSale] = useState(false);
 
         useEffect(() => { 
             getUsers();
@@ -66,9 +76,18 @@ function AdminPayment(){
     }
 
     async function getSelectedStudent(StudentID) {
+        // Clearing the dropdown back to "Select a Student"
+        if (!StudentID) {
+            setSelectedStudent(null);
+            return;
+        }
+
         const { data: student, error } = await supabase
         .from("users")
-        .select("*")
+        .select(`
+            *,
+            details:user_details!users_detail_id_fkey(*)
+        `)
         .eq("id", StudentID)
         .single();
 
@@ -185,12 +204,93 @@ function AdminPayment(){
         }
     }
 
-        const totalRevenue = paymentLists
+    // Records a one-off sale (not tied to a student subscription).
+    // It does NOT touch the users table, so nobody gets activated.
+    async function addSale(){
+        if (savingSale) return;
+
+        const price = Number(salePrice);
+
+        if (!saleName.trim()) {
+            alert("Please enter a name.");
+            return;
+        }
+
+        if (!saleService.trim()) {
+            alert("Please enter the service.");
+            return;
+        }
+
+        if (!price || price <= 0) {
+            alert("Please enter a valid price.");
+            return;
+        }
+
+        if (!admin) {
+            alert("Unable to identify the logged-in admin. Please refresh and try again.");
+            return;
+        }
+
+        setSavingSale(true);
+
+        try{
+
+            const { error } = await supabase
+                .from("payments")
+                .insert({
+                    student_id: null,
+                    customer_name: saleName.trim(),
+                    service: saleService.trim(),
+                    amount: price,
+                    months: 0,
+                    payment_date: new Date().toISOString(),
+                    admin_id: admin.id,
+                    status: "Completed",
+                    method: saleMethod
+                });
+
+            if (error) {
+                console.error(error);
+                alert("Unable to save sale: " + error.message);
+                return;
+            }
+
+            closeSaleModal();
+            alert("Sale added successfully.");
+            getPaymentList();
+
+        }catch(err){
+
+            console.error(err);
+            alert("Something went wrong.");
+
+        }finally{
+
+            setSavingSale(false);
+
+        }
+    }
+
+    function closeSaleModal(){
+        setShowSaleModal(false);
+        setSaleName("");
+        setSaleService("");
+        setSalePrice("");
+        setSaleMethod("CASH");
+    }
+
+    // A payment is either a student subscription (has a student) or a
+    // walk-in sale (has customer_name instead).
+    function getPaymentName(payment){
+        return payment.student?.Name || payment.customer_name || "Walk-in";
+    }
+
+    const totalRevenue = paymentLists
 
         .filter(payment=>payment.status==="Completed")
 
         .reduce(
-        (sum,payment)=>sum+payment.amount,
+        (sum,payment)=>sum+Number(payment.amount),
         0
         );
 
@@ -211,7 +311,7 @@ function AdminPayment(){
      const latestRefundable = {};
 
     paymentLists
-        .filter(payment => payment.status === "Completed")
+        .filter(payment => payment.status === "Completed" && payment.student_id)
         .forEach(payment => {
             const current = latestRefundable[payment.student_id];
 
@@ -232,7 +332,7 @@ function AdminPayment(){
             payment.status === filter;
 
         const matchesSearch =
-            payment.student.Name
+            getPaymentName(payment)
                 .toLowerCase()
                 .includes(search.toLowerCase().trim());
 
@@ -398,46 +498,52 @@ function AdminPayment(){
                 return;
             }
 
-            // Recalculate the student's subscription status now that this
-            // payment is gone, the same way a refund does.
-            const { data: remainingPayments, error: remainingError } = await supabase
-                .from("payments")
-                .select("*")
-                .eq("student_id", paymentToDelete.student_id)
-                .eq("status", "Completed")
-                .order("subscription_expires", { ascending: false });
+            // Walk-in sales have no student, so there is no subscription
+            // status to recalculate.
+            if (paymentToDelete.student_id) {
 
-            if (remainingError) {
-                console.error(remainingError);
-            } else if (remainingPayments.length === 0) {
+                // Recalculate the student's subscription status now that this
+                // payment is gone, the same way a refund does.
+                const { data: remainingPayments, error: remainingError } = await supabase
+                    .from("payments")
+                    .select("*")
+                    .eq("student_id", paymentToDelete.student_id)
+                    .eq("status", "Completed")
+                    .order("subscription_expires", { ascending: false });
 
-                const { error } = await supabase
-                    .from("users")
-                    .update({
-                        Status: "Inactive",
-                        Subscription_Expires: null
-                    })
-                    .eq("id", paymentToDelete.student_id);
+                if (remainingError) {
+                    console.error(remainingError);
+                } else if (remainingPayments.length === 0) {
 
-                if (error) console.error(error);
+                    const { error } = await supabase
+                        .from("users")
+                        .update({
+                            Status: "Inactive",
+                            Subscription_Expires: null
+                        })
+                        .eq("id", paymentToDelete.student_id);
 
-            } else {
+                    if (error) console.error(error);
 
-                const latestPayment = remainingPayments[0];
-                const latestExpiry = new Date(latestPayment.subscription_expires);
-                const today = new Date();
+                } else {
 
-                const status = latestExpiry > today ? "Active" : "Inactive";
+                    const latestPayment = remainingPayments[0];
+                    const latestExpiry = new Date(latestPayment.subscription_expires);
+                    const today = new Date();
 
-                const { error: userError } = await supabase
-                    .from("users")
-                    .update({
-                        Status: status,
-                        Subscription_Expires: latestPayment.subscription_expires
-                    })
-                    .eq("id", paymentToDelete.student_id);
+                    const status = latestExpiry > today ? "Active" : "Inactive";
 
-                if (userError) console.error(userError);
+                    const { error: userError } = await supabase
+                        .from("users")
+                        .update({
+                            Status: status,
+                            Subscription_Expires: latestPayment.subscription_expires
+                        })
+                        .eq("id", paymentToDelete.student_id);
+
+                    if (userError) console.error(userError);
+
+                }
 
             }
 
@@ -494,6 +600,36 @@ function AdminPayment(){
                                 ))}
                             </select>
 
+                            {selectedStudent && (
+                                <div className="student-documents">
+
+                                    {selectedStudent.details?.Guardian_ID_URL ? (
+                                        <a
+                                            href={selectedStudent.details.Guardian_ID_URL}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Parent ID
+                                        </a>
+                                    ) : (
+                                        <span className="document-missing">Parent ID (not provided)</span>
+                                    )}
+
+                                    {selectedStudent.details?.Certificate_URL ? (
+                                        <a
+                                            href={selectedStudent.details.Certificate_URL}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Certificates/proof
+                                        </a>
+                                    ) : (
+                                        <span className="document-missing">Certificates/proof (not provided)</span>
+                                    )}
+
+                                </div>
+                            )}
+
                             <select value = {selectedPaymentMethod||"CASH"}
                                     onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                                 >
@@ -515,10 +651,71 @@ function AdminPayment(){
                 </div>
             )}
 
+        {showSaleModal && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <h2>Add Sales</h2>
+
+                        <input
+                            type="text"
+                            placeholder="Name"
+                            value={saleName}
+                            onChange={(e) => setSaleName(e.target.value)}
+                        />
+
+                        <input
+                            type="text"
+                            placeholder="Service (e.g. Book, T-shirt, Hourly Tutorial)"
+                            value={saleService}
+                            onChange={(e) => setSaleService(e.target.value)}
+                        />
+
+                        <div className="sale-presets">
+                            {SALE_PRESETS.map((preset) => (
+                                <button
+                                    type="button"
+                                    key={preset}
+                                    className={`sale-preset-button ${Number(salePrice) === preset ? "selected" : ""}`}
+                                    onClick={() => setSalePrice(String(preset))}
+                                >
+                                    ₱{preset}
+                                </button>
+                            ))}
+                        </div>
+
+                        <input
+                            type="number"
+                            min="0"
+                            placeholder="Price"
+                            value={salePrice}
+                            onChange={(e) => setSalePrice(e.target.value)}
+                        />
+
+                        <select
+                            value={saleMethod}
+                            onChange={(e) => setSaleMethod(e.target.value)}
+                        >
+                            <option value="CASH">CASH</option>
+                            <option value="PAY MAYA">PAY MAYA</option>
+                            <option value="GCASH">GCASH</option>
+                        </select>
+
+                        <button disabled={savingSale} onClick={addSale}>
+                            {savingSale ? "Saving..." : "Add Sale"}
+                        </button>
+
+                        <button onClick={closeSaleModal}>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
 
         <div className='Payment-Header'>
         <h1> ADMIN PAYMENT</h1>
         <div>
+            <button className='ActiveUser-Button' onClick={()=>setShowSaleModal(true)}>Add Sales</button>
             <button className='ActiveUser-Button' onClick={()=>setShowModal(true)}>Active User</button>
         </div>
         </div>
@@ -602,6 +799,7 @@ function AdminPayment(){
                             <tr>
                                 <th>Transaction ID</th>
                                 <th>Student</th>
+                                <th>Service</th>
                                 <th>Amount</th>
                                 <th>Date</th>
                                 <th>Payment Method</th>
@@ -616,7 +814,8 @@ function AdminPayment(){
                                 (
                                     <tr key={payment.payment_id}>
                                         <td>{payment.payment_id}</td>
-                                        <td>{payment.student.Name}</td>
+                                        <td>{getPaymentName(payment)}</td>
+                                        <td>{payment.service || "Subscription"}</td>
                                         <td>{payment.amount}</td>
                                         <td>{new Date(payment.payment_date).toLocaleDateString()}</td>
                                         <td>{payment.method||"GCASH"}</td>
@@ -646,7 +845,7 @@ function AdminPayment(){
 
                                                     {
                                                     payment.status === "Completed"
-                                                        ? "Cannot Refund"
+                                                        ? (payment.student_id ? "Cannot Refund" : "Sale")
                                                         : payment.status
                                                     }
 
@@ -689,7 +888,7 @@ function AdminPayment(){
                     <p>
                         Student:
                         <strong>
-                            {selectedPayment?.student.Name}
+                            {selectedPayment && getPaymentName(selectedPayment)}
                         </strong>
                     </p>
 
@@ -745,7 +944,7 @@ function AdminPayment(){
                     <p>
                         Student:
                         <strong>
-                            {paymentToDelete?.student.Name}
+                            {paymentToDelete && getPaymentName(paymentToDelete)}
                         </strong>
                     </p>
 

@@ -1,14 +1,150 @@
+/* =========================================================
+   ADMIN PAYMENT - MODERN DESIGN
+   Layout and placement are unchanged; only visuals updated.
+   ========================================================= */
+
+/* ---------- Header ---------- */
+
+.Payment-Header{
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: space-between;
+    font-family: 'Inter', sans-serif;
+}
+
+.Payment-Header h1{
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #111827;
+}
+
+.Payment-Header > div{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.ActiveUser-Button{
+    height: 36px;
+    justify-self: center;
+    align-self: center;
+    padding: 0 18px;
+    border: none;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.3);
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.ActiveUser-Button:hover{
+    background: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.ActiveUser-Button:active{
+    transform: scale(0.97);
+}
+
+
+/* ---------- Summary Cards ---------- */
+
+.AdminPaymentNumberPanel{
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    margin: 20px 0px;
+    justify-content: space-between;
+    font-family: 'Inter', sans-serif;
+}
+
+.PaymentNumberBox{
+    width: 32% !important;
+    min-height: 50px;
+    margin: 5px 0px 5px 0px;
+    border: 1px #e5e7eb solid;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 18px;
+    box-sizing: border-box;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.PaymentNumberBox:hover{
+    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.08);
+    transform: translateY(-2px);
+}
+
+.PaymentNumberBox text{
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.PaymentNumberBox h1{
+    margin: 8px 0 0 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #111827;
+}
+
+
+/* ---------- Transaction Panel ---------- */
+
 .AdminLowerPaymentPanel{
     height: fit-content;
     width: 99%;
-    border: black solid 1px;
-    padding: 5px;
+    border: #e5e7eb solid 1px;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
+    padding: 16px;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
 }
 
 .TransactionHistory-Title{
-    font-size: 16px;
+    font-size: 18px;
+    font-weight: 700;
     font-family: 'Inter', sans-serif;
+    color: #111827;
+    margin-top: 4px;
+}
 
+.payment-toolbar input{
+    width: 260px;
+    max-width: 100%;
+    height: 38px;
+    padding: 0 14px;
+    margin-bottom: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f9fafb;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #111827;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.payment-toolbar input:focus{
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .button-panel{
@@ -16,33 +152,180 @@
     flex-wrap: nowrap;
     width: fit-content;
     flex-direction: row;
-    border: 1px solid black;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #f3f4f6;
     gap: 5px;
     padding: 5px;
 }
 
-.Payment-Header{
+.button-panel button{
+    padding: 7px 16px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #4b5563;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button-panel button:hover{
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.button-panel .active-filter,
+.active-filter{
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.35);
+}
+
+.button-panel .active-filter:hover{
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+
+/* ---------- Table ---------- */
+
+.mainTable{
+    width: 100%;
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+.user-table{
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
+.user-table th{
+    padding: 12px 14px;
+    text-align: left;
+    background: #f9fafb;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.user-table td{
+    padding: 14px;
+    text-align: left;
+    color: #374151;
+    border: none;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.user-table tr:hover td{
+    background-color: #f9fafb;
+}
+
+.user-table tbody tr:last-child td{
+    border-bottom: none;
+}
+
+
+/* ---------- Status Badges ---------- */
+
+.status{
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status.completed{
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status.pending{
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.status.failed{
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status.refunded{
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+
+/* ---------- Table Action Buttons ---------- */
+
+.action-buttons{
     display: flex;
-    flex-wrap: nowrap;
-    flex-direction: row;
-    justify-content: space-between;
+    gap: 8px;
 }
 
-.ActiveUser-Button{
-    height: 30px;
-    justify-self: center;
-    align-self: center;
+.user-table button{
+    padding: 6px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #374151;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.user-table button:hover:not(:disabled){
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.user-table button:disabled{
+    background: #f9fafb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.delete-button{
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.user-table .delete-button{
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.user-table .delete-button:hover:not(:disabled){
+    background: #fecaca;
+    border-color: #fca5a5;
 }
 
 
-.modal-overlay {
+/* ---------- Modals ---------- */
+
+.modal-overlay{
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
 
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(17, 24, 39, 0.55);
+    backdrop-filter: blur(3px);
 
     display: flex;
     justify-content: center;
@@ -51,112 +334,195 @@
     z-index: 1000;
 }
 
-.modal {
-    background: white;
+.modal{
+    background: #ffffff;
     width: 500px;
     max-width: 90%;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 5px 20px rgba(0,0,0,.2);
+    padding: 28px;
+    border-radius: 18px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    color: #374151;
 }
 
+.modal h2{
+    margin: 0 0 18px 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+}
 
-.mainTable{
+.modal p{
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+.modal p strong{
+    margin-left: 6px;
+    color: #111827;
+}
+
+.modal input,
+.modal select,
+.modal textarea{
+    display: block;
     width: 100%;
-    margin-top: 20px;
-}
-.user-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.user-table th,
-.user-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
-}
-
-
-.user-table tr:hover {
-  background-color: #ddd;
+    margin: 0 0 12px 0;
+    padding: 10px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f9fafb;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #111827;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-
-.status{
-
-padding:5px 10px;
-
-border-radius:15px;
-
-font-weight:bold;
-
+.modal textarea{
+    min-height: 90px;
+    resize: vertical;
 }
 
-.completed{
-
-background:#ccffcc;
-
-color:green;
-
+.modal input:focus,
+.modal select:focus,
+.modal textarea:focus{
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-.pending{
-
-background:#fff3cd;
-
-color:#996600;
-
+/* Primary modal buttons (Activate User, Add Sale, Confirm Refund, ...) */
+.modal > button{
+    display: block;
+    width: 100%;
+    margin: 8px 0 0 0;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 10px;
+    background: #2563eb;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.failed{
-
-background:#ffd6d6;
-
-color:red;
-
+.modal > button:hover:not(:disabled){
+    background: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
-.refunded{
-
-background:#d9d9d9;
-
-color:#555;
-
+.modal > button:disabled{
+    background: #cbd5e1;
+    color: #ffffff;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
-.active-filter{
-    background:#007bff;
-    color:white;
+/* Secondary modal button (Close / Cancel is always the last one) */
+.modal > button:last-child{
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.modal > button:last-child:hover:not(:disabled){
+    background: #e5e7eb;
+    box-shadow: none;
+}
+
+/* Destructive modal button (Confirm Delete) */
+.modal > .delete-button{
+    background: #dc2626;
+    color: #ffffff;
+    border: none;
+}
+
+.modal > .delete-button:hover:not(:disabled){
+    background: #b91c1c;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 
-.AdminPaymentNumberPanel{
-     display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    margin: 20px 0px;
-    justify-content: space-between;
-}
+/* ---------- Student Documents (Active User modal) ---------- */
 
-.PaymentNumberBox{
-    width: 32% !important;
-    min-height: 50px;
-    margin: 5px 0px 5px 0px;
-    border: 1px #6B7280 solid;
-    border-radius: 8px;
+.student-documents{
     display: flex;
-    flex-direction: column;
-    padding: 10px 5px;
+    gap: 10px;
+    margin: 0 0 12px 0;
 }
 
-.action-buttons {
+.student-documents a{
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.student-documents a:hover{
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.document-missing{
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px dashed #d1d5db;
+    border-radius: 10px;
+    background: #f9fafb;
+    color: #9ca3af;
+    font-size: 13px;
+    text-align: center;
+}
+
+
+/* ---------- Add Sales Presets ---------- */
+
+.sale-presets{
     display: flex;
     gap: 8px;
+    margin: 0 0 12px 0;
 }
 
-.delete-button {
-    background: #fee2e2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
+.modal .sale-preset-button{
+    flex: 1;
+    width: auto;
+    margin: 0;
+    padding: 10px 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #374151;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.modal .sale-preset-button:hover{
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.modal .sale-preset-button.selected{
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
 }
