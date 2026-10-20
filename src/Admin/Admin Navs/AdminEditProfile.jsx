@@ -18,6 +18,11 @@ function AdminEditProfile() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
+    // Delete user
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [isSelf, setIsSelf] = useState(false);
+
 
     // ==========================================
     // LOAD DATA
@@ -83,6 +88,16 @@ function AdminEditProfile() {
 
 
             setInfos(userData);
+
+            // Don't let an admin delete the account they're logged in with
+            const {
+                data: { user: authUser }
+            } = await supabase.auth.getUser();
+
+            setIsSelf(
+                !!authUser &&
+                authUser.id === userData.auth_id
+            );
 
 
             // --------------------------------------
@@ -153,6 +168,70 @@ function AdminEditProfile() {
         } finally {
 
             setLoading(false);
+
+        }
+
+    }
+
+
+    // ==========================================
+    // DELETE USER
+    // ==========================================
+    // Removing a login (auth.users) can't be done from the browser,
+    // so this calls the "delete-user" edge function, which checks the
+    // caller is an Admin and cleans up every table that points at the user.
+
+    async function handleDelete() {
+
+        if (!infos || deleting) {
+            return;
+        }
+
+        try {
+
+            setDeleting(true);
+
+            const {
+                data,
+                error
+            } = await supabase.functions.invoke(
+                "delete-user",
+                {
+                    body: {
+                        userId: infos.id
+                    }
+                }
+            );
+
+            if (error) {
+                throw error;
+            }
+
+            if (data?.error) {
+                throw new Error(data.error);
+            }
+
+            setShowDeleteModal(false);
+
+            alert("User deleted successfully.");
+
+            navigate("/admin/student-and-tutor");
+
+        } catch (error) {
+
+            console.error(
+                "Delete user error:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "Failed to delete user."
+            );
+
+        } finally {
+
+            setDeleting(false);
 
         }
 
@@ -545,6 +624,7 @@ function AdminEditProfile() {
                 </p>
 
                 <button
+                    className="aep-btn aep-btn-secondary"
                     onClick={() =>
                         navigate("/admin/StudentAndTutor")
                     }
@@ -565,7 +645,7 @@ function AdminEditProfile() {
 
     return (
 
-        <>
+        <div className="admin-edit-profile">
 
             <h1 id="SATTitle">
                 Student & Teacher
@@ -586,9 +666,23 @@ function AdminEditProfile() {
                 <div className="buttonBox">
 
                     <button
-                        style={{
-                            marginRight: "5px"
-                        }}
+                        className="aep-btn aep-btn-danger"
+                        onClick={() =>
+                            setShowDeleteModal(true)
+                        }
+                        disabled={saving || deleting || isSelf}
+                        title={
+                            isSelf
+                                ? "You can't delete your own account"
+                                : "Delete this user"
+                        }
+                    >
+                        Delete User
+                    </button>
+
+
+                    <button
+                        className="aep-btn aep-btn-secondary"
                         onClick={() =>
                             navigate(
                                 "/admin/student-and-tutor"
@@ -601,6 +695,7 @@ function AdminEditProfile() {
 
 
                     <button
+                        className="aep-btn aep-btn-primary"
                         onClick={handleSave}
                         disabled={
                             saving ||
@@ -647,13 +742,7 @@ function AdminEditProfile() {
                                 "https://placehold.co/150x150?text=Profile"
                             }
                             alt="Profile"
-                            style={{
-                                width: "50px",
-                                height: "50px",
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                                border: "2px solid #ccc"
-                            }}
+                            className="profile-avatar"
                         />
 
 
@@ -1050,7 +1139,68 @@ function AdminEditProfile() {
 
             </div>
 
-        </>
+
+            {/* ==================================
+                DELETE CONFIRMATION
+            ================================== */}
+
+            {showDeleteModal && (
+
+                <div className="aep-modal-overlay">
+
+                    <div className="aep-modal">
+
+                        <h2>
+                            Delete User
+                        </h2>
+
+                        <p>
+                            You are about to permanently delete
+                            <strong>
+                                {infos.Name}
+                            </strong>
+                            ({infos.Role}).
+                        </p>
+
+                        <p>
+                            This removes their account, profile,
+                            messages, schedule and submissions.
+                            Payment records are kept for your
+                            revenue history. This cannot be undone.
+                        </p>
+
+                        <div className="aep-modal-actions">
+
+                            <button
+                                className="aep-btn aep-btn-secondary"
+                                onClick={() =>
+                                    setShowDeleteModal(false)
+                                }
+                                disabled={deleting}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                className="aep-btn aep-btn-danger-solid"
+                                onClick={handleDelete}
+                                disabled={deleting}
+                            >
+                                {deleting
+                                    ? "Deleting..."
+                                    : "Confirm Delete"
+                                }
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
+
+        </div>
 
     );
 

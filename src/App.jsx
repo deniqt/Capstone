@@ -40,6 +40,7 @@ import TeacherMain from './Teacher/Teacher Navs/TeacherMain'
 import ForgotPassword from './Login/ForgotPassword'
 import ResetPassword from './Login/ResetPassword'
 import TeacherStudents from './Teacher/Teacher Navs/TeacherStudents'
+import StudentSubscriptionView from './Student/Student Navs/StudentSubscriptionView'
 
 
 
@@ -130,6 +131,11 @@ function App() {
           <Route
               path="schedule"
               element={<StudentSchedule />}
+          />
+
+          <Route
+              path="subscription"
+              element={<StudentSubscriptionView/>}
           />
 
           <Route

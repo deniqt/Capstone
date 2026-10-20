@@ -5,7 +5,7 @@ import { LayoutDashboard,
         File,
         TrendingUp,
         CalendarCheck,
-        MessageSquare,
+        MessageSquare,CalendarSync,
         Settings} from "lucide-react";
 import "./studentSidebar.css";
 
@@ -177,6 +177,13 @@ function StudentSidebar() {
                 >
                     <MessageSquare className="sideBar-logo"/>
                     Messages
+                </NavLink>
+
+                  <NavLink
+                    to="/student/subscription"
+                >
+                    <CalendarSync className="sideBar-logo"/>
+                    Manage Subscription
                 </NavLink>
 
 

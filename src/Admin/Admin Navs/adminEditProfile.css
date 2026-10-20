@@ -1,47 +1,231 @@
-#SATTitle{
-    margin-bottom: 30px;
+/* =========================================================
+   ADMIN EDIT PROFILE - MODERN DESIGN
+   Layout and placement are unchanged; only visuals updated.
+   ========================================================= */
+
+.admin-edit-profile,
+.buttonPanel,
+.info-panel{
+    font-family: 'Inter', sans-serif;
 }
 
-.buttonPanel {
+#SATTitle{
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #111827;
+}
+
+
+/* ---------- Header bar ---------- */
+
+.buttonPanel{
     display: flex;
+    align-items: center;
     width: 100%;
-    border: 1px black solid;
+    padding: 14px 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
     justify-content: space-between;
+    box-sizing: border-box;
 }
 
 .buttonPanel p{
-    font-size: 22px;
-    font-family: sans-serif;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    color: #111827;
 }
 
 .buttonBox{
     display: flex;
     align-items: center;
+    gap: 10px;
 }
+
+
+/* ---------- Buttons ---------- */
+
+.aep-btn{
+    height: 36px;
+    padding: 0 18px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease,
+                box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+.aep-btn:active:not(:disabled){
+    transform: scale(0.97);
+}
+
+.aep-btn:disabled{
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.aep-btn-primary{
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.3);
+}
+
+.aep-btn-primary:hover:not(:disabled){
+    background: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.aep-btn-secondary{
+    background: #ffffff;
+    color: #374151;
+    border-color: #e5e7eb;
+}
+
+.aep-btn-secondary:hover:not(:disabled){
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.aep-btn-danger{
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.aep-btn-danger:hover:not(:disabled){
+    background: #fecaca;
+    border-color: #fca5a5;
+}
+
+.aep-btn-danger-solid{
+    background: #dc2626;
+    color: #ffffff;
+}
+
+.aep-btn-danger-solid:hover:not(:disabled){
+    background: #b91c1c;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+
+/* ---------- Main panel ---------- */
 
 .info-panel{
     width: 100%;
     display: flex;
-    border: 1px black solid;
-    margin-top: 10px;
-    height: 70vh;
+    margin-top: 14px;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #f9fafb;
+    box-sizing: border-box;
+    min-height: 70vh;
+}
+
+.personal-box,
+.Account-Settings-Panel{
+    margin: 5px;
+    padding: 18px 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
+    box-sizing: border-box;
+    align-self: flex-start;
 }
 
 .personal-box{
-    margin:5px;
     width: 55%;
-    border: 1px black solid;
-    padding-left: 5px;
 }
 
-.picture-panel{
-    display:flex;
+.Account-Settings-Panel{
+    width: 43%;
+    height: auto;
+}
 
+.personal-box h3,
+.Account-Settings-Panel h3{
+    margin: 0 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+
+/* ---------- Profile picture ---------- */
+
+.picture-panel{
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.profile-avatar{
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #eff6ff;
+    box-shadow: 0 0 0 1px #bfdbfe;
 }
 
 #profile-label-box{
-    margin-left: 5px;
+    margin-left: 14px;
     align-content: center;
+}
+
+#profile-label-box label{
+    display: inline-block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#profile-label-box input[type="file"]{
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+#profile-label-box input[type="file"]::file-selector-button{
+    margin-right: 10px;
+    padding: 6px 14px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+#profile-label-box input[type="file"]::file-selector-button:hover{
+    background: #dbeafe;
+}
+
+
+/* ---------- Fields ---------- */
+
+#personalInfo-box,
+#Account-Settings-box{
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 .labelbox{
@@ -51,30 +235,102 @@
     margin: 2%;
 }
 
-#personalInfo-box{
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
+.labelbox label{
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.labelbox small{
+    margin-top: 6px;
+    font-size: 12px;
+    color: #9ca3af;
 }
 
 .input-style{
-    margin-left: 2px;
+    margin-left: 0;
+    margin-top: 6px;
+    padding: 10px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f9fafb;
+    font-family: 'Inter', sans-serif;
     font-size: 14px;
-    font-family: sans-serif;
-    padding: 2%;
-    margin-top: 2%;
+    color: #111827;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.Account-Settings-Panel{
-    width: 43%;
-    height: 50vh;
-    border: 1px solid black;
-    margin: 5px;
-    padding-left: 5px;
+.input-style:focus{
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-#Account-Settings-box{
-     display: flex;
-    flex-wrap: wrap;
+.input-style:disabled{
+    background: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+
+/* ---------- Delete confirmation modal ---------- */
+
+.aep-modal-overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
+    height: 100%;
+    background: rgba(17, 24, 39, 0.55);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.aep-modal{
+    width: 460px;
+    max-width: 90%;
+    padding: 28px;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+    color: #374151;
+}
+
+.aep-modal h2{
+    margin: 0 0 14px 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #b91c1c;
+}
+
+.aep-modal p{
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4b5563;
+}
+
+.aep-modal p strong{
+    margin: 0 4px;
+    color: #111827;
+}
+
+.aep-modal-actions{
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.aep-modal-actions .aep-btn{
+    flex: 1;
+    height: 40px;
 }

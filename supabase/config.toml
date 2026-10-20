@@ -9,3 +9,11 @@ entrypoint = "./functions/create-user/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/create-user/*.html" ]
+
+# Add this to your supabase/config.toml
+# (the function already verifies the caller is an Admin itself,
+#  and this lets the browser's CORS preflight through)
+[functions.delete-user]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/delete-user/index.ts"
