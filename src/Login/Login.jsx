@@ -4,7 +4,7 @@ import './login.css';
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { Eye, EyeOff } from "lucide-react";
-import BackgroundImage from "../assets/LoginImage.png";
+import BackgroundImage from "../assets/LoginLogo.png";
 import BackgroundImage2 from "../assets/SplashScreen.png";
 
 function Login() {

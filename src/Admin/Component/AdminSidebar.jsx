@@ -148,7 +148,7 @@ return(
                 <div
                     className="sidebarUser"
                     onClick={() =>
-                        navigate("/student/settings")
+                        navigate("/admin/settings")
                     }
                 >
 
