@@ -22,9 +22,18 @@ import FullCalendar from "@fullcalendar/react";
         const [notes,setNotes]=useState("");
         const [selectedEvent, setSelectedEvent] = useState(null);
         const [editMode, setEditMode] = useState(false);
+
+        // Filters (based on user)
+        const [tutors, setTutors] = useState([]);
+        const [students, setStudents] = useState([]);
+        const [filterTutor, setFilterTutor] = useState("");
+        const [filterStudent, setFilterStudent] = useState("");
+        const [filterStatus, setFilterStatus] = useState("");
+
         useEffect(()=>{
 
         getEvents();
+        loadFilterUsers();
 
         },[]);
 
@@ -90,6 +99,38 @@ import FullCalendar from "@fullcalendar/react";
             );
 
         }
+        async function loadFilterUsers(){
+
+            const { data, error } = await supabase
+                .from("users")
+                .select("id, Name, Role")
+                .in("Role", ["Tutor", "Student"])
+                .order("Name", { ascending: true });
+
+            if (error) {
+                console.error("Filter users error:", error);
+                return;
+            }
+
+            setTutors((data || []).filter(u => u.Role === "Tutor"));
+            setStudents((data || []).filter(u => u.Role === "Student"));
+
+        }
+
+        const filtersActive = filterTutor !== "" || filterStudent !== "" || filterStatus !== "";
+
+        function clearFilters(){
+            setFilterTutor("");
+            setFilterStudent("");
+            setFilterStatus("");
+        }
+
+        const filteredEvents = events.filter(event =>
+            (filterTutor === "" || String(event.tutor_id) === filterTutor) &&
+            (filterStudent === "" || String(event.student_id) === filterStudent) &&
+            (filterStatus === "" || event.status === filterStatus)
+        );
+
         async function loadTutor(tutorId){
 
             const { data } = await supabase
@@ -904,6 +945,67 @@ import FullCalendar from "@fullcalendar/react";
         return(<>
             <h1> ADMIN Schedule</h1>
 
+            <div className="schedule-filters">
+
+                <div className="schedule-filter-field">
+                    <label>Tutor</label>
+                    <select
+                        value={filterTutor}
+                        onChange={(e) => setFilterTutor(e.target.value)}
+                    >
+                        <option value="">All tutors</option>
+                        {tutors.map(tutor => (
+                            <option key={tutor.id} value={String(tutor.id)}>
+                                {tutor.Name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="schedule-filter-field">
+                    <label>Student</label>
+                    <select
+                        value={filterStudent}
+                        onChange={(e) => setFilterStudent(e.target.value)}
+                    >
+                        <option value="">All students</option>
+                        {students.map(student => (
+                            <option key={student.id} value={String(student.id)}>
+                                {student.Name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="schedule-filter-field">
+                    <label>Status</label>
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
+                    >
+                        <option value="">All statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Reschedule Pending">Reschedule Pending</option>
+                        <option value="Attended">Attended</option>
+                        <option value="Absent">Absent</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <div className="schedule-filter-summary">
+                    <span>
+                        Showing {filteredEvents.length} of {events.length} schedules
+                    </span>
+                    {filtersActive && (
+                        <button onClick={clearFilters}>
+                            Clear filters
+                        </button>
+                    )}
+                </div>
+
+            </div>
+
             <div >
                 <FullCalendar
 
@@ -978,7 +1080,7 @@ import FullCalendar from "@fullcalendar/react";
 
                 }}
                 nowIndicator={true}
-                events={events}
+                events={filteredEvents}
                 editable={true}
                 eventDrop={handleEventDrop}
                 eventResize={handleEventResize}

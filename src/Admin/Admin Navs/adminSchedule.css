@@ -17,3 +17,82 @@
     width: 450px;
     max-width: 90%;
 }
+
+/* =========================================================
+   SCHEDULE FILTERS
+   ========================================================= */
+
+.schedule-filters{
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 14px;
+    margin: 0 0 16px 0;
+    padding: 14px 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
+    font-family: 'Inter', sans-serif;
+}
+
+.schedule-filter-field{
+    display: flex;
+    flex-direction: column;
+    min-width: 190px;
+}
+
+.schedule-filter-field label{
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.schedule-filter-field select{
+    padding: 9px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f9fafb;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #111827;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.schedule-filter-field select:focus{
+    border-color: #2563eb;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.schedule-filter-summary{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    padding-bottom: 8px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.schedule-filter-summary button{
+    padding: 6px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    background: #fee2e2;
+    color: #b91c1c;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.schedule-filter-summary button:hover{
+    background: #fecaca;
+}
