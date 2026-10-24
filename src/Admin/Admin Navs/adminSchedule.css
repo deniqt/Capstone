@@ -1,98 +1,213 @@
+/* ==========================================================================
+   ADMIN SCHEDULE MANAGEMENT & CALENDAR OVERRIDES
+   ========================================================================== */
+
 .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.4);
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    z-index: 9999;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: satFadeIn 0.2s ease;
 }
 
 .modal {
-    background: white;
-    padding: 24px;
-    border-radius: 10px;
-    width: 450px;
-    max-width: 90%;
+  background: #ffffff;
+  padding: 28px;
+  border-radius: var(--radius-xl, 20px);
+  width: 480px;
+  max-width: 95%;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  animation: satModalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* =========================================================
+.modal h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--slate-900);
+}
+
+/* ==========================================================================
    SCHEDULE FILTERS
-   ========================================================= */
+   ========================================================================== */
 
-.schedule-filters{
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 14px;
-    margin: 0 0 16px 0;
-    padding: 14px 18px;
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    background: #ffffff;
-    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
-    font-family: 'Inter', sans-serif;
+.schedule-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin: 0 0 20px 0;
+  padding: 18px 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl, 20px);
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
 }
 
-.schedule-filter-field{
-    display: flex;
-    flex-direction: column;
-    min-width: 190px;
+.schedule-filter-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  flex: 1;
 }
 
-.schedule-filter-field label{
-    margin-bottom: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.schedule-filter-field label {
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--slate-500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.schedule-filter-field select{
-    padding: 9px 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    background: #f9fafb;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    color: #111827;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+.schedule-filter-field select {
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md, 10px);
+  background: var(--slate-50);
+  font-size: 0.92rem;
+  color: var(--slate-900);
+  outline: none;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
-.schedule-filter-field select:focus{
-    border-color: #2563eb;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+.schedule-filter-field select:focus {
+  border-color: var(--primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px var(--primary-ring);
 }
 
-.schedule-filter-summary{
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-left: auto;
-    padding-bottom: 8px;
-    font-size: 13px;
-    color: #6b7280;
+.schedule-filter-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  padding-bottom: 4px;
+  font-size: 0.88rem;
+  color: var(--slate-500);
 }
 
-.schedule-filter-summary button{
-    padding: 6px 14px;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
-    background: #fee2e2;
-    color: #b91c1c;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease;
+.schedule-filter-summary button {
+  padding: 8px 16px;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius-md, 10px);
+  background: var(--danger-light);
+  color: var(--danger-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
-.schedule-filter-summary button:hover{
-    background: #fecaca;
+.schedule-filter-summary button:hover {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+/* ==========================================================================
+   FULLCALENDAR GLOBAL POLISH
+   ========================================================================== */
+
+.fc {
+  font-family: inherit;
+  background: #ffffff;
+  border-radius: var(--radius-xl, 20px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+  padding: 20px;
+}
+
+.fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 1.5em;
+  padding: 4px 0;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--slate-900);
+  letter-spacing: -0.01em;
+}
+
+.fc .fc-button {
+  background: var(--slate-100);
+  border: 1px solid var(--border-subtle);
+  color: var(--slate-700);
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 8px 16px;
+  border-radius: var(--radius-md, 8px);
+  box-shadow: none;
+  transition: all var(--transition-fast, 0.2s ease);
+  text-transform: capitalize;
+}
+
+.fc .fc-button:hover {
+  background: var(--slate-200);
+  color: var(--slate-900);
+  border-color: var(--slate-300);
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.fc .fc-button:disabled {
+  opacity: 0.4;
+  background: var(--slate-100);
+  color: var(--slate-400);
+}
+
+.fc th {
+  padding: 10px 0;
+  background: #f8fafc;
+  color: var(--slate-500);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-color: var(--border-subtle);
+}
+
+.fc td {
+  border-color: #f1f5f9;
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+  border-color: var(--slate-200);
+}
+
+.fc .fc-daygrid-day:hover {
+  background-color: #f8fafc;
+}
+
+.fc .fc-day-today {
+  background-color: #f0f7ff !important;
+}
+
+.fc .fc-event {
+  border-radius: var(--radius-xs, 6px);
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fc .fc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }

@@ -1,652 +1,446 @@
-/* =========================
-   MAIN HEADER
-========================= */
+/* ==========================================================================
+   TEACHER SCHEDULE & APPOINTMENT MANAGEMENT DESIGN
+   ========================================================================== */
 
 .TeacherScheduleHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 20px;
-    box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 24px;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .TeacherScheduleHeader h1 {
-    margin: 0;
-    font-size: 25px;
-    color: #243b53;
+  margin: 0;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--slate-900);
+  letter-spacing: -0.02em;
 }
 
 .TeacherScheduleHeader p {
-    margin: 5px 0 0;
-    color: #7b8794;
-    font-size: 13px;
+  margin: 4px 0 0;
+  color: var(--slate-500);
+  font-size: 0.95rem;
 }
 
 .Teacher-NewSession {
-    border: none;
-    background: #2f6fed;
-    color: white;
-    padding: 10px 18px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
+  border: none;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  padding: 11px 22px;
+  border-radius: var(--radius-md, 10px);
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .Teacher-NewSession:hover {
-    background: #245bd1;
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
 }
 
-
-/* =========================
-   MAIN TWO-COLUMN LAYOUT
-========================= */
-
+/* Layout */
 .TeacherScheduleLowerPanel {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 18px;
-    width: 100%;
-    align-items: start;
-    box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 24px;
+  width: 100%;
+  align-items: start;
+  box-sizing: border-box;
 }
-
-
-/* =========================
-   LEFT SIDE
-========================= */
 
 .TeacherScheduleLowerLeft {
-    min-width: 0;
-    width: auto;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
-
-
-/* =========================
-   RIGHT SIDE
-========================= */
 
 .TeacherScheduleLowerRight {
-    width: auto;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-
-/* =========================
-   WHITE PANELS
-========================= */
-
+/* Panels */
 .TeacherScheduleCalendarPanel,
 .TeacherScheduleUpcomingSessionPanel,
 .TeacherScheduleSchedReqPanel,
 .TeacherRatingsPanel {
-    background: white;
-    border: 1px solid #e5e9f2;
-    border-radius: 7px;
-    padding: 16px;
-    box-sizing: border-box;
-    width: 100%;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl, 20px);
+  padding: 24px;
+  box-sizing: border-box;
+  width: 100%;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
 }
 
 .TeacherScheduleCalendarPanel h3,
 .TeacherScheduleUpcomingSessionPanel h3,
 .TeacherScheduleSchedReqPanel h3,
 .TeacherRatingsPanel h3 {
-    margin: 0;
-    color: #243b53;
-    font-size: 15px;
+  margin: 0 0 16px 0;
+  color: var(--slate-900);
+  font-size: 1.18rem;
+  font-weight: 700;
 }
-
-
-/* =========================
-   CALENDAR
-========================= */
 
 .CalendarPanel {
-    margin-top: 12px;
-    height: 430px;
-    width: 100%;
+  margin-top: 14px;
+  width: 100%;
 }
 
-.fc {
-    font-family: inherit;
-    font-size: 12px;
+.CalendarPanel .fc {
+  font-family: inherit;
+  font-size: 0.88rem;
+  min-height: 600px;
+  height: auto !important;
 }
 
-.fc .fc-toolbar {
-    margin-bottom: 12px;
+.CalendarPanel .fc .fc-toolbar.fc-header-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5em;
 }
 
-.fc .fc-toolbar-title {
-    font-size: 16px;
-    color: #243b53;
+.CalendarPanel .fc .fc-toolbar-title {
+  color: var(--slate-900);
+  font-size: 1.25rem;
+  font-weight: 800;
 }
 
-.fc .fc-button {
-    background: white;
-    border: 1px solid #dbe4f0;
-    color: #52606d;
-    box-shadow: none;
+.CalendarPanel .fc .fc-button {
+  background: var(--slate-100);
+  border: 1px solid var(--border-subtle);
+  color: var(--slate-700);
+  font-weight: 600;
+  font-size: 0.86rem;
+  padding: 7px 14px;
+  border-radius: var(--radius-md, 8px);
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
-.fc .fc-button:hover {
-    background: #f5f7fa;
-    color: #243b53;
+.CalendarPanel .fc .fc-button:hover {
+  background: var(--slate-200);
+  color: var(--slate-900);
 }
 
-.fc .fc-button-primary:not(:disabled).fc-button-active {
-    background: #2864e8;
-    border-color: #2864e8;
+.CalendarPanel .fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  border-color: var(--primary) !important;
 }
 
-.fc .fc-daygrid-day {
-    min-height: 75px;
-}
-
-.fc .fc-daygrid-day-number {
-    color: #52606d;
-    font-size: 11px;
-}
-
-.fc .fc-event {
-    border: none;
-    border-radius: 4px;
-    font-size: 10px;
-    padding: 2px 4px;
-}
-
-
-/* =========================
-   TODAY'S SESSIONS
-========================= */
-
-.TeacherScheduleTodaySessionPanel {
-    background: #2864e8;
-    color: white;
-    border-radius: 7px;
-    padding: 18px;
-    min-height: 95px;
-    box-sizing: border-box;
-    width: 100%;
-}
-
-.today-stat-header {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    opacity: 0.9;
-}
-
-.today-stat-values {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-top: 10px;
-}
-
-.today-stat-values strong:first-child {
-    font-size: 28px;
-}
-
-.today-stat-values strong:last-child {
-    font-size: 20px;
-}
-
-
-/* =========================
-   SECTION HEADER
-========================= */
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-}
-
-.request-count,
-.review-count {
-    font-size: 10px;
-    background: #e8f0ff;
-    color: #2864e8;
-    padding: 4px 7px;
-    border-radius: 10px;
-}
-
-
-/* =========================
-   UPCOMING SESSION
-========================= */
-
-.TeacherScheduleUpcomingSessionPanel {
-    display: flex;
-    flex-direction: column;
-}
+/* ==========================================================================
+   UPCOMING SESSIONS CARDS
+   ========================================================================== */
 
 .UpcomingSessionCard {
-    border: 1px solid #dbe4f0;
-    border-radius: 6px;
-    padding: 15px;
-    margin-bottom: 12px;
-    background: #f9fbff;
-    box-sizing: border-box;
-    width: 100%;
+  background: #f8fafc;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-lg, 14px);
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.UpcomingSessionCard:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .session-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .session-top h4 {
-    margin: 0;
-    color: #243b53;
-    font-size: 16px;
+  margin: 0;
+  color: var(--slate-900);
+  font-size: 1.05rem;
+  font-weight: 800;
 }
 
 .session-top span {
-    color: #829ab1;
-    font-size: 11px;
+  font-size: 0.84rem;
+  color: var(--slate-500);
 }
 
 .session-badge {
-    background: #e5f7ee;
-    color: #159957 !important;
-    padding: 4px 8px;
-    border-radius: 10px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .UpcomingSessionCard h3 {
-    margin: 12px 0 4px;
-    font-size: 14px;
+  margin: 0 0 6px 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--slate-900);
 }
 
 .session-student {
-    color: #627d98;
-    font-size: 12px;
+  margin: 0 0 10px 0;
+  color: var(--slate-600);
+  font-size: 0.88rem;
+  font-weight: 500;
 }
 
-.session-platform {
-    font-size: 11px;
-    color: #52606d;
-    margin: 8px 0;
+.session-platform span {
+  display: inline-block;
+  font-size: 0.82rem;
+  color: var(--slate-600);
+  background: #ffffff;
+  padding: 4px 10px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 14px;
 }
 
 .session-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.session-actions button,
-.session-actions a {
-    flex: 1;
-    text-align: center;
-    padding: 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    text-decoration: none;
-    cursor: pointer;
-    box-sizing: border-box;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .reschedule-btn {
-    background: white;
-    border: 1px solid #dbe4f0;
-    color: #52606d;
+  padding: 8px 16px;
+  border: 1px solid var(--border-subtle);
+  background: #ffffff;
+  color: var(--slate-700);
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.reschedule-btn:hover {
+  background: var(--slate-100);
+  color: var(--slate-900);
 }
 
 .join-btn {
-    background: #2864e8;
-    color: white;
-    border: 1px solid #2864e8;
+  padding: 8px 16px;
+  background: #10b981;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.86rem;
+  font-weight: 600;
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
+.join-btn:hover {
+  background: #059669;
+}
 
-/* =========================
-   SCHEDULE REQUESTS
-========================= */
+/* ==========================================================================
+   TODAY'S STAT PANEL (SIDEBAR)
+   ========================================================================== */
 
-.TeacherScheduleSchedReqPanel {
-    display: flex;
-    flex-direction: column;
+.TeacherScheduleTodaySessionPanel {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  color: #ffffff;
+  border-radius: var(--radius-xl, 20px);
+  padding: 24px;
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.35);
+}
+
+.today-stat-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+.today-stat-values {
+  display: flex;
+  justify-content: space-between;
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+/* ==========================================================================
+   SCHEDULE REQUESTS & RATINGS
+   ========================================================================== */
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+.request-count, .review-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 3px 10px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1px solid #bfdbfe;
 }
 
 .ScheduleRequestCard {
-    padding: 12px 0;
-    border-bottom: 1px solid #edf1f5;
-}
-
-.ScheduleRequestCard:last-child {
-    border-bottom: none;
+  background: #f8fafc;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md, 12px);
+  padding: 14px 16px;
+  margin-bottom: 12px;
 }
 
 .request-user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .request-avatar {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: #d9e7ff;
-    color: #2864e8;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    flex-shrink: 0;
-}
-
-.request-user strong {
-    font-size: 12px;
-    color: #243b53;
-}
-
-.request-user p {
-    margin: 3px 0 0;
-    color: #829ab1;
-    font-size: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1e40af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 
 .request-actions {
-    display: flex;
-    gap: 7px;
-    margin-top: 10px;
-}
-
-.request-actions button {
-    flex: 1;
-    padding: 7px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 11px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .decline-btn {
-    background: white;
-    border: 1px solid #dbe4f0;
+  padding: 6px 14px;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .view-btn {
-    background: #2864e8;
-    border: 1px solid #2864e8;
-    color: white;
+  padding: 6px 14px;
+  background: #ffffff;
+  color: var(--slate-700);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-
-/* =========================
-   RATINGS
-========================= */
-
-.TeacherRatingsPanel {
-    overflow: hidden;
-}
-
+/* Ratings Panel */
 .rating-summary {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 0;
-    border-bottom: 1px solid #edf1f5;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--slate-100);
+  margin-bottom: 16px;
 }
 
 .rating-number {
-    font-size: 32px;
-    font-weight: bold;
-    color: #243b53;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--slate-900);
+  line-height: 1;
 }
 
 .stars {
-    letter-spacing: 2px;
-}
-
-.star {
-    color: #d9e2ec;
-    font-size: 15px;
+  color: #cbd5e1;
+  font-size: 1.25rem;
 }
 
 .star.filled {
-    color: #f5a623;
-}
-
-.stars .star {
-    color: #ccc;
-    font-size: 24px;
-}
-
-.stars .star.filled {
-    color: #ffc107;
-}
-
-.stars .star.half {
-    background: linear-gradient(
-        90deg,
-        #ffc107 50%,
-        #ccc 50%
-    );
-
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.rating-summary p {
-    margin: 4px 0 0;
-    color: #829ab1;
-    font-size: 10px;
+  color: #f59e0b;
 }
 
 .RatingCard {
-    padding: 13px 0;
-    border-bottom: 1px solid #edf1f5;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--slate-100);
 }
 
 .RatingCard:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .rating-user {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
 .rating-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #e8edf5;
-    color: #52606d;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: bold;
-    flex-shrink: 0;
-}
-
-.rating-user strong {
-    font-size: 11px;
-    color: #243b53;
-}
-
-.small-stars {
-    line-height: 12px;
-}
-
-.small-stars .star {
-    font-size: 10px;
-    letter-spacing: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: var(--slate-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .rating-value {
-    margin-left: auto;
-    color: #2864e8 !important;
+  margin-left: auto;
+  color: #f59e0b;
+  font-size: 0.95rem;
 }
 
 .rating-comment {
-    margin: 8px 0 0;
-    color: #627d98;
-    font-size: 10px;
-    line-height: 1.5;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--slate-600);
+  font-style: italic;
 }
 
-
-/* =========================
-   EMPTY STATES
-========================= */
-
-.empty-rating,
-.empty-request,
-.empty-state {
-    text-align: center;
-    color: #829ab1;
-    font-size: 12px;
-    padding: 20px 5px;
-}
-
-
-/* =========================
-   MODALS
-========================= */
-
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    z-index: 9999;
-}
-
-.modal {
-    background: white;
-    padding: 24px;
-    border-radius: 10px;
-    width: 450px;
-    max-width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-sizing: border-box;
-}
-
-.modal h2 {
-    margin-top: 0;
-    color: #243b53;
-}
-
-.modal input,
-.modal select,
-.modal textarea {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 10px;
-    margin-bottom: 12px;
-    border: 1px solid #dbe4f0;
-    border-radius: 5px;
-    font-family: inherit;
-}
-
-.modal textarea {
-    min-height: 90px;
-    resize: vertical;
-}
-
-.modal button {
-    padding: 9px 14px;
-    border: 1px solid #dbe4f0;
-    border-radius: 5px;
-    background: white;
-    cursor: pointer;
-    margin-right: 8px;
-    margin-top: 5px;
-}
-
-.modal button:hover {
-    background: #f5f7fa;
-}
-
-
-/* =========================
-   RESCHEDULE STATUS
-========================= */
-
-.reschedule-status {
-    background: #f8faff;
-    border: 1px solid #e5e9f2;
-    border-radius: 6px;
-    padding: 12px;
-    margin: 15px 0;
-}
-
-.reschedule-status h3 {
-    margin-top: 0;
-    font-size: 14px;
-    color: #243b53;
-}
-
-.reschedule-status p {
-    font-size: 12px;
-    color: #52606d;
-}
-
-
-/* =========================
-   RESPONSIVE
-========================= */
-
-@media (max-width: 1000px) {
-
-    .TeacherScheduleLowerPanel {
-        grid-template-columns: 1fr;
-    }
-
-    .TeacherScheduleLowerRight {
-        width: 100%;
-    }
-
-}
-
-@media (max-width: 600px) {
-
-    .TeacherScheduleHeader {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    .Teacher-NewSession {
-        width: 100%;
-    }
-
-    .CalendarPanel {
-        height: 400px;
-    }
-
-}
-
-.fc-event-time, .fc-event-title{
-    color: black !important;
-}
-
-.fc-event-title{
-    font-weight: bold !important;
-    font-size: 11px;
-    margin-bottom: 5px;
+@media (max-width: 1100px) {
+  .TeacherScheduleLowerPanel {
+    grid-template-columns: 1fr;
+  }
 }

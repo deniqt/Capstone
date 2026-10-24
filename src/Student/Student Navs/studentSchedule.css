@@ -1,750 +1,481 @@
-/* =========================================
-   MAIN LAYOUT
-   ========================================= */
+/* ==========================================================================
+   STUDENT SCHEDULE & CALENDAR DESIGN
+   ========================================================================== */
 
-   .Main-Sched{
-    padding: 20px;
-   }
+.Main-Sched {
+  padding: 10px 4px 40px 4px;
+}
+
+.Main-Sched > h1 {
+  margin: 0 0 24px 0;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--slate-900);
+  letter-spacing: -0.02em;
+}
 
 .student-lower-panel {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 20px;
-
-    width: 100%;
-    padding: 0;
-
-    border: none;
-
-    flex-direction: row;
-    justify-content: space-between;
-
-    box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: start;
 }
-
-
-/* =========================================
-   LEFT PANEL
-   ========================================= */
 
 .student-lower-left {
-    width: 27%;
-
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-
-    padding: 0;
-
-    border: none;
-
-    box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
-
-
-/* =========================================
-   RIGHT PANEL
-   ========================================= */
 
 .student-lower-right {
-    width: 73%;
-    min-width: 0;
-
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-
-    padding: 0;
-
-    border: none;
-
-    height: auto;
-
-    box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-
-/* =========================================
-   ATTENDANCE CARDS
-   ========================================= */
+/* ==========================================================================
+   ATTENDANCE & STAT CARDS
+   ========================================================================== */
 
 .lower-left-panel {
-    background: #ffffff;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-
-    padding: 16px 18px;
-
-    box-sizing: border-box;
-
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl, 18px);
+  padding: 22px 24px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.lower-left-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.07);
+}
 
 .lower-left-panel h3 {
-    margin: 0 0 8px;
-
-    color: #64748b;
-
-    font-size: 13px;
-    font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--slate-500);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-
 
 .lower-left-panel h1 {
-    margin: 0;
-
-    color: #1e293b;
-
-    font-size: 27px;
-    font-weight: 700;
+  margin: 0;
+  color: var(--slate-900);
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
-
-/* =========================================
-   RATE PREVIOUS SESSION
-   ========================================= */
-
+/* Rate Previous Session Panel */
 .rate-previous-session-panel {
-    background: #ffffff;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-
-    padding: 18px;
-
-    box-sizing: border-box;
-
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl, 18px);
+  padding: 22px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
 }
-
 
 .rate-previous-session-panel h3 {
-    margin: 0 0 15px;
-
-    color: #334155;
-
-    font-size: 15px;
-    font-weight: 700;
+  margin: 0 0 14px;
+  color: var(--slate-900);
+  font-size: 1.05rem;
+  font-weight: 700;
 }
-
 
 .rate-previous-session-panel h4 {
-    margin: 0 0 6px;
-
-    color: #1e293b;
-
-    font-size: 14px;
+  margin: 0 0 6px;
+  color: var(--slate-800);
+  font-size: 0.95rem;
+  font-weight: 700;
 }
-
 
 .rate-previous-session-panel p {
-    margin: 5px 0;
-
-    color: #64748b;
-
-    font-size: 12px;
+  margin: 4px 0;
+  color: var(--slate-500);
+  font-size: 0.85rem;
 }
-
 
 .rate-previous-session-panel h1 {
-    margin: 5px 0 10px;
-
-    color: #22c55e;
-
-    text-align: center;
+  margin: 8px 0 12px;
+  color: var(--success, #10b981);
+  text-align: center;
+  font-size: 2rem;
 }
-
-
-/* Rate button */
 
 .rate-previous-session-panel button {
-    width: 100%;
-
-    margin-top: 12px;
-
-    padding: 9px 12px;
-
-    border: none;
-    border-radius: 6px;
-
-    background: #2563eb;
-    color: white;
-
-    font-size: 12px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition: 0.2s ease;
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px 16px;
+  border: none;
+  border-radius: var(--radius-md, 10px);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  transition: all var(--transition-fast, 0.2s ease);
 }
-
 
 .rate-previous-session-panel button:hover {
-    background: #1d4ed8;
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
 }
 
-
-/* =========================================
-   CALENDAR PANEL
-   ========================================= */
+/* ==========================================================================
+   CALENDAR CONTAINER & FULLCALENDAR (FIXES OVERLAP IN IMAGE 4)
+   ========================================================================== */
 
 .calendar-panel {
-    width: 100%;
-    height: 70vh;
-
-    padding: 15px;
-
-    background: #ffffff;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-
-    box-sizing: border-box;
-
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl, 20px);
+  box-sizing: border-box;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
-
 
 .calendar-panel h3 {
-    margin: 0 0 12px;
-
-    color: #334155;
-
-    font-size: 16px;
-    font-weight: 700;
+  margin: 0 0 18px;
+  color: var(--slate-900);
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
-
-/* =========================================
-   FULL CALENDAR
-   ========================================= */
-
+/* Ensure FullCalendar has natural flow height without spilling into Today's Sessions */
 .calendar-panel .fc {
-    height: calc(100% - 30px);
-
-    font-size: 12px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  min-height: 620px;
+  height: auto !important;
+  width: 100%;
 }
 
-
-/* Calendar toolbar */
-
-.calendar-panel .fc-toolbar {
-    margin-bottom: 12px;
+.calendar-panel .fc .fc-view-harness {
+  min-height: 560px;
+  height: auto !important;
 }
 
-
-.calendar-panel .fc-toolbar-title {
-    color: #334155;
-
-    font-size: 17px;
-    font-weight: 700;
+.calendar-panel .fc .fc-toolbar.fc-header-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5em;
+  padding: 2px 0;
 }
 
-
-/* Toolbar buttons */
-
-.calendar-panel .fc-button {
-    background: #ffffff !important;
-
-    border: 1px solid #dbe2ea !important;
-
-    color: #475569 !important;
-
-    box-shadow: none !important;
-
-    font-size: 11px !important;
-    font-weight: 600;
-
-    padding: 6px 9px !important;
+.calendar-panel .fc .fc-toolbar-title {
+  color: var(--slate-900);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
-
-.calendar-panel .fc-button:hover {
-    background: #f1f5f9 !important;
+.calendar-panel .fc .fc-button {
+  background: var(--slate-100, #f1f5f9);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  color: var(--slate-700, #334155);
+  font-weight: 600;
+  font-size: 0.86rem;
+  padding: 7px 14px;
+  border-radius: var(--radius-md, 8px);
+  box-shadow: none;
+  transition: all var(--transition-fast, 0.2s ease);
+  text-transform: capitalize;
 }
 
-
-.calendar-panel
-.fc-button-primary:not(:disabled).fc-button-active {
-    background: #2563eb !important;
-
-    border-color: #2563eb !important;
-
-    color: #ffffff !important;
+.calendar-panel .fc .fc-button:hover {
+  background: var(--slate-200, #e2e8f0);
+  color: var(--slate-900, #0f172a);
+  border-color: #cbd5e1;
 }
 
-
-/* =========================================
-   CALENDAR HEADER
-   ========================================= */
-
-.calendar-panel .fc-col-header-cell {
-    background: #f8fafc;
-
-    border-color: #e5e7eb;
+.calendar-panel .fc .fc-button-primary:not(:disabled).fc-button-active,
+.calendar-panel .fc .fc-button-primary:not(:disabled):active {
+  background: var(--primary, #2563eb) !important;
+  color: #ffffff !important;
+  border-color: var(--primary, #2563eb) !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35) !important;
 }
 
-
-.calendar-panel .fc-col-header-cell-cushion {
-    padding: 8px 4px;
-
-    color: #64748b;
-
-    font-size: 11px;
-    font-weight: 600;
+.calendar-panel .fc .fc-button:disabled {
+  opacity: 0.45;
+  background: var(--slate-100);
+  color: var(--slate-400);
 }
 
-
-/* =========================================
-   CALENDAR CELLS
-   ========================================= */
-
-.calendar-panel .fc-daygrid-day,
-.calendar-panel .fc-timegrid-slot,
-.calendar-panel .fc-scrollgrid {
-    border-color: #e5e7eb;
+.calendar-panel .fc th {
+  padding: 10px 0;
+  background: #f8fafc;
+  color: var(--slate-500);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-color: var(--border-subtle);
 }
 
-
-.calendar-panel .fc-daygrid-day-number {
-    padding: 6px;
-
-    color: #64748b;
-
-    font-size: 11px;
+.calendar-panel .fc td {
+  border-color: #f1f5f9;
 }
 
-
-/* Today's date */
-
-.calendar-panel .fc-day-today {
-    background: #eff6ff !important;
+.calendar-panel .fc-theme-standard td,
+.calendar-panel .fc-theme-standard th {
+  border-color: var(--slate-200);
 }
 
-
-/* =========================================
-   CALENDAR EVENTS
-   ========================================= */
-
-.calendar-panel .fc-event {
-
-
-    border-radius: 5px !important;
-
-    padding: 2px 5px !important;
-
-    font-size: 10px !important;
-
-    font-weight: 600;
-
-    cursor: pointer;
+.calendar-panel .fc .fc-daygrid-day:hover {
+  background-color: #f8fafc;
 }
 
-
-.calendar-panel .fc-event:hover {
-    opacity: 0.85;
+.calendar-panel .fc .fc-day-today {
+  background-color: #f0f7ff !important;
 }
 
+.calendar-panel .fc .fc-event {
+  border-radius: var(--radius-xs, 6px);
+  padding: 3px 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
 
-/* =========================================
-   TODAY'S SESSIONS
-   ========================================= */
+.calendar-panel .fc .fc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ==========================================================================
+   TODAY'S SESSIONS PANEL (FIXES OVERLAP IN IMAGE 4)
+   ========================================================================== */
 
 .today-session-panel {
-    width: 100%;
-
-    padding: 16px;
-
-    background: #ffffff;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-
-    box-sizing: border-box;
-
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl, 20px);
+  box-sizing: border-box;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+  position: relative;
+  clear: both;
 }
-
 
 .today-session-panel h3 {
-    margin: 0 0 12px;
-
-    color: #334155;
-
-    font-size: 16px;
-    font-weight: 700;
+  margin: 0 0 18px 0;
+  color: var(--slate-900);
+  font-size: 1.18rem;
+  font-weight: 700;
 }
-
-
-/* =========================================
-   SESSION CARD
-   ========================================= */
 
 .Session-card {
-    padding: 12px 14px;
-
-    margin-bottom: 9px;
-
-    background: #f8fafc;
-
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-
-    transition: 0.2s ease;
-
-    box-sizing: border-box;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--primary, #2563eb);
+  border-radius: var(--radius-md, 12px);
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  transition: all var(--transition-fast, 0.2s ease);
 }
-
 
 .Session-card:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
-
 
 .Session-card:hover {
-    background: #f8fbff;
-
-    border-color: #bfdbfe;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  transform: translateX(2px);
 }
-
 
 .Session-card h4 {
-    margin: 0 0 5px;
-
-    color: #1e293b;
-
-    font-size: 13px;
-    font-weight: 700;
+  margin: 0;
+  color: var(--slate-900);
+  font-size: 0.98rem;
+  font-weight: 700;
 }
 
-
-.Session-card p {
-    margin: 4px 0;
-
-    color: #64748b;
-
-    font-size: 11px;
+.Session-card p:first-of-type {
+  margin: 0;
+  color: var(--slate-500);
+  font-size: 0.88rem;
+  font-weight: 500;
 }
 
+.Session-card p:last-of-type {
+  margin: 0;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  text-transform: capitalize;
+}
 
-/* =========================================
-   MODAL OVERLAY
-   ========================================= */
+/* ==========================================================================
+   MODAL DIALOGS
+   ========================================================================== */
 
 .modal-overlay {
-    position: fixed;
-
-    inset: 0;
-
-    z-index: 9999;
-
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-
-    padding: 20px;
-
-    box-sizing: border-box;
-
-    background: rgba(15, 23, 42, 0.45);
-
-    backdrop-filter: blur(3px);
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: satFadeIn 0.2s ease;
 }
-
-
-/* =========================================
-   MODAL
-   ========================================= */
 
 .modal {
-    width: min(480px, 100%);
-
-    max-height: 90vh;
-
-    overflow-y: auto;
-
-    padding: 24px;
-
-    background: #ffffff;
-
-    border-radius: 12px;
-
-    box-sizing: border-box;
-
-    box-shadow:
-        0 20px 50px rgba(15, 23, 42, 0.2);
+  background: #ffffff;
+  padding: 30px;
+  border-radius: var(--radius-xl, 20px);
+  width: 480px;
+  max-width: 95%;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  animation: satModalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-
-.modal h2 {
-    margin: 0 0 18px;
-
-    color: #172554;
-
-    font-size: 20px;
+.modal h2, .modal h3 {
+  margin: 0 0 14px;
+  color: var(--slate-900);
+  font-weight: 700;
 }
-
-
-.modal h3 {
-    color: #334155;
-
-    font-size: 15px;
-}
-
 
 .modal p {
-    color: #64748b;
-
-    font-size: 13px;
-
-    line-height: 1.5;
+  color: var(--slate-600);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0 0 12px;
 }
-
-
-/* =========================================
-   MODAL INPUTS
-   ========================================= */
 
 .modal input,
 .modal select,
 .modal textarea {
-    width: 100%;
-
-    box-sizing: border-box;
-
-    padding: 10px 12px;
-
-    border: 1px solid #dbe2ea;
-
-    border-radius: 7px;
-
-    background: #ffffff;
-
-    color: #334155;
-
-    font-family: inherit;
-
-    font-size: 13px;
-
-    outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md, 10px);
+  background: #ffffff;
+  color: var(--slate-900);
+  font-family: inherit;
+  font-size: 0.92rem;
+  outline: none;
+  transition: all var(--transition-fast, 0.2s ease);
 }
-
 
 .modal input:focus,
 .modal select:focus,
 .modal textarea:focus {
-    border-color: #2563eb;
-
-    box-shadow:
-        0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-ring);
 }
-
 
 .modal textarea {
-    min-height: 100px;
-
-    resize: vertical;
+  min-height: 100px;
+  resize: vertical;
 }
-
-
-/* =========================================
-   MODAL BUTTONS
-   ========================================= */
 
 .modal button {
-    padding: 9px 14px;
-
-    margin-top: 12px;
-
-    border: none;
-
-    border-radius: 6px;
-
-    background: #2563eb;
-
-    color: #ffffff;
-
-    font-size: 12px;
-
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition: 0.2s ease;
+  padding: 10px 18px;
+  margin-top: 14px;
+  border: none;
+  border-radius: var(--radius-md, 10px);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25);
+  transition: all var(--transition-fast, 0.2s ease);
 }
-
 
 .modal button:hover {
-    background: #1d4ed8;
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 5px 14px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
 }
-
 
 .modal button:disabled {
-    opacity: 0.5;
-
-    cursor: not-allowed;
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
-
-
-/* =========================================
-   RESCHEDULE STATUS
-   ========================================= */
 
 .reschedule-status {
-    margin-top: 15px;
-
-    padding: 14px;
-
-    background: #faf5ff;
-
-    border: 1px solid #e9d5ff;
-
-    border-radius: 8px;
+  margin-top: 18px;
+  padding: 16px;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: var(--radius-md, 12px);
 }
-
 
 .reschedule-status h3 {
-    margin-top: 0;
-
-    color: #7e22ce;
+  margin-top: 0;
+  color: #7e22ce;
+  font-size: 1rem;
 }
-
-
-/* =========================================
-   RATING MODAL
-   ========================================= */
 
 .rating-modal {
-    text-align: center;
-
-    max-width: 450px;
+  text-align: center;
+  max-width: 460px;
 }
-
 
 .star-rating {
-    display: flex;
-
-    justify-content: center;
-
-    gap: 8px;
-
-    margin: 20px 0 8px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0 12px;
 }
-
 
 .star {
-    border: none;
-
-    background: none;
-
-    font-size: 42px;
-
-    color: #d1d5db;
-
-    cursor: pointer;
-
-    transition: 0.2s;
+  border: none;
+  background: none;
+  font-size: 42px;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: transform 0.15s ease, color 0.15s ease;
+  padding: 0;
 }
 
-
-.star:hover {
-    transform: scale(1.15);
+.star:hover, .star.active {
+  color: #f59e0b;
+  transform: scale(1.15);
 }
-
-
-.star.active {
-    color: #fbbf24;
-}
-
-
-.rating-label {
-    min-height: 24px;
-
-    font-weight: 600;
-}
-
-
-.rating-modal textarea {
-    width: 100%;
-
-    min-height: 100px;
-
-    resize: vertical;
-
-    margin-top: 15px;
-
-    padding: 12px;
-
-    border-radius: 8px;
-
-    border: 1px solid #ddd;
-
-    box-sizing: border-box;
-}
-
-
-.rating-actions {
-    display: flex;
-
-    justify-content: center;
-
-    gap: 10px;
-
-    margin-top: 20px;
-}
-
-
-/* =========================================
-   RESPONSIVE
-   ========================================= */
 
 @media (max-width: 900px) {
-
-    .student-lower-panel {
-        flex-direction: column;
-    }
-
-    .student-lower-left,
-    .student-lower-right {
-        width: 100%;
-    }
-
-    .calendar-panel {
-        height: 65vh;
-    }
-
-}
-
-
-@media (max-width: 600px) {
-
-    .lower-left-panel {
-        padding: 14px;
-    }
-
-    .calendar-panel {
-        height: 60vh;
-
-        padding: 10px;
-    }
-
-    .calendar-panel .fc-toolbar {
-        flex-direction: column;
-
-        gap: 8px;
-    }
-
-    .calendar-panel .fc-toolbar-chunk {
-        display: flex;
-
-        justify-content: center;
-    }
-
-    .modal {
-        padding: 18px;
-    }
-
+  .student-lower-panel {
+    grid-template-columns: 1fr;
+  }
 }

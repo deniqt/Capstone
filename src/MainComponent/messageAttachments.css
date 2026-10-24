@@ -1,99 +1,133 @@
-/* Shared by StudentMessages and TeacherMessages */
+/* ==========================================================================
+   MESSAGE ATTACHMENTS DESIGN (SHARED)
+   ========================================================================== */
 
 .attach-button {
-    flex-shrink: 0;
-    background: transparent;
-    border: none;
-    font-size: 20px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 6px 8px;
-    color: inherit;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 8px 10px;
+  color: var(--slate-500);
+  border-radius: var(--radius-md, 8px);
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .attach-button:hover:not(:disabled) {
-    opacity: 0.7;
+  color: var(--primary);
+  background: var(--slate-100);
 }
 
 .attach-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-
-/* Selected file preview (above the input) */
+/* ==========================================================================
+   SELECTED FILE PREVIEW (ABOVE INPUT)
+   ========================================================================== */
 
 .selected-file-preview {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 8px 12px;
-    margin: 0 12px 8px;
-    background: #f1f5f9;
-    border-radius: 8px;
-    font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  margin: 0 16px 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md, 10px);
+  font-size: 0.88rem;
+  color: var(--primary-active);
+  animation: fadeIn 0.2s ease;
 }
 
 .selected-file-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-weight: 500;
 }
 
 .selected-file-preview button {
-    flex-shrink: 0;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 2px 6px;
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--slate-400);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm, 6px);
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
+.selected-file-preview button:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
-/* Attachments inside message bubbles */
+/* ==========================================================================
+   ATTACHMENTS INSIDE MESSAGE BUBBLES
+   ========================================================================== */
 
 .attachment-image {
-    display: block;
-    max-width: 240px;
-    max-height: 240px;
-    width: 100%;
-    border-radius: 8px;
-    margin-bottom: 6px;
-    object-fit: cover;
+  display: block;
+  max-width: 260px;
+  max-height: 260px;
+  width: 100%;
+  border-radius: var(--radius-md, 10px);
+  margin-bottom: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.attachment-image:hover {
+  transform: scale(1.02);
 }
 
 .attachment-file {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    margin-bottom: 6px;
-    background: rgba(0, 0, 0, 0.06);
-    border-radius: 8px;
-    text-decoration: none;
-    color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-md, 10px);
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.attachment-file:hover {
+  background: rgba(0, 0, 0, 0.09);
+  transform: translateY(-1px);
 }
 
 .attachment-file-icon {
-    font-size: 20px;
+  font-size: 22px;
+  color: var(--primary);
 }
 
 .attachment-file-info {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .attachment-file-info strong {
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
 }
 
 .attachment-file-info small {
-    font-size: 11px;
-    opacity: 0.7;
+  font-size: 0.74rem;
+  opacity: 0.75;
 }

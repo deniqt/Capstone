@@ -1,880 +1,604 @@
-
-/* =========================================
-   PAGE
-========================================= */
+/* ==========================================================================
+   TEACHER MESSAGING SYSTEM DESIGN (SPLIT SCREEN & MODERN CHAT BUBBLES)
+   ========================================================================== */
 
 .teacher-messages-page {
-    height: 100vh;
-    overflow: hidden;
-
-    background: #f5f8fc;
-    color: #18324a;
-
-    display: flex;
-    flex-direction: column;
+  height: calc(100vh - 80px);
+  min-height: 580px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg-app);
+  color: var(--slate-900);
+  display: flex;
+  flex-direction: column;
+  padding: 10px 4px 20px 4px;
+  box-sizing: border-box;
 }
-
-
-/* =========================================
-   LOADING
-========================================= */
 
 .teacher-messages-loading {
-    height: 100vh;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #f5f8fc;
-    color: #526273;
-
-    font-size: 14px;
+  height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--slate-500);
+  font-size: 0.95rem;
 }
-
-
-/* =========================================
-   WRAPPER
-========================================= */
 
 .teacher-messages-wrapper {
-    flex: 1;
-    min-height: 0;
-
-    margin: 24px 18px;
-
-    display: flex;
-    flex-direction: column;
-
-    overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-
-/* =========================================
-   TITLE
-========================================= */
-
 .teacher-messages-title {
-    flex-shrink: 0;
-    margin-bottom: 16px;
+  flex-shrink: 0;
+  margin-bottom: 18px;
 }
 
 .teacher-messages-title h1 {
-    margin: 0;
-
-    font-size: 20px;
-
-    color: #173452;
+  margin: 0;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--slate-900);
 }
 
 .teacher-messages-title p {
-    margin: 4px 0 0;
-
-    font-size: 11px;
-
-    color: #8994a1;
+  margin: 4px 0 0;
+  font-size: 0.92rem;
+  color: var(--slate-500);
 }
 
-
-/* =========================================
-   MAIN CONTAINER
-========================================= */
+/* ==========================================================================
+   MESSAGING CONTAINER (SPLIT SCREEN)
+   ========================================================================== */
 
 .teacher-messaging-container {
-    flex: 1;
-    min-height: 0;
-
-    width: 100%;
-    max-width: 1100px;
-
-    margin: 0 auto;
-
-    display: flex;
-
-    background: white;
-
-    border: 1px solid #e2e7ed;
-    border-radius: 8px;
-
-    overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl, 20px);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
 }
 
-
-/* =========================================
-   STUDENT LIST PANEL
-========================================= */
+/* ==========================================================================
+   STUDENT LIST PANEL (LEFT SIDEBAR)
+   ========================================================================== */
 
 .student-list-panel {
-    width: 280px;
-
-    flex-shrink: 0;
-    min-height: 0;
-
-    display: flex;
-    flex-direction: column;
-
-    border-right: 1px solid #e5e9ef;
-
-    background: white;
+  width: 320px;
+  flex-shrink: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-subtle);
+  background: #ffffff;
 }
 
-
-/* =========================================
-   STUDENT LIST HEADER
-========================================= */
-
 .student-list-header {
-    height: 60px;
-
-    flex-shrink: 0;
-
-    padding: 0 16px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    border-bottom: 1px solid #e8edf2;
+  height: 64px;
+  flex-shrink: 0;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .student-list-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .student-list-header h2 {
-    margin: 0;
-
-    font-size: 13px;
-
-    color: #25415e;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--slate-900);
 }
 
 .student-list-header span {
-    min-width: 22px;
-    height: 22px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 50%;
-
-    background: #eef5ff;
-
-    color: #3268d5;
-
-    font-size: 9px;
-    font-weight: 700;
+  min-width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full, 9999px);
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
-
-
-/* =========================================
-   STUDENT LIST CONTROLS
-========================================= */
 
 .student-list-controls {
-    flex-shrink: 0;
-
-    padding: 12px;
-
-    border-bottom: 1px solid #e5e7eb;
-
-    background: white;
+  flex-shrink: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: #ffffff;
 }
 
-
-/* =========================================
-   SEARCH
-========================================= */
-
 .student-search-input {
-    width: 100%;
-
-    box-sizing: border-box;
-
-    padding: 10px 12px;
-
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-
-    outline: none;
-
-    font-size: 14px;
-
-    margin-bottom: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md, 10px);
+  outline: none;
+  font-size: 0.9rem;
+  color: var(--slate-900);
+  background: var(--slate-50);
+  margin-bottom: 12px;
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .student-search-input:focus {
-    border-color: #2563eb;
+  border-color: var(--primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px var(--primary-ring);
 }
 
-
-/* =========================================
-   FILTER BUTTONS
-========================================= */
-
 .student-filter-buttons {
-    display: flex;
-
-    gap: 8px;
+  display: flex;
+  gap: 8px;
 }
 
 .student-filter-buttons button {
-    flex: 1;
-
-    padding: 8px 12px;
-
-    border: 1px solid #d1d5db;
-
-    background: #f9fafb;
-
-    border-radius: 7px;
-
-    cursor: pointer;
-
-    font-size: 13px;
-    font-weight: 600;
-
-    color: #4b5563;
+  flex: 1;
+  padding: 7px 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--slate-50);
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--slate-600);
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .student-filter-buttons button:hover {
-    background: #f3f4f6;
+  background: var(--slate-100);
+  color: var(--slate-900);
 }
 
 .student-filter-buttons button.active {
-    background: #2563eb;
-
-    color: white;
-
-    border-color: #2563eb;
+  background: var(--primary, #2563eb);
+  color: #ffffff;
+  border-color: var(--primary, #2563eb);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
-
-
-/* =========================================
-   UNREAD COUNT
-========================================= */
 
 .filter-unread-count {
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    min-width: 18px;
-    height: 18px;
-
-    margin-left: 6px;
-
-    padding: 0 5px;
-
-    border-radius: 10px;
-
-    background: #ef4444;
-
-    color: white;
-
-    font-size: 11px;
-    font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: var(--radius-full, 9999px);
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
 }
 
-
-/* =========================================
-   STUDENT LIST
-========================================= */
-
+/* Student List Items */
 .student-list {
-    flex: 1;
-    min-height: 0;
-
-    overflow-y: auto;
-
-    overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
-
-
-/* =========================================
-   STUDENT ITEMS
-========================================= */
 
 .student-list-item {
-    width: 100%;
-
-    box-sizing: border-box;
-
-    padding: 11px 13px;
-
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-
-    border: none;
-    border-bottom: 1px solid #f0f2f5;
-
-    background: white;
-
-    text-align: left;
-
-    cursor: pointer;
-
-    transition: 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  border-bottom: 1px solid var(--slate-100);
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
+  position: relative;
 }
 
 .student-list-item:hover {
-    background: #f7faff;
+  background: var(--slate-50);
 }
 
 .student-list-item.selected {
-    background: #eef5ff;
+  background: #f0f7ff;
 }
 
-
-/* =========================================
-   STUDENT AVATAR
-========================================= */
+.student-list-item.selected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3.5px;
+  background: var(--primary);
+}
 
 .student-avatar {
-    width: 36px;
-    height: 36px;
-
-    flex-shrink: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 50%;
-
-    background: #eef5ff;
-
-    color: #3268d5;
-
-    font-size: 13px;
-    font-weight: 700;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full, 9999px);
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1e40af;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .student-avatar.large {
-    width: 40px;
-    height: 40px;
-
-    font-size: 15px;
+  width: 44px;
+  height: 44px;
+  font-size: 16px;
 }
 
-
-/* =========================================
-   STUDENT INFO
-========================================= */
-
 .student-list-info {
-    min-width: 0;
-
-    flex: 1;
+  min-width: 0;
+  flex: 1;
 }
 
 .student-list-info strong {
-    display: block;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-
-    font-size: 11px;
-
-    color: #25415e;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--slate-900);
 }
 
 .student-list-info small {
-    display: block;
-
-    margin-top: 2px;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-
-    font-size: 8px;
-
-    color: #8a96a5;
-}
-
-
-/* =========================================
-   UNREAD STUDENT
-========================================= */
-
-.student-list-item.has-unread {
-    background: #eef5ff;
-
-    border-left: 3px solid #3268d5;
-}
-
-.student-list-item.has-unread strong {
-    font-weight: 700;
-
-    color: #173452;
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--slate-400);
 }
 
 .student-unread-badge {
-    min-width: 20px;
-    height: 20px;
-
-    padding: 0 6px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    border-radius: 10px;
-
-    background: #ef4444;
-
-    color: white;
-
-    font-size: 10px;
-    font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: var(--radius-full, 9999px);
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 4px;
 }
-
-
-/* =========================================
-   CHAT PANEL
-========================================= */
-
-.teacher-chat-panel {
-    flex: 1;
-
-    min-width: 0;
-    min-height: 0;
-
-    display: flex;
-
-    flex-direction: column;
-
-    background: #f8fafc;
-
-    overflow: hidden;
-}
-
-
-/* =========================================
-   CHAT HEADER
-========================================= */
-
-.teacher-chat-header {
-    min-height: 65px;
-
-    flex-shrink: 0;
-
-    box-sizing: border-box;
-
-    padding: 10px 18px;
-
-    display: flex;
-    align-items: center;
-
-    gap: 12px;
-
-    background: white;
-
-    border-bottom: 1px solid #e5e9ef;
-}
-
-.teacher-chat-header strong {
-    display: block;
-
-    font-size: 13px;
-
-    color: #25415e;
-}
-
-.teacher-chat-header span {
-    display: block;
-
-    margin-top: 2px;
-
-    font-size: 9px;
-
-    color: #8a96a5;
-}
-
-
-/* =========================================
-   MESSAGES
-========================================= */
-
-.teacher-chat-messages {
-    flex: 1;
-
-    min-height: 0;
-
-    padding: 20px;
-
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    box-sizing: border-box;
-}
-
-
-/* =========================================
-   MESSAGE ROW
-========================================= */
-
-.message-row {
-    display: flex;
-
-    margin-bottom: 10px;
-}
-
-.message-row.mine {
-    justify-content: flex-end;
-}
-
-.message-row.theirs {
-    justify-content: flex-start;
-}
-
-
-/* =========================================
-   MESSAGE BUBBLE
-========================================= */
-
-.teacher-message-bubble {
-    max-width: 65%;
-
-    padding: 9px 12px;
-
-    border-radius: 10px;
-}
-
-.message-row.mine
-.teacher-message-bubble {
-    background: #3769d5;
-
-    color: white;
-
-    border-bottom-right-radius: 3px;
-}
-
-.message-row.theirs
-.teacher-message-bubble {
-    background: white;
-
-    color: #25415e;
-
-    border: 1px solid #e2e7ed;
-
-    border-bottom-left-radius: 3px;
-}
-
-.teacher-message-bubble p {
-    margin: 0;
-
-    font-size: 12px;
-
-    line-height: 1.5;
-
-    word-break: break-word;
-}
-
-.teacher-message-bubble small {
-    display: block;
-
-    margin-top: 4px;
-
-    font-size: 8px;
-
-    opacity: 0.7;
-
-    text-align: right;
-}
-
-
-/* =========================================
-   CHAT PLACEHOLDER
-========================================= */
-
-.chat-placeholder,
-.chat-start {
-    height: 100%;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-    justify-content: center;
-
-    text-align: center;
-}
-
-.chat-placeholder > div,
-.chat-start > div {
-    margin-bottom: 8px;
-
-    font-size: 38px;
-}
-
-.chat-placeholder h2,
-.chat-start h3 {
-    margin: 0;
-
-    font-size: 15px;
-
-    color: #25415e;
-}
-
-.chat-placeholder p,
-.chat-start p {
-    margin: 5px 0 0;
-
-    font-size: 10px;
-
-    color: #8994a1;
-}
-
-
-/* =========================================
-   CHAT LOADING
-========================================= */
-
-.chat-loading {
-    height: 100%;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    font-size: 11px;
-
-    color: #8994a1;
-}
-
-
-/* =========================================
-   INPUT
-========================================= */
-
-.teacher-chat-input {
-    flex-shrink: 0;
-
-    padding: 12px;
-
-    display: flex;
-
-    gap: 8px;
-
-    background: white;
-
-    border-top: 1px solid #e5e9ef;
-}
-
-.teacher-chat-input input {
-    flex: 1;
-
-    min-width: 0;
-
-    height: 38px;
-
-    box-sizing: border-box;
-
-    padding: 0 12px;
-
-    border: 1px solid #dce3ea;
-
-    border-radius: 6px;
-
-    outline: none;
-
-    font-size: 12px;
-
-    color: #25415e;
-}
-
-.teacher-chat-input input:focus {
-    border-color: #3769d5;
-}
-
-.teacher-chat-input button {
-    min-width: 65px;
-
-    padding: 0 15px;
-
-    border: none;
-
-    border-radius: 6px;
-
-    background: #3769d5;
-
-    color: white;
-
-    font-size: 11px;
-
-    font-weight: 600;
-
-    cursor: pointer;
-}
-
-.teacher-chat-input button:hover {
-    background: #2f5ec4;
-}
-
-.teacher-chat-input button:disabled {
-    opacity: 0.5;
-
-    cursor: not-allowed;
-}
-
-
-/* =========================================
-   NO STUDENTS
-========================================= */
 
 .no-students {
-    height: 200px;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-    justify-content: center;
-
-    text-align: center;
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--slate-400);
 }
 
 .no-students span {
-    font-size: 30px;
-
-    margin-bottom: 8px;
+  font-size: 36px;
+  display: block;
+  margin-bottom: 10px;
 }
 
 .no-students p {
-    margin: 0;
-
-    font-size: 10px;
-
-    color: #8994a1;
+  margin: 0;
+  font-size: 0.9rem;
 }
 
+/* ==========================================================================
+   CHAT PANEL (RIGHT) (FIXES UNSTYLED MESSAGES IN IMAGE 2)
+   ========================================================================== */
 
-/* =========================================
-   SCROLLBARS
-========================================= */
-
-.student-list::-webkit-scrollbar,
-.teacher-chat-messages::-webkit-scrollbar {
-    width: 6px;
+.teacher-chat-panel {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  position: relative;
 }
 
-.student-list::-webkit-scrollbar-track,
-.teacher-chat-messages::-webkit-scrollbar-track {
-    background: transparent;
+/* Chat Header */
+.teacher-chat-header {
+  height: 64px;
+  flex-shrink: 0;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: #ffffff;
 }
 
-.student-list::-webkit-scrollbar-thumb,
-.teacher-chat-messages::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-
-    border-radius: 10px;
+.teacher-chat-header strong {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--slate-900);
 }
 
-.student-list::-webkit-scrollbar-thumb:hover,
-.teacher-chat-messages::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+.teacher-chat-header span {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--slate-500);
+  margin-top: 2px;
 }
 
-
-/* =========================================
-   RESPONSIVE
-========================================= */
-
-@media (max-width: 700px) {
-
-    .teacher-messages-wrapper {
-        margin: 15px;
-    }
-
-    .student-list-panel {
-        width: 210px;
-    }
-
-    .teacher-message-bubble {
-        max-width: 80%;
-    }
-
+/* Messages Area */
+.teacher-chat-messages {
+  flex: 1;
+  min-height: 0;
+  padding: 24px;
+  overflow-y: auto;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
+.chat-loading {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--slate-400);
+  font-size: 0.92rem;
+}
 
-/* =========================================
-   SMALL MOBILE
-========================================= */
+.chat-start {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
 
-@media (max-width: 550px) {
+.chat-start div {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
 
-    .teacher-messages-wrapper {
-        margin: 10px;
-    }
+.chat-start h3 {
+  margin: 0 0 6px 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--slate-800);
+}
 
-    .student-list-panel {
-        width: 75px;
-    }
+.chat-start p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--slate-400);
+}
 
-    .student-list-header h2 {
-        display: none;
-    }
+/* ==========================================================================
+   MESSAGE ROWS & BUBBLES (IMAGE 2)
+   ========================================================================== */
 
-    .student-list-header {
-        justify-content: center;
-    }
+.message-row {
+  display: flex;
+  width: 100%;
+}
 
-    .student-list-info {
-        display: none;
-    }
+.message-row.mine {
+  justify-content: flex-end;
+}
 
-    .student-list-item {
-        justify-content: center;
+.message-row.theirs {
+  justify-content: flex-start;
+}
 
-        padding: 10px 5px;
-    }
+.teacher-message-bubble {
+  max-width: 68%;
+  padding: 12px 18px;
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
 
-    .student-list-controls {
-        padding: 8px;
-    }
+.message-row.mine .teacher-message-bubble {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
 
-    .student-search-input {
-        font-size: 11px;
+.message-row.theirs .teacher-message-bubble {
+  background: #ffffff;
+  color: var(--slate-800);
+  border: 1px solid var(--border-subtle);
+  border-bottom-left-radius: 4px;
+}
 
-        padding: 8px 6px;
-    }
+.teacher-message-bubble p {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
 
-    .student-filter-buttons {
-        flex-direction: column;
+.teacher-message-bubble small {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.74rem;
+  opacity: 0.78;
+  text-align: right;
+}
 
-        gap: 4px;
-    }
+.message-row.mine .teacher-message-bubble small {
+  color: rgba(255, 255, 255, 0.85);
+}
 
-    .student-filter-buttons button {
-        padding: 6px 4px;
+.message-row.theirs .teacher-message-bubble small {
+  color: var(--slate-400);
+}
 
-        font-size: 9px;
-    }
+/* Image attachments inside bubble */
+.teacher-message-bubble .attachment-image {
+  max-width: 280px;
+  max-height: 280px;
+  width: 100%;
+  border-radius: var(--radius-md, 12px);
+  object-fit: cover;
+  display: block;
+  margin-bottom: 8px;
+}
 
-    .teacher-chat-messages {
-        padding: 12px;
-    }
+/* Placeholder when no student selected */
+.chat-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--slate-400);
+}
 
-    .teacher-message-bubble {
-        max-width: 85%;
-    }
+.chat-placeholder div {
+  font-size: 48px;
+  margin-bottom: 14px;
+}
 
+.chat-placeholder h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--slate-800);
+  margin: 0 0 8px;
+}
+
+.chat-placeholder p {
+  font-size: 0.92rem;
+  color: var(--slate-500);
+  margin: 0;
+}
+
+/* ==========================================================================
+   INPUT BAR (IMAGE 2)
+   ========================================================================== */
+
+.teacher-chat-input {
+  flex-shrink: 0;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-subtle);
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.teacher-chat-input .attach-button {
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-full, 9999px);
+  background: var(--slate-50);
+  color: var(--slate-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all var(--transition-fast, 0.2s ease);
+  flex-shrink: 0;
+}
+
+.teacher-chat-input .attach-button:hover:not(:disabled) {
+  background: var(--slate-100);
+  color: var(--primary);
+  border-color: #cbd5e1;
+}
+
+.teacher-chat-input input[type="text"] {
+  flex: 1;
+  height: 44px;
+  padding: 0 18px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.92rem;
+  color: var(--slate-900);
+  background: var(--slate-50);
+  outline: none;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.teacher-chat-input input[type="text"]:focus {
+  background: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-ring);
+}
+
+.teacher-chat-input button[type="submit"] {
+  height: 44px;
+  padding: 0 22px;
+  border: none;
+  border-radius: var(--radius-full, 9999px);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast, 0.2s ease);
+  flex-shrink: 0;
+}
+
+.teacher-chat-input button[type="submit"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 5px 14px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
+}
+
+.teacher-chat-input button[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (ALL SCREENS)
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .teacher-messaging-container {
+    flex-direction: column;
+  }
+  .student-list-panel {
+    width: 100%;
+    height: 240px;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
 }

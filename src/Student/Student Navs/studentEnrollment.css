@@ -1,0 +1,13 @@
+/* ==========================================================================
+   STUDENT ENROLLMENT DESIGN
+   ========================================================================== */
+
+h1:has(+ .enrollment-container),
+.student-enrollment-title {
+  margin: 0 0 24px 0;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--slate-900);
+  letter-spacing: -0.02em;
+}

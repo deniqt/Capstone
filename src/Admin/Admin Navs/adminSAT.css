@@ -1,651 +1,543 @@
+/* ==========================================================================
+   ADMIN STUDENT & TUTOR (SAT) MANAGEMENT DESIGN
+   ========================================================================== */
 
-#SATTitle{
-    margin-bottom: 20px;
-    color: #2D4961;
+#SATTitle {
+  margin: 0 0 20px 0;
+  color: var(--slate-900);
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
-.TableOption{
-    margin-right: 10px;
-
+.sat-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
+
+.sat-add-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.add-user-button {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border: none;
+  border-radius: var(--radius-md, 10px);
+  padding: 10px 20px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.add-user-button:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+}
+
+.export-csv-button {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md, 10px);
+  padding: 10px 18px;
+  color: var(--slate-700);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.export-csv-button:hover {
+  background: var(--slate-50);
+  border-color: var(--slate-300);
+  color: var(--slate-900);
+  transform: translateY(-1px);
+}
+
+.export-csv-icon {
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   NAVIGATION TABS
+   ========================================================================== */
+
 .TableHead {
-    width: 100%;
-    display: flex;
-    position: relative;
-    border-bottom: 1px solid #e5e7eb;
+  width: 100%;
+  display: flex;
+  position: relative;
+  border-bottom: 2px solid var(--border-subtle);
+  margin-bottom: 20px;
+  gap: 4px;
 }
 
 .TableHead button {
-    position: relative;
-    padding: 10px 20px;
-    border: none;
-    background-color: transparent;
-    color: #6B7280;
-    font-size: 14px;
-    cursor: pointer;
+  position: relative;
+  padding: 12px 22px;
+  border: none;
+  background-color: transparent;
+  color: var(--slate-500);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.TableHead button:hover {
+  color: var(--primary);
 }
 
 .TableHead button::after {
-    content: "";
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: #0B74FF;
-
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background-color: var(--primary);
+  transform: scaleX(0);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 2px 2px 0 0;
 }
 
 .TableHead button.active {
-    color: #0B74FF;
+  color: var(--primary);
 }
 
 .TableHead button.active::after {
-    transform: scaleX(1);
+  transform: scaleX(1);
 }
 
-.TableBox{
-    border: 1px solid #00000008;
-    padding: 10px;
+/* ==========================================================================
+   TABLE CONTAINER
+   ========================================================================== */
+
+.TableBox {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl, 20px);
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
 }
 
-.mainTable{
-    width: 100%;
+.mainTable {
+  width: 100%;
+  overflow-x: auto;
 }
-
 
 .user-table {
   width: 100%;
   border-collapse: collapse;
+  font-family: inherit;
+  font-size: 0.9rem;
 }
 
-.user-table th,
-.user-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
+.user-table thead {
+  background: #f8fafc;
+}
+
+.user-table th {
+  padding: 14px 20px;
   text-align: left;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--slate-500);
+  border-bottom: 1px solid var(--border-subtle);
+  text-transform: uppercase;
 }
 
-
-.user-table tr:hover {
-  background-color: #ddd;
+.user-table td {
+  padding: 16px 20px;
+  color: var(--slate-700);
+  border-bottom: 1px solid var(--slate-100);
+  vertical-align: middle;
 }
 
+.user-table tbody tr:last-child td {
+  border-bottom: none;
+}
 
-/* ==========================================
-   ADD USER MODAL
-========================================== */
+.user-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* User Profile Row */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: var(--radius-full, 9999px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1e40af;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-name {
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+/* ==========================================================================
+   PAGINATION
+   ========================================================================== */
+
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.pagination-info {
+  font-size: 0.88rem;
+  color: var(--slate-500);
+  font-weight: 500;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-button,
+.pagination-number {
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-subtle);
+  background: #ffffff;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--slate-700);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.pagination-button {
+  padding: 0 12px;
+}
+
+.pagination-number.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+.pagination-button:hover:not(:disabled),
+.pagination-number:hover:not(.active) {
+  background: var(--slate-100);
+  color: var(--slate-900);
+  border-color: var(--slate-300);
+}
+
+.pagination-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pagination-dots {
+  padding: 0 6px;
+  color: var(--slate-400);
+}
+
+/* ==========================================================================
+   ADD USER MODAL DIALOG
+   ========================================================================== */
 
 .sat-modal-overlay {
-    position: fixed;
-    inset: 0;
-
-    background: rgba(0, 0, 0, 0.45);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    z-index: 9999;
-
-    padding: 20px;
-
-    animation: satFadeIn 0.2s ease;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: satFadeIn 0.2s ease;
 }
-
-
-/* ==========================================
-   MODAL
-========================================== */
 
 .sat-modal {
-    width: min(650px, 100%);
-
-    max-height: 90vh;
-
-    background: #ffffff;
-
-    border-radius: 14px;
-
-    box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.2);
-
-    overflow-y: auto;
-
-    animation: satModalIn 0.25s ease;
+  width: min(640px, 100%);
+  max-height: 88vh;
+  background: #ffffff;
+  border-radius: var(--radius-xl, 20px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  overflow-y: auto;
+  animation: satModalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-
-/* ==========================================
-   MODAL HEADER
-========================================== */
-
 .sat-modal-header {
-    display: flex;
-
-    justify-content: space-between;
-    align-items: flex-start;
-
-    padding: 24px 28px;
-
-    border-bottom: 1px solid #e5e7eb;
-
-    position: sticky;
-    top: 0;
-
-    background: #ffffff;
-
-    z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 2;
 }
 
 .sat-modal-header h2 {
-    margin: 0;
-
-    font-size: 22px;
-
-    font-weight: 600;
-
-    color: #1f2937;
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--slate-900);
 }
 
 .sat-modal-header p {
-    margin: 6px 0 0;
-
-    font-size: 13px;
-
-    color: #6b7280;
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--slate-500);
 }
 
-
-/* ==========================================
-   CLOSE BUTTON
-========================================== */
-
 .sat-modal-close {
-    width: 36px;
-    height: 36px;
-
-    border: none;
-
-    background: #f3f4f6;
-
-    border-radius: 8px;
-
-    font-size: 24px;
-
-    color: #6b7280;
-
-    cursor: pointer;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    transition: 0.2s;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-subtle);
+  background: var(--slate-100);
+  border-radius: var(--radius-md, 10px);
+  font-size: 20px;
+  color: var(--slate-500);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .sat-modal-close:hover {
-    background: #e5e7eb;
-
-    color: #111827;
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
 }
-
-
-/* ==========================================
-   FORM
-========================================== */
 
 .sat-modal form {
-    padding: 24px 28px;
+  padding: 24px 28px;
 }
 
-
-/* ==========================================
-   FORM SECTION
-========================================== */
-
 .sat-form-section {
-    margin-bottom: 26px;
+  margin-bottom: 24px;
 }
 
 .sat-form-section h3 {
-    margin: 0 0 18px;
-
-    font-size: 15px;
-
-    font-weight: 600;
-
-    color: #315B78;
-
-    padding-bottom: 10px;
-
-    border-bottom: 1px solid #e5e7eb;
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--slate-900);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-
-/* ==========================================
-   FORM GROUP
-========================================== */
-
 .sat-form-group {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 7px;
-
-    margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
 }
 
 .sat-form-group label {
-    font-size: 13px;
-
-    font-weight: 500;
-
-    color: #374151;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--slate-700);
 }
 
 .sat-form-group input,
 .sat-form-group select,
 .sat-form-group textarea {
-    width: 100%;
-
-    box-sizing: border-box;
-
-    padding: 11px 12px;
-
-    border: 1px solid #d1d5db;
-
-    border-radius: 8px;
-
-    background: #ffffff;
-
-    color: #111827;
-
-    font-family: inherit;
-
-    font-size: 14px;
-
-    outline: none;
-
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md, 10px);
+  background: #ffffff;
+  color: var(--slate-900);
+  font-family: inherit;
+  font-size: 0.92rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .sat-form-group input:focus,
 .sat-form-group select:focus,
 .sat-form-group textarea:focus {
-    border-color: #315B78;
-
-    box-shadow:
-        0 0 0 3px rgba(49, 91, 120, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3.5px var(--primary-ring);
 }
 
 .sat-form-group textarea {
-    min-height: 80px;
-
-    resize: vertical;
+  min-height: 80px;
+  resize: vertical;
 }
 
 .sat-form-group input:disabled {
-    background: #f3f4f6;
-
-    color: #6b7280;
-
-    cursor: not-allowed;
+  background: var(--slate-100);
+  color: var(--slate-400);
+  cursor: not-allowed;
 }
-
-
-/* ==========================================
-   SMALL TEXT
-========================================== */
 
 .sat-form-group small,
 .profile-upload small {
-    font-size: 11px;
-
-    color: #9ca3af;
+  font-size: 0.76rem;
+  color: var(--slate-400);
 }
 
-
-/* ==========================================
-   PROFILE UPLOAD
-========================================== */
-
 .profile-upload {
-    display: flex;
-
-    align-items: center;
-
-    gap: 18px;
-
-    margin-bottom: 22px;
-
-    padding: 15px;
-
-    background: #f8fafc;
-
-    border: 1px dashed #d1d5db;
-
-    border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 22px;
+  padding: 16px;
+  background: var(--slate-50);
+  border: 1.5px dashed var(--slate-300);
+  border-radius: var(--radius-md, 12px);
 }
 
 .profile-preview {
-    width: 72px;
-    height: 72px;
-
-    flex-shrink: 0;
-
-    border-radius: 50%;
-
-    overflow: hidden;
-
-    background: #e5e7eb;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    font-size: 25px;
-
-    color: #6b7280;
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full, 9999px);
+  overflow: hidden;
+  background: var(--slate-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--slate-500);
 }
 
 .profile-preview img {
-    width: 100%;
-    height: 100%;
-
-    object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
-
-.profile-upload label {
-    display: block;
-
-    margin-bottom: 6px;
-
-    font-size: 13px;
-
-    font-weight: 500;
-
-    color: #374151;
-}
-
-.profile-upload input[type="file"] {
-    width: 100%;
-
-    font-size: 12px;
-}
-
-
-/* ==========================================
-   MODAL ACTIONS
-========================================== */
 
 .sat-modal-actions {
-    display: flex;
-
-    justify-content: flex-end;
-
-    gap: 10px;
-
-    padding-top: 20px;
-
-    border-top: 1px solid #e5e7eb;
-
-    margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 12px;
 }
 
 .sat-cancel-button,
 .sat-save-button {
-    padding: 10px 18px;
-
-    border-radius: 8px;
-
-    font-size: 14px;
-
-    font-weight: 500;
-
-    cursor: pointer;
-
-    transition: 0.2s;
+  padding: 10px 20px;
+  border-radius: var(--radius-md, 10px);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .sat-cancel-button {
-    border: 1px solid #d1d5db;
-
-    background: #ffffff;
-
-    color: #374151;
+  border: 1px solid var(--border-subtle);
+  background: #ffffff;
+  color: var(--slate-700);
 }
 
 .sat-cancel-button:hover {
-    background: #f3f4f6;
+  background: var(--slate-100);
+  color: var(--slate-900);
 }
 
 .sat-save-button {
-    border: none;
-
-    background: #315B78;
-
-    color: #ffffff;
+  border: none;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
 }
 
 .sat-save-button:hover {
-    background: #264861;
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.38);
+  transform: translateY(-1px);
 }
 
 .sat-cancel-button:disabled,
 .sat-save-button:disabled {
-    opacity: 0.6;
-
-    cursor: not-allowed;
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-
-/* ==========================================
-   ANIMATIONS
-========================================== */
-
+/* Animations */
 @keyframes satFadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes satModalIn {
-    from {
-        opacity: 0;
-
-        transform: translateY(15px) scale(0.98);
-    }
-
-    to {
-        opacity: 1;
-
-        transform: translateY(0) scale(1);
-    }
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-
-/* ==========================================
-   MOBILE
-========================================== */
-
-@media (max-width: 600px) {
-
-    .sat-modal-overlay {
-        padding: 10px;
-    }
-
-    .sat-modal {
-        max-height: 95vh;
-
-        border-radius: 10px;
-    }
-
-    .sat-modal-header {
-        padding: 18px 20px;
-    }
-
-    .sat-modal form {
-        padding: 20px;
-    }
-
-    .sat-modal-actions {
-        flex-direction: column-reverse;
-    }
-
-    .sat-cancel-button,
-    .sat-save-button {
-        width: 100%;
-    }
-
-}
-
-/* ==========================================
-   PAGINATION
-========================================== */
-.pagination-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    border-top: 1px solid #e5e7eb;
-}
-
-.pagination-info {
-    font-size: 14px;
-    color: #6b7280;
-}
-
-.pagination {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.pagination-pages {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.pagination-button,
-.pagination-number {
-    min-width: 34px;
-    height: 34px;
-    border: 1px solid #e5e7eb;
-    background: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.pagination-button {
-    padding: 0 10px;
-}
-
-.pagination-number.active {
-    background: #2563eb;
-    color: white;
-    border-color: #2563eb;
-}
-
-.pagination-button:hover:not(:disabled),
-.pagination-number:hover {
-    background: #f3f4f6;
-}
-
-.pagination-number.active:hover {
-    background: #2563eb;
-}
-
-.pagination-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.pagination-dots {
-    padding: 0 4px;
-    color: #6b7280;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-
-    border-radius: 50%;
-    overflow: hidden;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #e8eef7;
-    color: #2f5f9f;
-
-    font-size: 15px;
-    font-weight: 600;
-}
-
-.user-avatar img {
+@media (max-width: 640px) {
+  .sat-modal-actions {
+    flex-direction: column-reverse;
+  }
+  .sat-cancel-button,
+  .sat-save-button {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.user-name {
-    font-weight: 500;
-}
-
-.sat-header{
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.sat-add-buttons{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;
-}
-
-.add-user-button{
-    background-color: #3498DB;
-    border: 0px;
-    border-radius: 6px;
-    padding: 10px 20px;
-    color: white;
-    font-size: 14px;
-}
-
-.export-csv-button{
-    background-color: #EAF2FF;
-    border: 1px #00000008 solid;
-    border-radius: 6px;
-    padding: 10px 20px;
-    color: black;
-    font-size: 14px;
-}
-.export-csv-icon {
-    flex-shrink: 0;
+  }
 }

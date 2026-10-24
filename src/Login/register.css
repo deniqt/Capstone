@@ -1,393 +1,459 @@
-:root {
-    --yosef-blue: #2554e5;
-    --yosef-blue-light: #eef2fc;
-    --yosef-navy: #101a33;
-    --yosef-gray: #6b7280;
-    --yosef-border: #e3e8f5;
-    --yosef-bg: #f6f8fe;
-    --yosef-white: #ffffff;
-    --yosef-red: #e5484d;
-}
+/* ==========================================================================
+   REGISTRATION PAGE STYLES
+   ========================================================================== */
 
-* {
-    box-sizing: border-box;
+:root {
+  --yosef-blue: #2563eb;
+  --yosef-blue-dark: #1d4ed8;
+  --yosef-navy: #0f172a;
+  --yosef-gray: #475569;
+  --yosef-border: #e2e8f0;
+  --yosef-bg: #f8fafc;
+  --yosef-white: #ffffff;
+  --yosef-red: #ef4444;
 }
 
 .register-page {
-    min-height: 100vh;
-    background: var(--yosef-bg);
-    font-family: inherit;
+  min-height: 100vh;
+  background: var(--yosef-bg);
+  font-family: inherit;
+  color: var(--yosef-navy);
 }
 
-/* ---------- Header ---------- */
+/* ==========================================================================
+   HEADER
+   ========================================================================== */
 
 .register-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 64px;
-    background: var(--yosef-white);
-    border-bottom: 1px solid var(--yosef-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 64px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--yosef-border);
+  position: sticky;
+  top: 0;
+  z-index: 900;
 }
 
 #logo-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
 }
 
 #landing-logo {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    object-fit: cover;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full, 9999px);
+  object-fit: cover;
 }
 
 #logo-container p {
-    font-weight: 700;
-    font-size: 1rem;
-    color: var(--yosef-navy);
-    margin: 0;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--yosef-navy);
+  margin: 0;
 }
 
 .cancel-button {
-    background: var(--yosef-white);
-    color: var(--yosef-navy);
-    border: 1px solid var(--yosef-border);
-    padding: 10px 22px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.92rem;
-    cursor: pointer;
+  background: var(--yosef-white);
+  color: var(--slate-700);
+  border: 1px solid var(--yosef-border);
+  padding: 9px 20px;
+  border-radius: var(--radius-md, 10px);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .cancel-button:hover {
-    border-color: var(--yosef-blue);
+  background: var(--slate-50);
+  border-color: var(--slate-300);
+  color: var(--slate-900);
 }
 
 .confirm-button {
-    background: var(--yosef-blue);
-    color: var(--yosef-white);
-    border: none;
-    padding: 11px 26px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.92rem;
-    cursor: pointer;
+  background: linear-gradient(135deg, var(--yosef-blue), var(--yosef-blue-dark));
+  color: var(--yosef-white);
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-md, 10px);
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .confirm-button:hover {
-    background: #1c3fb0;
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.38);
+  transform: translateY(-1px);
 }
 
 .confirm-button:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-/* ---------- Body ---------- */
+/* ==========================================================================
+   BODY CONTENT
+   ========================================================================== */
 
 .register-body {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 48px 24px 80px;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 44px 24px 80px;
 }
 
 .register-intro h1 {
-    font-size: 2.1rem;
-    font-weight: 800;
-    color: var(--yosef-navy);
-    margin: 0 0 8px;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--yosef-navy);
+  margin: 0 0 8px;
 }
 
 .register-intro p {
-    color: var(--yosef-gray);
-    margin: 0 0 32px;
+  color: var(--yosef-gray);
+  font-size: 1.02rem;
+  margin: 0 0 32px;
 }
 
-/* ---------- Form cards ---------- */
+/* ==========================================================================
+   FORM CARDS
+   ========================================================================== */
 
 .form-card {
-    background: var(--yosef-white);
-    border: 1px solid var(--yosef-border);
-    border-radius: 16px;
-    padding: 30px;
-    margin-bottom: 24px;
+  background: var(--yosef-white);
+  border: 1px solid var(--yosef-border);
+  border-radius: var(--radius-xl, 20px);
+  padding: 34px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);
 }
 
 .form-card-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
 }
 
 .form-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    background: var(--yosef-blue-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md, 12px);
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  color: var(--yosef-blue);
 }
 
 .form-card-header h2 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--yosef-navy);
-    margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--yosef-navy);
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .form-card hr {
-    border: none;
-    border-top: 1px solid var(--yosef-border);
-    margin: 0 0 24px;
+  border: none;
+  border-top: 1px solid var(--yosef-border);
+  margin: 0 0 26px;
 }
 
 .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 22px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 24px;
 }
 
 .form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
 }
 
 .form-field.span-2 {
-    grid-column: span 2;
+  grid-column: span 2;
 }
 
 .field-hint {
-    font-size: 0.78rem;
-    color: var(--yosef-gray);
+  font-size: 0.78rem;
+  color: var(--slate-400);
 }
 
 .form-field label {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--yosef-navy);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--slate-700);
 }
 
 .required {
-    color: var(--yosef-red);
+  color: var(--yosef-red);
+  margin-left: 2px;
 }
 
 .input-style {
-    width: 100%;
-    padding: 11px 14px;
-    border: 1px solid var(--yosef-border);
-    border-radius: 8px;
-    font-size: 0.92rem;
-    color: var(--yosef-navy);
-    background: var(--yosef-white);
+  width: 100%;
+  padding: 11px 15px;
+  border: 1.5px solid var(--yosef-border);
+  border-radius: var(--radius-md, 10px);
+  font-size: 0.94rem;
+  color: var(--yosef-navy);
+  background: var(--slate-50);
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .input-style:focus {
-    outline: none;
-    border-color: var(--yosef-blue);
+  outline: none;
+  background: #ffffff;
+  border-color: var(--yosef-blue);
+  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.15);
 }
 
 .input-style::placeholder {
-    color: #9aa4b8;
+  color: var(--slate-400);
 }
 
 .input-error {
-    border-color: var(--yosef-red) !important;
+  border-color: var(--yosef-red) !important;
+  background: #fff8f8 !important;
 }
 
 .field-error {
-    color: var(--yosef-red);
-    font-size: 0.8rem;
+  color: var(--yosef-red);
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
-/* ---------- Learning preferences ---------- */
+/* ==========================================================================
+   LEARNING PREFERENCES CARDS
+   ========================================================================== */
 
 .preference-group {
-    margin-bottom: 24px;
+  margin-bottom: 24px;
 }
 
 .preference-group:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .preference-label {
-    display: block;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--yosef-navy);
-    margin-bottom: 12px;
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--slate-700);
+  margin-bottom: 12px;
 }
 
 .preference-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
 
 .preference-card {
-    text-align: left;
-    background: var(--yosef-white);
-    border: 1px solid var(--yosef-border);
-    border-radius: 12px;
-    padding: 18px;
-    cursor: pointer;
-    font-family: inherit;
+  text-align: left;
+  background: #ffffff;
+  border: 1.5px solid var(--yosef-border);
+  border-radius: var(--radius-lg, 14px);
+  padding: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.preference-card:hover {
+  border-color: #cbd5e1;
+  background: var(--slate-50);
+  transform: translateY(-1.5px);
 }
 
 .preference-card.selected {
-    border-color: var(--yosef-blue);
-    background: var(--yosef-blue-light);
+  border-color: var(--yosef-blue);
+  background: #f0f7ff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
 }
 
 .preference-card-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
 }
 
 .preference-icon {
-    font-size: 1.1rem;
+  font-size: 1.25rem;
 }
 
 .radio-dot {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid var(--yosef-border);
-    display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--yosef-border);
+  display: inline-block;
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .radio-dot.checked {
-    border-color: var(--yosef-blue);
-    background: radial-gradient(circle, var(--yosef-blue) 0 40%, transparent 42%);
+  border-color: var(--yosef-blue);
+  background: radial-gradient(circle, var(--yosef-blue) 0 42%, transparent 45%);
 }
 
 .preference-card h3 {
-    font-size: 1rem;
-    color: var(--yosef-navy);
-    margin: 0 0 6px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--yosef-navy);
+  margin: 0 0 6px;
 }
 
 .preference-card p {
-    font-size: 0.82rem;
-    color: var(--yosef-gray);
-    margin: 0;
-    line-height: 1.4;
+  font-size: 0.82rem;
+  color: var(--yosef-gray);
+  margin: 0;
+  line-height: 1.45;
 }
 
-/* ---------- Documents ---------- */
+/* ==========================================================================
+   DOCUMENT UPLOAD BOXES
+   ========================================================================== */
 
 .document-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 18px;
 }
 
 .document-box {
-    background: var(--yosef-blue-light);
-    border: 1px dashed #c6d1f2;
-    border-radius: 12px;
-    padding: 30px 20px;
-    text-align: center;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: var(--radius-lg, 14px);
+  padding: 32px 20px;
+  text-align: center;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.document-box:hover {
+  background: #f0f7ff;
+  border-color: #93c5fd;
 }
 
 .document-icon {
-    font-size: 1.3rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--yosef-white);
-    margin-bottom: 12px;
+  font-size: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--yosef-white);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  margin-bottom: 12px;
 }
 
 .document-box h3 {
-    font-size: 0.98rem;
-    color: var(--yosef-navy);
-    margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--yosef-navy);
+  margin: 0 0 4px;
 }
 
 .document-box p {
-    font-size: 0.8rem;
-    color: var(--yosef-gray);
-    margin: 0 0 14px;
+  font-size: 0.82rem;
+  color: var(--yosef-gray);
+  margin: 0 0 16px;
 }
 
 .browse-button {
-    display: inline-block;
-    background: var(--yosef-white);
-    border: 1px solid var(--yosef-border);
-    border-radius: 8px;
-    padding: 8px 18px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--yosef-navy);
-    cursor: pointer;
+  display: inline-block;
+  background: var(--yosef-white);
+  border: 1px solid var(--yosef-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 8px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--yosef-navy);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-fast, 0.2s ease);
 }
 
 .browse-button:hover {
-    border-color: var(--yosef-blue);
+  border-color: var(--yosef-blue);
+  color: var(--yosef-blue);
+  background: #f8fafc;
 }
 
 .file-name {
-    display: block;
-    margin-top: 10px;
-    font-size: 0.78rem;
-    color: var(--yosef-blue);
-    word-break: break-all;
+  display: block;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--yosef-blue);
+  word-break: break-all;
 }
 
 .checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    color: var(--yosef-navy);
-    font-weight: 500;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.92rem;
+  color: var(--slate-700);
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  padding: 8px 0;
 }
 
 .checkbox-row input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--yosef-blue);
+  width: 18px;
+  height: 18px;
+  accent-color: var(--yosef-blue);
 }
-
-/* ---------- Actions ---------- */
 
 .register-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 16px;
 }
 
-/* ---------- Responsive ---------- */
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
 
-@media (max-width: 720px) {
-    .register-header {
-        padding: 16px 20px;
-    }
+@media (max-width: 768px) {
+  .register-header {
+    padding: 14px 20px;
+  }
 
-    .register-body {
-        padding: 32px 16px 60px;
-    }
+  .register-body {
+    padding: 28px 16px 60px;
+  }
 
-    .form-grid,
-    .document-grid {
-        grid-template-columns: 1fr;
-    }
+  .form-card {
+    padding: 24px 18px;
+  }
 
-    .preference-grid {
-        grid-template-columns: 1fr;
-    }
+  .form-grid,
+  .document-grid,
+  .preference-grid {
+    grid-template-columns: 1fr;
+  }
 }

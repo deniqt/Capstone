@@ -1379,62 +1379,11 @@ function MainSettings() {
                                     </div>
 
 
-                                    <div className="settings-field">
-
-                                        <label>
-                                            Subjects
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            value={
-                                                Array.isArray(
-                                                    otherInfos?.Subjects
-                                                )
-                                                    ? otherInfos.Subjects.join(
-                                                        ", "
-                                                    )
-                                                    : ""
-                                            }
-                                            disabled
-                                        />
-
-                                    </div>
-
                                 </>
 
                             )}
 
 
-                            {/* ==================================
-                                TUTOR ONLY
-                            ================================== */}
-
-                            {infos.Role === "Tutor" && (
-
-                                <div className="settings-field">
-
-                                    <label>
-                                        Subjects
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        value={
-                                            Array.isArray(
-                                                otherInfos?.Subjects
-                                            )
-                                                ? otherInfos.Subjects.join(
-                                                    ", "
-                                                )
-                                                : ""
-                                        }
-                                        disabled
-                                    />
-
-                                </div>
-
-                            )}
 
 
                             {/* ==================================

@@ -1,980 +1,511 @@
-/* ================================
+/* ==========================================================================
+   YOSEF TUTORIAL CENTER - ULTRA POLISHED AUTHENTICATION STYLES
+   ========================================================================== */
+
+/* ==========================================================================
    MAIN LOGIN LAYOUT
-================================ */
+   ========================================================================== */
 
 .mainPanel {
-    display: flex;
-    min-height: 100vh;
-    width: 100%;
-    background: #f5f8fa;
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+  position: relative;
+  overflow-x: hidden;
 }
 
-
-/* ================================
-   LEFT IMAGE - DESKTOP
-================================ */
+/* ==========================================================================
+   LEFT HERO IMAGE - DESKTOP
+   ========================================================================== */
 
 .imageBackground {
-    width: 40%;
-    height: 100vh;
-    overflow: hidden;
-    position: relative;
+  width: 46%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.imageBackground::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.2) 0%, rgba(15, 23, 42, 0.6) 100%);
+  pointer-events: none;
 }
 
 #ImageLogin {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Mobile image hidden by default */
+.imageBackground:hover #ImageLogin {
+  transform: scale(1.03);
+}
+
 #ImageLogin2 {
-    display: none;
+  display: none;
 }
 
-
-/* ================================
-   RIGHT SIDE
-================================ */
+/* ==========================================================================
+   RIGHT SIDE - FORM CONTAINER
+   ========================================================================== */
 
 .textfieldPanel {
-    width: 60%;
-    min-height: 100vh;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    padding: 40px;
-    box-sizing: border-box;
+  width: 54%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 36px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-
-/* ================================
-   TITLE
-================================ */
+/* Ambient glow on the form container */
+.textfieldPanel::before {
+  content: "";
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(191, 219, 254, 0.35) 0%, rgba(239, 246, 255, 0.05) 70%, transparent 100%);
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(50px);
+  z-index: 0;
+}
 
 #loginTitle {
-    width: 100%;
-    max-width: 600px;
-
-    margin: 0 0 35px 0;
-    padding: 0;
-
-    color: #2D4961;
-    font-size: clamp(32px, 3.5vw, 48px);
-    font-weight: 700;
-    line-height: 1.15;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 0 28px 0;
+  padding: 0;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: clamp(28px, 3.2vw, 42px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: relative;
+  z-index: 1;
 }
 
-
-/* ================================
+/* ==========================================================================
    LOGIN CARD
-================================ */
+   ========================================================================== */
 
 .loginPanel {
-    width: 100%;
-    max-width: 500px;
-
-    min-height: auto;
-
-    padding: 40px;
-    box-sizing: border-box;
-
-    display: flex;
-    flex-direction: column;
-
-    background: #ffffff;
-
-    border: none;
-    border-radius: 20px;
-
-    box-shadow:
-        0 10px 30px rgba(45, 73, 97, 0.08),
-        0 2px 8px rgba(45, 73, 97, 0.04);
+  width: 100%;
+  max-width: 480px;
+  padding: 44px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 24px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(15, 23, 42, 0.03);
+  position: relative;
+  z-index: 1;
+  transition: transform var(--transition-fast, 0.2s ease), box-shadow var(--transition-fast, 0.2s ease);
 }
-
-
-/* ================================
-   LOGIN TITLE
-================================ */
 
 .loginPanel h1 {
-    margin: 0 0 30px 0;
-
-    color: #2D4961;
-
-    font-size: 32px;
-    font-weight: 700;
+  margin: 0 0 26px 0;
+  color: #0f172a;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
-
-/* ================================
-   INPUTS
-================================ */
-
-.loginPanel input {
-    width: 100%;
-    height: 52px;
-
-    margin-bottom: 18px;
-    padding: 0 16px;
-
-    box-sizing: border-box;
-
-    border: 1px solid #d9e1e7;
-    border-radius: 10px;
-
-    background: #f9fbfc;
-
-    color: #2D4961;
-
-    font-size: 15px;
-
-    outline: none;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
+/* Form Inputs */
+.loginPanel input[type="email"],
+.loginPanel input[type="text"],
+.loginPanel input[type="password"] {
+  width: 100%;
+  height: 52px;
+  margin-bottom: 18px;
+  padding: 0 18px;
+  box-sizing: border-box;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s ease;
 }
 
 .loginPanel input::placeholder {
-    color: #9aa7b2;
+  color: #94a3b8;
 }
 
 .loginPanel input:focus {
-    background: #ffffff;
-
-    border-color: #2D4961;
-
-    box-shadow: 0 0 0 3px rgba(45, 73, 97, 0.10);
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
-
-/* ================================
-   LOGIN BUTTON
-================================ */
-
-.loginPanel > button {
-    width: 100%;
-    height: 52px;
-
-    margin-top: 8px;
-
-    border: none;
-    border-radius: 10px;
-
-    background: #286DC2 !important;
-    color: white;
-
-    font-size: 16px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
-}
-
-.loginPanel > button:hover {
-    background: #243d52;
-
-    transform: translateY(-1px);
-
-    box-shadow: 0 6px 15px rgba(45, 73, 97, 0.20);
-}
-
-.loginPanel > button:active {
-    transform: translateY(0);
-}
-
-
-/* ================================
-   CREATE ACCOUNT
-================================ */
-
-.loginPanel a {
-    margin-top: 24px;
-
-    text-align: center;
-
-    color: #7a8792;
-
-    font-size: 14px;
-
-    text-decoration: none;
-}
-
-
-/* "Click here" button */
-
-.loginPanel a button {
-    border: none;
-
-    background: transparent;
-
-    color: #286DC2;
-
-    font-size: 14px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    padding: 0;
-}
-
-.loginPanel a button:hover {
-    text-decoration: underline;
-}
-
-
-/* ================================
-   TABLET
-================================ */
-
-@media (max-width: 1000px) {
-
-    .imageBackground {
-        width: 35%;
-    }
-
-    .textfieldPanel {
-        width: 65%;
-        padding: 30px;
-    }
-
-    #loginTitle {
-        font-size: 38px;
-    }
-
-    .loginPanel {
-        max-width: 450px;
-        padding: 35px;
-    }
-}
-
-
-/* ================================
-   MOBILE
-================================ */
-
-@media (max-width: 768px) {
-
-    .mainPanel {
-        flex-direction: column;
-    }
-
-    /* Hide image on mobile */
-     .imageBackground {
-        display: block;
-        width: 100%;
-        height: 227px;
-    }
-
-     /* Hide desktop image */
-    #ImageLogin {
-        display: none;
-    }
-
-    /* Show mobile image */
-    #ImageLogin2 {
-        display: block;
-
-        width: 100%;
-        height: 100%;
-
-        object-fit: cover;
-        object-position: center;
-    }
-
-
-    .textfieldPanel {
-        width: 100%;
-        min-height: 100vh;
-        padding: 35px 20px 50px;
-        justify-content: start;
-        box-sizing: border-box;
-    }
-
-    #loginTitle {
-        text-align: center;
-        font-size: 32px;
-        margin-bottom: 20px;
-        margin-top: 35px;
-    }
-
-    .loginPanel {
-        width: 100%;
-        max-width: 450px;
-        padding: 30px 25px;
-        border-radius: 16px;
-        background-color: transparent;
-        box-shadow: none;
-    }
-
-    .loginPanel h1 {
-        font-size: 28px;
-        text-align: center;
-    }
-}
-
-
-/* ================================
-   SMALL MOBILE
-================================ */
-
-@media (max-width: 480px) {
-
-    .textfieldPanel {
-        padding: 25px 15px 40px;
-        justify-content: start;
-    }
-
-    #loginTitle {
-        font-size: 27px;
-    }
-
-    .loginPanel {
-        padding: 25px 20px;
-    }
-
-    .loginPanel h1 {
-        font-size: 26px;
-    }
-}
-
-
-
- /* for password */
-
-/* ================================
-   PASSWORD FIELD
-================================ */
-
+/* Password Toggle Field */
 .passwordInputWrapper {
-    position: relative;
-    width: 100%;
-    margin-bottom: 8px;
+  position: relative;
+  width: 100%;
+  margin-bottom: 18px;
 }
 
 .passwordInputWrapper input {
-    width: 100%;
-    margin-bottom: 0 !important;
-    padding-right: 50px;
+  width: 100%;
+  margin-bottom: 0 !important;
+  padding-right: 50px;
 }
 
 .passwordToggle {
-    position: absolute;
-
-    right: 14px;
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    width: auto !important;
-    height: auto !important;
-
-    margin: 0 !important;
-    padding: 4px !important;
-
-    border: none !important;
-
-    background: transparent !important;
-
-    color: #8a98a5;
-
-    cursor: pointer;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    box-shadow: none !important;
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  border: none !important;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0 !important;
+  box-shadow: none !important;
+  transition: color 0.2s ease;
 }
 
 .passwordToggle:hover {
-    color: #2D4961;
-
-    transform: translateY(-50%);
+  color: #2563eb;
 }
 
-
-/* ================================
-   REMEMBER ME
-================================ */
-
+/* Remember Me & Forgot Password */
 .rememberMe {
-    width: 100%;
-    margin: 5px 0 20px 0;
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-
+  width: 100%;
+  margin: 4px 0 26px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .rememberMe label {
-    display: flex;
-    align-items: center;
-
-    gap: 9px;
-
-    color: #6f7d88;
-
-    font-size: 14px;
-
-    cursor: pointer;
-
-    user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
 }
 
-.rememberMe input {
-    width: 16px !important;
-    height: 16px !important;
-
-    margin: 0 !important;
-
-    padding: 0 !important;
-
-    accent-color: #2D4961;
-
-    cursor: pointer;
+.rememberMe input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  margin: 0 !important;
+  accent-color: #2563eb;
+  cursor: pointer;
 }
 
-
-#Forgot-Button{
-    background-color: transparent;
-    border:none;
-    color: #286DC2;
-    font-weight: bold;
+#Forgot-Button {
+  background: transparent;
+  border: none;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.2s ease;
 }
 
-#Forgot-Button:hover{
-    background-color: transparent;
-    border:none;
-    color: #273746;
-    font-weight: bold;
+#Forgot-Button:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
 }
 
-/* ================================
-   LOGIN BUTTON
-================================ */
-
-.loginButton {
-    width: 100%;
-    height: 52px;
-
-    border: none;
-    border-radius: 10px;
-
-    background: #286DC2 !important;
-    color: white;
-
-    font-size: 16px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
+/* Login Action Button */
+.loginButton,
+.loginPanel > button.loginButton {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.loginButton:hover {
-    background: #243d52;
-
-    transform: translateY(-1px);
-
-    box-shadow:
-        0 6px 15px rgba(45, 73, 97, 0.20);
+.loginButton:hover,
+.loginPanel > button.loginButton:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+  transform: translateY(-1.5px);
 }
 
-.loginButton:active {
-    transform: translateY(0);
+.loginButton:active,
+.loginPanel > button.loginButton:active {
+  transform: translateY(0) scale(0.99);
 }
 
-
-/* ================================
-   CREATE ACCOUNT
-================================ */
-
+/* Create Account Link */
 .createAccount {
-    margin-top: 24px;
-
-    text-align: center;
-
-    color: #7a8792;
-
-    font-size: 14px;
+  margin-top: 26px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .createAccount button {
-    border: none;
-
-    background: transparent;
-
-    color: #2D4961;
-
-    font-size: 14px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    padding: 0;
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
 }
 
 .createAccount button:hover {
-    text-decoration: underline;
+  color: #1d4ed8;
+  text-decoration: underline;
 }
 
-
-
-
-
-
-/* =========================================================
-   FORGOT PASSWORD / RESET PASSWORD
-   SHARED AUTH PAGE DESIGN
-========================================================= */
+/* ==========================================================================
+   FORGOT PASSWORD / RESET PASSWORD STYLES
+   ========================================================================== */
 
 .authPage {
-    display: flex;
-    min-height: 100vh;
-    width: 100%;
-    background: #f5f8fa;
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
-
-/* ================================
-   LEFT IMAGE
-================================ */
-
 .authImage {
-    width: 40%;
-    height: 100vh;
-    overflow: hidden;
+  width: 46%;
+  height: 100vh;
+  overflow: hidden;
+  background: #0f172a;
 }
 
 #BG1 {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-    display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
-/* Mobile image hidden by default */
-#BG2{
-    display: none;
+#BG2 {
+  display: none;
 }
 
-/* lock logo */
 .LockLogo {
-    width: 70px;
-    height: 70px;
-    object-fit: contain;
-    margin: 0 auto 15px;
-    display: block;
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  margin: 0 auto 18px;
+  display: block;
+  filter: drop-shadow(0 6px 14px rgba(37, 99, 235, 0.25));
 }
-/* ================================
-   RIGHT SIDE
-================================ */
 
 .authContent {
-    width: 60%;
-    min-height: 100vh;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    padding: 40px;
-    box-sizing: border-box;
+  width: 54%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 36px;
+  box-sizing: border-box;
 }
-
-
-/* ================================
-   AUTH TITLE
-================================ */
 
 .authTitle {
-    width: 100%;
-    max-width: 500px;
-
-    margin: 0 0 30px 0;
-
-    color: #2D4961;
-
-    font-size: 40px;
-    font-weight: 700;
-
-    line-height: 1.15;
-
-    text-align: left;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 0 28px 0;
+  color: #0f172a;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.15;
 }
-
-
-/* ================================
-   AUTH CARD
-================================ */
 
 .authCard {
-    width: 100%;
-    max-width: 500px;
-
-    padding: 40px;
-
-    box-sizing: border-box;
-
-    display: flex;
-    flex-direction: column;
-
-    background: #ffffff;
-
-    border-radius: 20px;
-
-    box-shadow:
-        0 10px 30px rgba(45, 73, 97, 0.08),
-        0 2px 8px rgba(45, 73, 97, 0.04);
+  width: 100%;
+  max-width: 480px;
+  padding: 44px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.1);
 }
-
-
-/* ================================
-   CARD TITLE
-================================ */
 
 .authCard h1 {
-    margin: 0 0 12px 0;
-    text-align: center;
-
-    color: #2D4961;
-
-    font-size: 32px;
-    font-weight: 700;
+  margin: 0 0 10px 0;
+  text-align: center;
+  color: #0f172a;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 28px;
+  font-weight: 800;
 }
-
-
-/* ================================
-   CARD DESCRIPTION
-================================ */
 
 .authDescription {
-    margin: 0 0 28px 0;
-
-    color: #7a8792;
-
-    font-size: 15px;
-
-    line-height: 1.6;
+  margin: 0 0 26px 0;
+  color: #64748b;
+  font-size: 14.5px;
+  line-height: 1.6;
+  text-align: center;
 }
-
-
-/* ================================
-   FORM
-================================ */
 
 .authCard form {
-    width: 100%;
-
-    display: flex;
-    flex-direction: column;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
-
-
-/* ================================
-   INPUT
-================================ */
 
 .authCard input {
-    width: 100%;
-    height: 52px;
-
-    margin-bottom: 18px;
-
-    padding: 0 16px;
-
-    box-sizing: border-box;
-
-    border: 1px solid #d9e1e7;
-
-    border-radius: 10px;
-
-    background: #f9fbfc;
-
-    color: #2D4961;
-
-    font-size: 15px;
-
-    outline: none;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
-}
-
-.authCard input::placeholder {
-    color: #9aa7b2;
+  width: 100%;
+  height: 52px;
+  margin-bottom: 18px;
+  padding: 0 18px;
+  box-sizing: border-box;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.2s ease;
 }
 
 .authCard input:focus {
-    background: #ffffff;
-
-    border-color: #2D4961;
-
-    box-shadow:
-        0 0 0 3px rgba(45, 73, 97, 0.10);
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
-
-/* ================================
-   SUBMIT BUTTON
-================================ */
-
 .authSubmitButton {
-    width: 100%;
-    height: 52px;
-
-    margin-top: 5px;
-
-    border: none;
-
-    border-radius: 10px;
-
-    background: #286DC2;
-
-    color: white;
-
-    font-size: 16px;
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease;
+  width: 100%;
+  height: 52px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .authSubmitButton:hover {
-    background: #243d52;
-
-    transform: translateY(-1px);
-
-    box-shadow:
-        0 6px 15px rgba(45, 73, 97, 0.20);
-}
-
-.authSubmitButton:active {
-    transform: translateY(0);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+  transform: translateY(-1.5px);
 }
 
 .authSubmitButton:disabled {
-    opacity: 0.65;
-
-    cursor: not-allowed;
-
-    transform: none;
-
-    box-shadow: none;
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
-
-
-/* ================================
-   MESSAGE
-================================ */
 
 .resetMessage {
-    margin: 18px 0 0 0;
-
-    padding: 12px 14px;
-
-    border-radius: 8px;
-
-    background: #f1f6f9;
-
-    color: #2D4961;
-
-    font-size: 14px;
-
-    line-height: 1.5;
-
-    text-align: center;
+  margin: 20px 0 0 0;
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
 }
 
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
 
-/* ================================
-   BACK TO LOGIN
-================================ */
-
-.backToLogin {
-    margin-top: 24px;
-
-    padding: 0;
-
-    border: none;
-
-    background: transparent;
-
-    color: #2D4961;
-
-    font-size: 14px;
-    font-weight: 600;
-
-    cursor: pointer;
+@media (max-width: 1024px) {
+  .imageBackground, .authImage {
+    width: 38%;
+  }
+  .textfieldPanel, .authContent {
+    width: 62%;
+    padding: 36px 28px;
+  }
+  .loginPanel, .authCard {
+    padding: 36px 30px;
+  }
 }
-
-.backToLogin:hover {
-    text-decoration: underline;
-}
-
-
-/* ================================
-   TABLET
-================================ */
-
-@media (max-width: 1000px) {
-
-    .authImage {
-        width: 35%;
-    }
-
-    .authContent {
-        width: 65%;
-
-        padding: 30px;
-    }
-
-    .authTitle {
-        font-size: 34px;
-    }
-
-    .authCard {
-        max-width: 450px;
-
-        padding: 35px;
-    }
-}
-
-
-/* ================================
-   MOBILE
-================================ */
 
 @media (max-width: 768px) {
+  .mainPanel, .authPage {
+    flex-direction: column;
+  }
 
-    .authPage {
-        flex-direction: column;
-    }
+  .imageBackground, .authImage {
+    display: block;
+    width: 100%;
+    height: 220px;
+  }
 
-    .authImage2 {
-        display: block;
-        width: 100%;
-        height: 227px;
-    }
+  #ImageLogin, #BG1 {
+    display: none;
+  }
 
+  #ImageLogin2, #BG2 {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-    /* Hide desktop image */
-    #BG1 {
-        display: none;
-    }
+  .textfieldPanel, .authContent {
+    width: 100%;
+    min-height: auto;
+    padding: 36px 20px 56px;
+  }
 
-    /* Show mobile image */
-    #BG2 {
-        display: block;
+  #loginTitle, .authTitle {
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 22px;
+  }
 
-        width: 100%;
-        height: 100%;
-
-        object-fit: cover;
-        object-position: center;
-    }
-
-
-    .authContent {
-        width: 100%;
-
-        min-height: 100vh;
-
-        padding: 35px 20px 50px;
-
-        justify-content: flex-start;
-
-        background-color: white;
-
-        box-sizing: border-box;
-    }
-
-
-    .authTitle {
-        max-width: 500px;
-
-        margin-bottom: 25px;
-
-        color: white;
-
-        text-align: center;
-
-        font-size: 32px;
-    }
-
-
-    .authCard {
-        width: 100%;
-
-        max-width: 450px;
-
-        padding: 30px 25px;
-
-        border-radius: 16px;
-
-        background: white;
-    }
-
-
-    .authCard h1 {
-        font-size: 28px;
-
-        text-align: center;
-    }
-
-
-    .authDescription {
-        text-align: center;
-    }
+  .loginPanel, .authCard {
+    padding: 30px 22px;
+    border-radius: 20px;
+  }
 }
-
-
-/* ================================
-   SMALL MOBILE
-================================ */
-
-@media (max-width: 480px) {
-
-    .authContent {
-        padding: 25px 15px 40px;
-    }
-
-
-    .authTitle {
-        font-size: 27px;
-    }
-
-
-    .authCard {
-        padding: 25px 20px;
-    }
-
-
-    .authCard h1 {
-        font-size: 26px;
-    }
-}
-

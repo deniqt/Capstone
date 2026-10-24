@@ -1,36 +1,183 @@
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
-.sidebar{
- background-color: #2D4F6A;
- color: white;
- padding: 20px;
+/* ==========================================================================
+   ADMIN SIDEBAR DESIGN
+   ========================================================================== */
 
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 100vh;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+.sidebar h2 {
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  margin: 4px 8px 24px 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar h2::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: var(--brand-accent, #38bdf8);
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 10px #38bdf8;
+}
+
+/* ==========================================================================
+   SIDEBAR NAVIGATION LINKS
+   ========================================================================== */
+
 .sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
 }
 
 .sidebar-nav a {
-    color: white;              /* Default color */
-    text-decoration: none;
-    font-family:"QuickSand", sans-serif;
-    font-weight: 300;
-    padding: 10px 15px;
-    border-radius: 8px;
-    transition: 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(241, 245, 249, 0.75);
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
-/* Hover */
+.sideBar-logo {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Hover State */
 .sidebar-nav a:hover {
-    background-color: #4A6F8E;
-    color: #D4E2FF;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  transform: translateX(3px);
 }
 
-/* Active page */
+.sidebar-nav a:hover .sideBar-logo {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+/* Active State */
 .sidebar-nav a.active {
-    background-color: #D4E2FF;
-    color: #2D4F6A;
-    font-weight: bold;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
+.sidebar-nav a.active .sideBar-logo {
+  opacity: 1;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   SIDEBAR USER PROFILE AT BOTTOM
+   ========================================================================== */
+
+.sidebarUser {
+  margin-top: auto;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebarUser:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.sidebarUserImage {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+}
+
+.sidebarUserImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebarUserPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #38bdf8, #0284c7);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sidebarUserInfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebarUserName {
+  color: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebarUserRole {
+  color: rgba(241, 245, 249, 0.6);
+  font-size: 0.74rem;
+  font-weight: 500;
+  text-transform: capitalize;
 }

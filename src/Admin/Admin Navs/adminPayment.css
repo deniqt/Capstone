@@ -730,3 +730,47 @@
     cursor: not-allowed;
     box-shadow: none;
 }
+
+
+/* ---------- Responsive Design ---------- */
+@media (max-width: 992px) {
+  .AdminPaymentNumberPanel {
+    gap: 12px;
+  }
+  .PaymentNumberBox {
+    width: calc(50% - 8px) !important;
+  }
+  .Payment-Header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .PaymentNumberBox {
+    width: 100% !important;
+  }
+  .Payment-Header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .Payment-Header > div {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .button-panel {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .button-panel button {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+  }
+  .payment-toolbar input {
+    width: 100%;
+  }
+  .user-table {
+    min-width: 600px;
+  }
+}
