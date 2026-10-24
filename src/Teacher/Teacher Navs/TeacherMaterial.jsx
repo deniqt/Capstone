@@ -69,7 +69,8 @@ function TeacherMaterial(){
                 <tbody>
                     {
                         students.map((student)=>(
-                            <tr key={student.id} onClick={() => navigate(`/teacher/materials/${student.id}`)}>
+                            <tr key={student.id} onClick={() => navigate(`/teacher/materials/${student.id}`)}  title="Click to view student materials"
+  style={{ cursor: "pointer" }}>
                                 <td>
                                     {student.Name}
                                 </td>
@@ -81,7 +82,6 @@ function TeacherMaterial(){
                                 </td>
                             </tr>
                             )
-                            
                         )
                     }
                 </tbody>

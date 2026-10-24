@@ -1058,10 +1058,10 @@ import FullCalendar from "@fullcalendar/react";
                  eventContent={(eventInfo) => {
                     return (
                         <div className="custom-event-content" style={{ display: 'flex', flexDirection: 'column' }}>
-                            <div className="fc-event-title" style={{ fontWeight: 'bold' }}>
+                            <div className="fc-event-title" style={{ fontWeight: 'bold' , color:'#2563eb'}}>
                                 {eventInfo.event.title}
                             </div>
-                            <div className="fc-event-time" style={{ fontSize: '0.85em' }}>
+                            <div className="fc-event-time" style={{ fontSize: '0.85em' , color:'#2563eb'}}>
                                 {eventInfo.timeText}
                             </div>
                         </div>

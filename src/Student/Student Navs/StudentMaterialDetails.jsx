@@ -177,19 +177,6 @@ function StudentMaterialDetails() {
                     ›
                 </span>
 
-                <button
-                    onClick={() =>
-                        navigate(
-                            `/student/materials/subject/${material.Subjects.Subject_ID}`
-                        )
-                    }
-                >
-                    {material.Subjects.Subject_Name}
-                </button>
-
-                <span>
-                    ›
-                </span>
 
                 <span>
                     {material.Material_Name}
@@ -213,11 +200,6 @@ function StudentMaterialDetails() {
                     <h1>
                         <File color="Red"/> {material.Material_Name}
                     </h1>
-
-                    <p>
-                        {material.Subjects.Subject_Name}
-                    </p>
-
                 </div>
 
             </div>
@@ -268,13 +250,7 @@ function StudentMaterialDetails() {
 
                     <div className="detail-row">
 
-                        <span>
-                            Subject
-                        </span>
 
-                        <strong>
-                            {material.Subjects.Subject_Name}
-                        </strong>
 
                     </div>
 
