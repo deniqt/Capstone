@@ -703,7 +703,7 @@ function TeacherSubjects() {
 
             <div className="teacher-header">
                 <div>
-                    <h1>📚 Files ni {student?.Name || "Unknown"}</h1>
+                    <h1>📚 Files of {student?.Name || "Unknown"}</h1>
                     <p>{totalMaterials} materials</p>
                 </div>
 
