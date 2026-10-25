@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/supabase';
 import './adminSidebar.css'
 import { NavLink, useNavigate } from "react-router-dom";
+import Logo from "../../assets/yosefLogo.jpg"
 import { LayoutDashboard,
         File,
         User,
@@ -126,7 +127,10 @@ function AdminSidebar(){
   
 return(
     <div className="sidebar" >
-        <h2>Yoseff Admin Side</h2>
+        <div className="sidebarBrand">
+            <img src={Logo} alt="Yoseff logo" className="sidebarLogo" />
+            <h2>Yosef Admin Side</h2>
+        </div>
 
         <nav className="sidebar-nav">
 

@@ -35,15 +35,6 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.sidebar h2::before {
-  content: "";
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  background: var(--brand-accent, #38bdf8);
-  border-radius: var(--radius-full);
-  box-shadow: 0 0 10px #38bdf8;
-}
 
 /* ==========================================================================
    SIDEBAR NAVIGATION LINKS
@@ -180,4 +171,28 @@
   font-size: 0.74rem;
   font-weight: 500;
   text-transform: capitalize;
+}
+
+.sidebarBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 8px 24px 8px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar .sidebarBrand h2 {
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
+}
+
+.sidebarLogo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.18); /* optional ring, matches your user avatar */
 }

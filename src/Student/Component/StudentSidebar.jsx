@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import Logo from "../../assets/yosefLogo.jpg"
 import { supabase } from "../../lib/supabase";
 import { LayoutDashboard,
         File,
@@ -131,9 +132,10 @@ function StudentSidebar() {
 
         <div className="sidebar">
 
-            <h2>
-                Yoseff Student Side
-            </h2>
+          <div className="sidebarBrand">
+            <img src={Logo} alt="Yoseff logo" className="sidebarLogo" />
+            <h2>Yosef Student Side</h2>
+        </div>
 
 
             <nav className="sidebar-nav">

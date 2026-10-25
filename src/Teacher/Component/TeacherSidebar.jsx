@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import MainHeader from "../../MainComponent/MainHeader";
+import Logo from "../../assets/yosefLogo.jpg"
 import { LayoutDashboard,
         File,
         GraduationCap,
@@ -124,7 +125,10 @@ function TeacherSidebar(){
 
 return(
     <div className="sidebar">
-        <h2>Yoseff Teacher Side</h2>
+        <div className="sidebarBrand">
+            <img src={Logo} alt="Yoseff logo" className="sidebarLogo" />
+            <h2>Yosef Teacher Side</h2>
+        </div>
 
        
         
