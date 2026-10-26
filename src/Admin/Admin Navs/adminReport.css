@@ -390,3 +390,148 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ==========================================================================
+   STUDENT PROFILE FILTERS + PDF EXPORT (added)
+   ========================================================================== */
+
+.report-filter-group {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.report-more-button,
+.report-reset-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--border-subtle);
+  background: #ffffff;
+  color: var(--slate-800);
+  padding: 8px 14px;
+  border-radius: var(--radius-md, 10px);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.report-more-button:hover,
+.report-reset-button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.report-reset-button {
+  border-style: dashed;
+}
+
+.report-filter-badge {
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.export-report-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.report-advanced-filters {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg, 16px);
+  padding: 18px 20px 20px;
+  margin: -12px 0 24px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.report-advanced-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--slate-800);
+  margin-bottom: 14px;
+}
+
+.report-advanced-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px 16px;
+}
+
+.report-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.report-filter-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--slate-800);
+}
+
+.report-filter-field input,
+.report-filter-field select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid var(--border-subtle);
+  background: var(--slate-50);
+  padding: 8px 12px;
+  border-radius: var(--radius-md, 10px);
+  font-size: 0.88rem;
+  color: var(--slate-800);
+  outline: none;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.report-filter-field input:focus,
+.report-filter-field select:focus {
+  border-color: var(--primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px var(--primary-ring);
+}
+
+.report-age-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-age-range span {
+  color: var(--slate-800);
+}
+
+.report-filter-summary {
+  background: var(--primary-light);
+  border: 1px solid var(--primary-border);
+  color: var(--slate-800);
+  border-radius: var(--radius-md, 10px);
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .report-more-button,
+  .report-reset-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .report-advanced-grid {
+    grid-template-columns: 1fr;
+  }
+}
