@@ -479,3 +479,15 @@
     grid-template-columns: 1fr;
   }
 }
+
+.calendar-panel .fc .fc-timegrid-event .fc-event-main {
+    overflow: visible;
+}
+
+.calendar-panel .fc .fc-timegrid-event {
+    min-height: 55px;   /* floor based on your content */
+}
+
+.custom-event-content {
+    overflow: visible;
+}

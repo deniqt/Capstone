@@ -1056,6 +1056,7 @@ import FullCalendar from "@fullcalendar/react";
                 }}
 
                  eventContent={(eventInfo) => {
+                       const status = eventInfo.event.extendedProps.status;
                     return (
                         <div className="custom-event-content" style={{ display: 'flex', flexDirection: 'column' }}>
                             <div className="fc-event-title" style={{ fontWeight: 'bold' , color:'#2563eb'}}>
@@ -1063,6 +1064,16 @@ import FullCalendar from "@fullcalendar/react";
                             </div>
                             <div className="fc-event-time" style={{ fontSize: '0.85em' , color:'#2563eb'}}>
                                 {eventInfo.timeText}
+                            </div>
+
+                              <div
+                                className={`fc-event-status ${
+                                    status ? status.toLowerCase().replace(/\s+/g, "-") : ""
+                                }`}
+
+                                style={{ fontSize: '0.65em'}}
+                            >
+                                {status || "No Status"}
                             </div>
                         </div>
                     );

@@ -211,3 +211,19 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
+
+.CalendarPanel .fc .fc-timegrid-event .fc-event-main {
+    overflow: visible;
+}
+
+.CalendarPanel .fc .fc-timegrid-event {
+    min-height: 60px;   /* floor based on your content */
+}
+
+.custom-event-content {
+    overflow: visible;
+}
+
+.custom-event-content{
+  gap:0px;
+}

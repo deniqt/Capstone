@@ -941,13 +941,23 @@ function StudentSchedule(){
                         }}
 
                          eventContent={(eventInfo) => {
+                            const status = eventInfo.event.extendedProps.status;
                                 return (
                                     <div className="custom-event-content" style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <div className="fc-event-title" style={{ fontWeight: 'bold', color:'#2563eb'}}>
+                                        <div className="fc-event-title" style={{ fontSize: '0.75em',fontWeight: 'bold', color:'#2563eb'}}>
                                             {eventInfo.event.title}
                                         </div>
-                                        <div className="fc-event-time" style={{ fontSize: '0.85em' , color:'#2563eb'}}>
+                                        <div className="fc-event-time" style={{ fontSize: '0.65em' , color:'#2563eb'}}>
                                             {eventInfo.timeText}
+                                        </div>
+                                         <div
+                                            className={`fc-event-status ${
+                                                status ? status.toLowerCase().replace(/\s+/g, "-") : ""
+                                            }`}
+
+                                            style={{ fontSize: '0.65em'}}
+                                        >
+                                            {status || "No Status"}
                                         </div>
                                     </div>
                                 );
