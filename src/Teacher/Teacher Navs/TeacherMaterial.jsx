@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
+import "./teacherMaterial.css"
 
 function TeacherMaterial(){
 
@@ -53,42 +54,88 @@ function TeacherMaterial(){
     }
 
 
-    return(<>
-     <h1> TEACHER MATERIALS</h1>
+    function getInitials(name = "") {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0].toUpperCase())
+    .join("");
+}
+const getProfileImage = (student) =>
+  student.profile_url || student.details?.profile_url || null;
 
-        <div className='mainTable'>
-            <table className='user-table'>
-                 <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Grade</th>
-                        <th>Email</th>
-                    </tr>
-                </thead>
+// inside TeacherMaterial():
+const openStudent = (id) => navigate(`/teacher/materials/${id}`);
 
-                <tbody>
-                    {
-                        students.map((student)=>(
-                            <tr key={student.id} onClick={() => navigate(`/teacher/materials/${student.id}`)}  title="Click to view student materials"
-  style={{ cursor: "pointer" }}>
-                                <td>
-                                    {student.Name}
-                                </td>
-                                <td>
-                                    {student.details.Grade_Level}
-                                </td>
-                                 <td>
-                                    {student.Email}
-                                </td>
-                            </tr>
-                            )
-                        )
-                    }
-                </tbody>
-            </table>
-              
-        </div>
-    </>);
+return (
+  <>
+    <h1>TEACHER MATERIALS</h1>
+    <p className="table-hint">Select a student to view and manage their materials.</p>
+
+    <div className="mainTable">
+      <table className="user-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Grade</th>
+            <th>Email</th>
+            <th aria-hidden="true"></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {students.length === 0 ? (
+            <tr className="empty-row">
+              <td colSpan={4}>No students assigned yet.</td>
+            </tr>
+          ) : (
+            students.map((student) => (
+              <tr
+                key={student.id}
+                className="clickable-row"
+                tabIndex={0}
+                role="link"
+                aria-label={`View materials for ${student.Name}`}
+                onClick={() => openStudent(student.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openStudent(student.id);
+                  }
+                }}
+              >
+                <td>
+                <div className="student-cell">
+                    {getProfileImage(student) ? (
+                    <img
+                        src={getProfileImage(student)}
+                        alt={student.Name}
+                        className="student-avatar student-avatar-img"
+                    />
+                    ) : (
+                    <span className="student-avatar">{getInitials(student.Name)}</span>
+                    )}
+                    <span className="student-name">{student.Name}</span>
+                </div>
+                </td>
+                <td>
+                  <span className="grade-pill">{student.details.Grade_Level}</span>
+                </td>
+                <td className="email-cell">{student.Email}</td>
+                <td className="action-cell">
+                  <span className="row-action">
+                    View materials <span className="row-arrow">→</span>
+                  </span>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  </>
+);
 }
 
 export default TeacherMaterial

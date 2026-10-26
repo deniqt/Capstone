@@ -40,32 +40,169 @@ h1:has(+ .mainTable),
   color: var(--slate-500);
 }
 
+.table-hint {
+  margin: -12px 0 20px 0;
+  font-size: 0.92rem;
+  color: var(--slate-500);
+}
+
+/* ---------- Rows ---------- */
 .user-table tbody tr {
   border-bottom: 1px solid var(--slate-100);
   cursor: pointer;
-  transition: background-color var(--transition-fast, 0.2s ease);
+  transition: background-color 0.18s ease, transform 0.18s ease;
+  outline: none;
 }
 
 .user-table tbody tr:last-child {
   border-bottom: none;
 }
 
-.user-table tbody tr:hover {
-  background-color: #f8fafc;
-}
-
 .user-table td {
   padding: 16px 24px;
   font-size: 0.92rem;
   color: var(--slate-700);
+  transition: box-shadow 0.18s ease;
 }
 
-.user-table td:first-child {
+/* Hover + keyboard focus */
+.clickable-row:hover,
+.clickable-row:focus-visible {
+  background-color: #eff6ff;
+}
+
+.clickable-row:hover td:first-child,
+.clickable-row:focus-visible td:first-child {
+  box-shadow: inset 4px 0 0 var(--primary, #2563eb);
+}
+
+.clickable-row:focus-visible {
+  outline: 2px solid var(--primary, #2563eb);
+  outline-offset: -2px;
+}
+
+.clickable-row:active {
+  background-color: #dbeafe;
+}
+
+/* ---------- Student cell ---------- */
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-avatar {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: var(--primary, #2563eb);
+  font-size: 0.8rem;
+  font-weight: 800;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.student-name {
   font-weight: 700;
   color: var(--slate-900);
+  transition: color 0.18s ease;
 }
 
-.user-table td:nth-child(2) {
-  font-weight: 600;
+.clickable-row:hover .student-avatar,
+.clickable-row:focus-visible .student-avatar {
+  background: var(--primary, #2563eb);
+  color: #fff;
+  transform: scale(1.08);
+}
+
+.clickable-row:hover .student-name,
+.clickable-row:focus-visible .student-name {
   color: var(--primary, #2563eb);
+}
+
+/* ---------- Grade pill ---------- */
+.grade-pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: var(--primary, #2563eb);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.clickable-row:hover .grade-pill,
+.clickable-row:focus-visible .grade-pill {
+  background: #fff;
+}
+
+/* ---------- Action cue ---------- */
+.action-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.row-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--slate-400, #94a3b8);
+  transition: color 0.18s ease;
+}
+
+.row-arrow {
+  display: inline-block;
+  transition: transform 0.18s ease;
+}
+
+.clickable-row:hover .row-action,
+.clickable-row:focus-visible .row-action {
+  color: var(--primary, #2563eb);
+}
+
+.clickable-row:hover .row-arrow,
+.clickable-row:focus-visible .row-arrow {
+  transform: translateX(5px);
+}
+
+/* ---------- Empty state ---------- */
+.empty-row td {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--slate-500);
+  cursor: default;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 720px) {
+  .email-cell,
+  .user-table th:nth-child(3) {
+    display: none;
+  }
+  .row-action {
+    font-size: 0;      /* hide the label, keep the arrow */
+  }
+  .row-arrow {
+    font-size: 1.1rem;
+  }
+}
+
+.student-avatar-img {
+  object-fit: cover;
+  background: #e2e8f0;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--slate-200, #e2e8f0);
+}
+
+.clickable-row:hover .student-avatar-img,
+.clickable-row:focus-visible .student-avatar-img {
+  box-shadow: 0 0 0 2px var(--primary, #2563eb);
+  transform: scale(1.08);
 }
