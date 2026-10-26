@@ -4,7 +4,14 @@ import { supabase } from '../../lib/supabase';
 import { createNotification } from '../../Services/notificationService';
 
 // Preset prices shown as quick-pick buttons in the "Add Sales" modal
-const SALE_PRESETS = [200, 3500, 300, 80];
+const SALE_ITEMS = [
+    { label: "Notebooks", price: 80 },
+    { label: "T-shirt", price: 300 },
+    { label: "Hourly Tutoring", price: 200 },
+    { label: "Reading Sessions", price: 3500 },
+];
+
+const CUSTOM_ITEM = "Custom";
 
 // Storage bucket where students upload their proof of payment
 const PROOF_BUCKET = "renewal-proofs";
@@ -14,6 +21,7 @@ const MONTHLY_PRICE = 3200;
 
 function AdminPayment(){
 
+    const [dropdownOpen, setDropdownOpen] = useState(false);
     const [search, setSearch] = useState("");
     const[users, setUsers] = useState([]);
     const[selectedStudent, setSelectedStudent] = useState(null);
@@ -38,6 +46,18 @@ function AdminPayment(){
     const [salePrice, setSalePrice] = useState("");
     const [saleMethod, setSaleMethod] = useState("CASH");
     const [savingSale, setSavingSale] = useState(false);
+
+    const [saleItem, setSaleItem] = useState("");
+    const [saleQuantity, setSaleQuantity] = useState(1);
+
+    // Derived sale values (recalculate on every render, so the total updates live)
+    const isCustomSale = saleItem === CUSTOM_ITEM;
+    const selectedSaleItem = SALE_ITEMS.find(item => item.label === saleItem);
+    const saleUnitPrice = isCustomSale
+        ? Number(salePrice) || 0
+        : selectedSaleItem?.price || 0;
+    const saleQty = Math.max(1, parseInt(saleQuantity, 10) || 1);
+    const saleTotal = saleUnitPrice * saleQty;
 
     // Renewal requests
     const [requests, setRequests] = useState([]);
@@ -468,20 +488,28 @@ function AdminPayment(){
     async function addSale(){
         if (savingSale) return;
 
-        const price = Number(salePrice);
-
         if (!saleName.trim()) {
             alert("Please enter a name.");
             return;
         }
 
-        if (!saleService.trim()) {
-            alert("Please enter the service.");
+        if (!saleItem) {
+            alert("Please select an item.");
             return;
         }
 
-        if (!price || price <= 0) {
+        if (isCustomSale && !saleService.trim()) {
+            alert("Please enter the service title.");
+            return;
+        }
+
+        if (!saleUnitPrice || saleUnitPrice <= 0) {
             alert("Please enter a valid price.");
+            return;
+        }
+
+        if (!Number.isInteger(Number(saleQuantity)) || Number(saleQuantity) < 1) {
+            alert("Quantity must be a whole number of at least 1.");
             return;
         }
 
@@ -489,6 +517,8 @@ function AdminPayment(){
             alert("Unable to identify the logged-in admin. Please refresh and try again.");
             return;
         }
+
+        const serviceTitle = isCustomSale ? saleService.trim() : saleItem;
 
         setSavingSale(true);
 
@@ -499,8 +529,9 @@ function AdminPayment(){
                 .insert({
                     student_id: null,
                     customer_name: saleName.trim(),
-                    service: saleService.trim(),
-                    amount: price,
+                    // e.g. "Notebooks (x3)" so the quantity shows in Transaction History
+                    service: saleQty > 1 ? `${serviceTitle} (x${saleQty})` : serviceTitle,
+                    amount: saleTotal,
                     months: 0,
                     payment_date: new Date().toISOString(),
                     admin_id: admin.id,
@@ -533,11 +564,12 @@ function AdminPayment(){
     function closeSaleModal(){
         setShowSaleModal(false);
         setSaleName("");
+        setSaleItem("");
         setSaleService("");
         setSalePrice("");
+        setSaleQuantity(1);
         setSaleMethod("CASH");
     }
-
     // A payment is either a student subscription (has a student) or a
     // walk-in sale (has customer_name instead).
     function getPaymentName(payment){
@@ -851,30 +883,61 @@ function AdminPayment(){
                     <div className="modal">
                         <h2>Material Details</h2>
 
-                            <input
-                                type="text"
-                                className="student-search-input"
-                                placeholder="Search student..."
-                                value={studentSearch}
-                                onChange={(e) => setStudentSearch(e.target.value)}
-                            />
 
-                             <select
-                                value={selectedStudent?.id || ""}
-                                onChange={(e) => getSelectedStudent(e.target.value)}
-                            >
-                                <option value="">
-                                    Select a Student
-                                </option>
-                                {filteredStudentOptions.map(user => (
-                                    <option
-                                        key={user.id}
-                                        value={user.id}
+                            <div className="student-combobox">
+                                <input
+                                    type="text"
+                                    className="student-search-input"
+                                    placeholder="Search or select a student..."
+                                    autoComplete="off"
+                                    value={dropdownOpen ? studentSearch : (selectedStudent?.Name || "")}
+                                    onFocus={() => {
+                                        setStudentSearch("");      // show the full list when opened
+                                        setDropdownOpen(true);
+                                    }}
+                                    onChange={(e) => {
+                                        setStudentSearch(e.target.value);
+                                        setDropdownOpen(true);
+                                        // typing means they're picking someone new, so clear the old pick
+                                        if (selectedStudent) setSelectedStudent(null);
+                                    }}
+                                    onBlur={() => setDropdownOpen(false)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") setDropdownOpen(false);
+                                        if (e.key === "Enter" && filteredStudentOptions.length > 0) {
+                                            e.preventDefault();
+                                            getSelectedStudent(filteredStudentOptions[0].id);
+                                            setDropdownOpen(false);
+                                        }
+                                    }}
+                                />
+
+                                {dropdownOpen && (
+                                    <ul
+                                        className="student-combobox-list"
+                                        onMouseDown={(e) => e.preventDefault()}  // keeps the input from blurring before the click registers
                                     >
-                                        {user.Name}
-                                    </option>
-                                ))}
-                            </select>
+                                        {filteredStudentOptions.length === 0 ? (
+                                            <li className="student-combobox-empty">No students found</li>
+                                        ) : (
+                                            filteredStudentOptions.map((user) => (
+                                                <li
+                                                    key={user.id}
+                                                    className={`student-combobox-item ${
+                                                        selectedStudent?.id === user.id ? "selected" : ""
+                                                    }`}
+                                                    onClick={() => {
+                                                        getSelectedStudent(user.id);
+                                                        setDropdownOpen(false);
+                                                    }}
+                                                >
+                                                    {user.Name}
+                                                </li>
+                                            ))
+                                        )}
+                                    </ul>
+                                )}
+                            </div>
 
                             {selectedStudent && (
                                 <div className="student-documents">
@@ -916,9 +979,10 @@ function AdminPayment(){
 
                             <button  disabled={!selectedStudent} onClick={addPayment}>  {loading ? "Processing..." : "Activate User"} </button>
 
-                        <button onClick={() => { 
+                      <button onClick={() => {
                             setSelectedStudent(null);
                             setStudentSearch("");
+                            setDropdownOpen(false);
                             setShowModal(false);
                         }}>
                             Close
@@ -928,65 +992,108 @@ function AdminPayment(){
             )}
 
         {showSaleModal && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <h2>Add Sales</h2>
+            <div className="modal-overlay">
+                <div className="modal">
+                    <h2>Add Sales</h2>
 
-                        <input
-                            type="text"
-                            placeholder="Name"
-                            value={saleName}
-                            onChange={(e) => setSaleName(e.target.value)}
-                        />
+                    <input
+                        type="text"
+                        placeholder="Name"
+                        value={saleName}
+                        onChange={(e) => setSaleName(e.target.value)}
+                    />
 
-                        <input
-                            type="text"
-                            placeholder="Service (e.g. Book, T-shirt, Hourly Tutorial)"
-                            value={saleService}
-                            onChange={(e) => setSaleService(e.target.value)}
-                        />
+                    <select
+                        value={saleItem}
+                        onChange={(e) => setSaleItem(e.target.value)}
+                    >
+                        <option value="">Select an item</option>
+                        {SALE_ITEMS.map(item => (
+                            <option key={item.label} value={item.label}>
+                                {item.label} - ₱{item.price.toLocaleString()}
+                            </option>
+                        ))}
+                        <option value={CUSTOM_ITEM}>Custom</option>
+                    </select>
 
-                        <div className="sale-presets">
-                            {SALE_PRESETS.map((preset) => (
-                                <button
-                                    type="button"
-                                    key={preset}
-                                    className={`sale-preset-button ${Number(salePrice) === preset ? "selected" : ""}`}
-                                    onClick={() => setSalePrice(String(preset))}
-                                >
-                                    ₱{preset}
-                                </button>
-                            ))}
-                        </div>
+                    {isCustomSale && (
+                        <>
+                            <input
+                                type="text"
+                                placeholder="Service title (e.g. Book, Printing)"
+                                value={saleService}
+                                onChange={(e) => setSaleService(e.target.value)}
+                            />
 
-                        <input
-                            type="number"
-                            min="0"
-                            placeholder="Price"
-                            value={salePrice}
-                            onChange={(e) => setSalePrice(e.target.value)}
-                        />
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="Price per unit"
+                                value={salePrice}
+                                onChange={(e) => setSalePrice(e.target.value)}
+                            />
+                        </>
+                    )}
 
-                        <select
-                            value={saleMethod}
-                            onChange={(e) => setSaleMethod(e.target.value)}
-                        >
-                            <option value="CASH">CASH</option>
-                            <option value="PAY MAYA">PAY MAYA</option>
-                            <option value="GCASH">GCASH</option>
-                        </select>
+                    {saleItem && (
+                        <>
+                            <div className="sale-quantity">
+                                <span>Quantity</span>
 
-                        <button disabled={savingSale} onClick={addSale}>
-                            {savingSale ? "Saving..." : "Add Sale"}
-                        </button>
+                                <div className="sale-quantity-controls">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSaleQuantity(Math.max(1, saleQty - 1))}
+                                    >
+                                        −
+                                    </button>
 
-                        <button onClick={closeSaleModal}>
-                            Close
-                        </button>
-                    </div>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        value={saleQuantity}
+                                        onChange={(e) => setSaleQuantity(e.target.value)}
+                                        onBlur={() => setSaleQuantity(saleQty)}  // snap empty/invalid back to a valid number
+                                    />
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSaleQuantity(saleQty + 1)}
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="sale-total">
+                                <span>
+                                    ₱{saleUnitPrice.toLocaleString()} × {saleQty}
+                                </span>
+                                <strong>₱{saleTotal.toLocaleString()}</strong>
+                            </div>
+                        </>
+                    )}
+
+                    <select
+                        value={saleMethod}
+                        onChange={(e) => setSaleMethod(e.target.value)}
+                    >
+                        <option value="CASH">CASH</option>
+                        <option value="PAY MAYA">PAY MAYA</option>
+                        <option value="GCASH">GCASH</option>
+                    </select>
+
+                    <button disabled={savingSale || !saleItem} onClick={addSale}>
+                        {savingSale ? "Saving..." : "Add Sale"}
+                    </button>
+
+                    <button onClick={closeSaleModal}>
+                        Close
+                    </button>
                 </div>
-            )}
-
+            </div>
+        )}
 
         {reviewRequest && (
                 <div className="modal-overlay">

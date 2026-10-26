@@ -774,3 +774,96 @@
     min-width: 600px;
   }
 }
+
+.student-combobox {
+    position: relative;
+    width: 100%;
+}
+
+.student-combobox-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    z-index: 50;
+}
+
+.student-combobox-item {
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.student-combobox-item:hover {
+    background: #eff6ff;
+}
+
+.student-combobox-item.selected {
+    background: #dbeafe;
+    font-weight: 600;
+}
+
+.student-combobox-empty {
+    padding: 10px 12px;
+    color: #94a3b8;
+    font-size: 0.88rem;
+}
+
+.sale-quantity {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.sale-quantity > span {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.sale-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sale-quantity-controls button {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    font-size: 1.1rem;
+    line-height: 1;
+    margin-top: 0px;
+}
+
+.sale-quantity-controls input {
+    width: 64px;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.sale-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    color: #1e3a8a;
+}
+
+.sale-total strong {
+    font-size: 1.25rem;
+}
