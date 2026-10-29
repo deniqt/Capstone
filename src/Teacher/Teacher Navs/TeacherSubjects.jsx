@@ -11,6 +11,11 @@ import {
     Clock,
     AlertCircle,
     CheckCircle2,
+    UploadCloud,
+    X,
+    Trash2,
+    Eye,
+    Pencil,
 } from "lucide-react";
 import "./teacherSubjects.css";
 import { createNotification } from "../../Services/notificationService";
@@ -48,6 +53,20 @@ function TypeTitle({ type, text }) {
             {text ?? label}
         </div>
     );
+}
+
+function formatDueDate(dateStr) {
+    if (!dateStr) return "No due date";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "No due date";
+    return d.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    });
 }
 
 function getGroupType(material) {
@@ -769,112 +788,118 @@ function TeacherSubjects() {
                                             key={material.uniqueKey}
                                             className="material-list-card"
                                         >
-                                            <div>
-                                                <h4>
-                                                    <TypeTitle
-                                                        type={type}
-                                                        text={material.Material_Name}
-                                                    />
-                                                </h4>
+                                            <div className="card-main-content">
+                                                <div className="card-title-row">
+                                                    <h4>
+                                                        <TypeTitle
+                                                            type={type}
+                                                            text={material.Material_Name}
+                                                        />
+                                                    </h4>
+                                                </div>
 
                                                 {assignment ? (
                                                     <>
-                                                        <p>
-                                                            {assignment.Assignment_Type}
-                                                            {" • "}
-                                                            Due:{" "}
-                                                            {assignment.Due_Date
-                                                                ? new Date(
-                                                                      assignment.Due_Date
-                                                                  ).toLocaleString()
-                                                                : "No due date"}
-                                                            {" • "}
-                                                            {assignment.Total_Points} points
-                                                        </p>
-
-                                                        {submission && (
-                                                            <p>
-                                                                Submission status:{" "}
-                                                                {submission.Status || "Submitted"}
-                                                                {submission.Score !== null &&
-                                                                    submission.Score !== undefined &&
-                                                                    ` • Score: ${submission.Score}/${assignment.Total_Points}`}
-                                                            </p>
-                                                        )}
-
-                                                        {type === "Due" && (
-                                                            <p className="assignment-due">
-                                                                Awaiting submission
-                                                            </p>
-                                                        )}
+                                                        <div className="assignment-meta-row">
+                                                            <span className="assignment-type-badge">
+                                                                {assignment.Assignment_Type}
+                                                            </span>
+                                                            <span className="assignment-meta-item">
+                                                                Due: {formatDueDate(assignment.Due_Date)}
+                                                            </span>
+                                                            {assignment.Total_Points !== null && assignment.Total_Points !== undefined && (
+                                                                <span className="assignment-meta-item">
+                                                                    • {assignment.Total_Points} pts
+                                                                </span>
+                                                            )}
+                                                        </div>
 
                                                         {type === "Overdue" && (
-                                                            <p className="assignment-overdue">
-                                                                Deadline passed — no submission
-                                                            </p>
+                                                            <div className="assignment-status-tag status-overdue">
+                                                                <AlertCircle size={13} />
+                                                                <span>Deadline passed — no submission</span>
+                                                            </div>
                                                         )}
 
                                                         {type === "Not Graded" && (
-                                                            <p className="assignment-not-graded">
-                                                                Submitted — awaiting grading
-                                                            </p>
+                                                            <div className="assignment-status-tag status-pending">
+                                                                <Clock size={13} />
+                                                                <span>Submitted — awaiting grading</span>
+                                                            </div>
                                                         )}
 
                                                         {type === "Graded" && (
-                                                            <p className="assignment-graded">
-                                                                Graded
-                                                            </p>
+                                                            <div className="assignment-status-tag status-graded">
+                                                                <CheckCircle2 size={13} />
+                                                                <span>
+                                                                    Graded
+                                                                    {submission?.Score !== null && submission?.Score !== undefined
+                                                                        ? ` • Score: ${submission.Score}/${assignment.Total_Points}`
+                                                                        : ""}
+                                                                </span>
+                                                            </div>
+                                                        )}
+
+                                                        {type === "Due" && (
+                                                            <div className="assignment-status-tag status-due">
+                                                                <Clock size={13} />
+                                                                <span>Awaiting submission</span>
+                                                            </div>
                                                         )}
                                                     </>
                                                 ) : (
-                                                    <>
-                                                        <p>
-                                                            Subject:{" "}
-                                                            {material.Subjects?.Subject_Name ||
-                                                                "Unspecified"}
-                                                        </p>
-                                                        <p>
-                                                            {material.Material_Description}
-                                                        </p>
-                                                    </>
+                                                    <div className="material-meta-block">
+                                                    
+                                                        {material.Material_Description && (
+                                                            <p className="material-desc">
+                                                                {material.Material_Description}
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
 
-                                            <div className="material-actions">
-                                                {material.Material_URL && (
-                                                    <a
-                                                        href={material.Material_URL}
-                                                        target="_blank"
-                                                        rel="noreferrer"
-                                                    >
-                                                        <button className="btn-secondary btn-small">
-                                                            Open
-                                                        </button>
-                                                    </a>
-                                                )}
+                                            <div className="card-actions-group">
+                                                <div className="card-actions-row">
+                                                    {material.Material_URL && (
+                                                        <a
+                                                            href={material.Material_URL}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                        >
+                                                            <button type="button" className="btn-card-action btn-card-open">
+                                                                Open
+                                                            </button>
+                                                        </a>
+                                                    )}
 
-                                                {assignment && (
-                                                    <button
-                                                        className="btn-secondary btn-small"
-                                                        onClick={() =>
-                                                            openEditAssignment(assignment)
-                                                        }
-                                                    >
-                                                        ✏️ Edit
-                                                    </button>
-                                                )}
+                                                    {assignment && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn-card-action btn-card-edit"
+                                                            onClick={() =>
+                                                                openEditAssignment(assignment)
+                                                            }
+                                                        >
+                                                            <Pencil size={12} />
+                                                            <span>Edit</span>
+                                                        </button>
+                                                    )}
+                                                </div>
 
                                                 {assignment &&
                                                     submittedAssignments[
                                                         assignment.Assignment_ID
                                                     ] && (
                                                         <button
-                                                            className="btn-primary btn-small"
+                                                            type="button"
+                                                            className="btn-card-action btn-card-submissions"
                                                             onClick={() =>
                                                                 loadSubmissions(assignment)
                                                             }
                                                         >
-                                                            👁️ View Submission
+                                                            <Eye size={13} />
+                                                            <span>View Submission</span>
                                                         </button>
                                                     )}
                                             </div>
@@ -889,84 +914,180 @@ function TeacherSubjects() {
 
             {/* UPLOAD MODAL */}
             {showModal && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <h2>Upload Material</h2>
+                <div className="app-modal-overlay" onClick={() => setShowModal(false)}>
+                    <div className="app-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="app-modal-header">
+                            <div>
+                                <h2 className="app-modal-title">Upload Material</h2>
+                                <p className="app-modal-desc">Share learning resources or create an assignment for this subject.</p>
+                            </div>
+                            <button
+                                type="button"
+                                className="app-modal-close"
+                                onClick={() => setShowModal(false)}
+                                aria-label="Close dialog"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
 
-                        <input
-                            placeholder="Title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
-
-                        <textarea
-                            placeholder="Description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                        />
-
-                        <input
-                            type="file"
-                            onChange={(e) =>
-                                setFile(e.target.files?.[0] || null)
-                            }
-                        />
-
-                        <label>Content Type</label>
-                        <select
-                            value={contentType}
-                            onChange={(e) => setContentType(e.target.value)}
-                        >
-                            <option value="Material">Material</option>
-                            <option value="Assignment">Assignment</option>
-                        </select>
-
-                        {contentType === "Assignment" && (
-                            <div className="assignment-options">
-                                <label>Assignment Type</label>
-                                <select
-                                    value={assignmentType}
-                                    onChange={(e) =>
-                                        setAssignmentType(e.target.value)
-                                    }
-                                >
-                                    {assignmentOptions}
-                                </select>
-
-                                <label>Due Date</label>
+                        <div className="app-modal-body">
+                            <div className="form-group">
+                                <label className="form-label">
+                                    Title <span className="text-danger">*</span>
+                                </label>
                                 <input
-                                    type="datetime-local"
-                                    value={dueDate}
-                                    onChange={(e) => setDueDate(e.target.value)}
-                                />
-
-                                <label>Total Points</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    value={totalPoints}
-                                    onChange={(e) =>
-                                        setTotalPoints(e.target.value)
-                                    }
-                                    placeholder="e.g. 20"
+                                    className="form-control"
+                                    placeholder="Enter material or assignment title"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
                                 />
                             </div>
-                        )}
 
-                        <div className="modal-buttons">
+                            <div className="form-group">
+                                <label className="form-label">Description</label>
+                                <textarea
+                                    className="form-control form-textarea"
+                                    placeholder="Provide brief instructions or details..."
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">
+                                    File Attachment <span className="text-danger">*</span>
+                                </label>
+
+                                {!file ? (
+                                    <label className="dropzone-box">
+                                        <div className="dropzone-icon">
+                                            <UploadCloud size={22} />
+                                        </div>
+                                        <div className="dropzone-text">
+                                            <span className="dropzone-accent">Click to upload a file</span> or drag & drop
+                                        </div>
+                                        <div className="dropzone-hint">
+                                            PDF, Word, PowerPoint, Images, or Video (Max 50MB)
+                                        </div>
+                                        <input
+                                            type="file"
+                                            style={{ display: "none" }}
+                                            onChange={(e) =>
+                                                setFile(e.target.files?.[0] || null)
+                                            }
+                                        />
+                                    </label>
+                                ) : (
+                                    <div className="selected-file-card">
+                                        <div className="file-info-group">
+                                            <div className="file-icon-box">
+                                                <FileText size={20} />
+                                            </div>
+                                            <div className="file-details">
+                                                <span className="file-name-text">{file.name}</span>
+                                                <span className="file-meta-text">
+                                                    {(file.size / (1024 * 1024)).toFixed(2)} MB • Ready to upload
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="file-actions">
+                                            <label className="btn-file-change">
+                                                Change
+                                                <input
+                                                    type="file"
+                                                    style={{ display: "none" }}
+                                                    onChange={(e) =>
+                                                        setFile(e.target.files?.[0] || null)
+                                                    }
+                                                />
+                                            </label>
+                                            <button
+                                                type="button"
+                                                className="btn-file-remove"
+                                                onClick={() => setFile(null)}
+                                                title="Remove file"
+                                                aria-label="Remove file"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Content Type</label>
+                                <select
+                                    className="form-control form-select"
+                                    value={contentType}
+                                    onChange={(e) => setContentType(e.target.value)}
+                                >
+                                    <option value="Material">Material (Resource / Handout)</option>
+                                    <option value="Assignment">Assignment (Graded Task)</option>
+                                </select>
+                            </div>
+
+                            {contentType === "Assignment" && (
+                                <div className="assignment-config-panel">
+                                    <div className="form-group">
+                                        <label className="form-label">Assignment Type</label>
+                                        <select
+                                            className="form-control form-select"
+                                            value={assignmentType}
+                                            onChange={(e) =>
+                                                setAssignmentType(e.target.value)
+                                            }
+                                        >
+                                            {assignmentOptions}
+                                        </select>
+                                    </div>
+
+                                    <div className="form-row-2">
+                                        <div className="form-group">
+                                            <label className="form-label">Due Date & Time</label>
+                                            <input
+                                                className="form-control"
+                                                type="datetime-local"
+                                                value={dueDate}
+                                                onChange={(e) => setDueDate(e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label className="form-label">Total Points</label>
+                                            <input
+                                                className="form-control"
+                                                type="number"
+                                                min="1"
+                                                value={totalPoints}
+                                                onChange={(e) =>
+                                                    setTotalPoints(e.target.value)
+                                                }
+                                                placeholder="e.g. 20"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="app-modal-footer">
                             <button
-                                className="btn-secondary"
+                                type="button"
+                                className="btn-modal-cancel"
                                 onClick={() => setShowModal(false)}
                             >
                                 Close
                             </button>
 
                             <button
-                                className="btn-primary"
+                                type="button"
+                                className="btn-modal-submit"
                                 onClick={uploadMaterial}
-                                disabled={isUploading}
+                                disabled={isUploading || !title.trim() || !file}
                             >
-                                {isUploading ? "Uploading..." : "Upload"}
+                                {isUploading ? "Uploading..." : "Upload Material"}
                             </button>
                         </div>
                     </div>
@@ -975,38 +1096,68 @@ function TeacherSubjects() {
 
             {/* EDIT ASSIGNMENT MODAL */}
             {showEditModal && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <h2>Edit Assignment</h2>
-
-                        <label>Assignment Type</label>
-                        <select
-                            value={editAssignmentType}
-                            onChange={(e) =>
-                                setEditAssignmentType(e.target.value)
-                            }
-                        >
-                            {assignmentOptions}
-                        </select>
-
-                        <label>Due Date</label>
-                        <input
-                            type="datetime-local"
-                            value={editDueDate}
-                            onChange={(e) => setEditDueDate(e.target.value)}
-                        />
-
-                        <label>Total Points</label>
-                        <input
-                            type="number"
-                            min="1"
-                            value={editTotalPoints}
-                            onChange={(e) => setEditTotalPoints(e.target.value)}
-                        />
-
-                        <div className="modal-buttons">
+                <div className="app-modal-overlay" onClick={() => { setShowEditModal(false); setEditingAssignment(null); }}>
+                    <div className="app-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="app-modal-header">
+                            <div className="app-modal-header-text">
+                                <h2>Edit Assignment</h2>
+                                <p>Update the assignment type, deadline, and total points</p>
+                            </div>
                             <button
-                                className="btn-secondary"
+                                type="button"
+                                className="app-modal-close"
+                                onClick={() => {
+                                    setShowEditModal(false);
+                                    setEditingAssignment(null);
+                                }}
+                                aria-label="Close modal"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="app-modal-body">
+                            <div className="form-group">
+                                <label className="form-label">Assignment Type</label>
+                                <select
+                                    className="form-control form-select"
+                                    value={editAssignmentType}
+                                    onChange={(e) =>
+                                        setEditAssignmentType(e.target.value)
+                                    }
+                                >
+                                    {assignmentOptions}
+                                </select>
+                            </div>
+
+                            <div className="form-row-2">
+                                <div className="form-group">
+                                    <label className="form-label">Due Date</label>
+                                    <input
+                                        className="form-control"
+                                        type="datetime-local"
+                                        value={editDueDate}
+                                        onChange={(e) => setEditDueDate(e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Total Points</label>
+                                    <input
+                                        className="form-control"
+                                        type="number"
+                                        min="1"
+                                        value={editTotalPoints}
+                                        onChange={(e) => setEditTotalPoints(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="app-modal-footer">
+                            <button
+                                type="button"
+                                className="btn-modal-cancel"
                                 onClick={() => {
                                     setShowEditModal(false);
                                     setEditingAssignment(null);
@@ -1016,7 +1167,8 @@ function TeacherSubjects() {
                             </button>
 
                             <button
-                                className="btn-primary"
+                                type="button"
+                                className="btn-modal-submit"
                                 onClick={updateAssignment}
                             >
                                 Save Changes
@@ -1028,94 +1180,111 @@ function TeacherSubjects() {
 
             {/* SUBMISSIONS MODAL */}
             {showSubmissionsModal && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <h2>Student Submissions</h2>
-
-                        <h3>
-                            {selectedAssignmentForGrading?.Assignment_Type}
-                        </h3>
-
-                        <p>
-                            Total Points:{" "}
-                            {selectedAssignmentForGrading?.Total_Points}
-                        </p>
-
-                        {loadingSubmissions ? (
-                            <p>Loading submissions...</p>
-                        ) : submissions.length === 0 ? (
-                            <p>No submissions yet.</p>
-                        ) : (
-                            submissions.map((submission) => (
-                                <div
-                                    key={submission.Submission_ID}
-                                    className="submission-card"
-                                >
-                                    <h4>👤 {student?.Name}</h4>
-
-                                    <p>
-                                        Status: {submission.Status || "Submitted"}
-                                    </p>
-
-                                    <p>
-                                        Submission:{" "}
-                                        {submission.Is_Late
-                                            ? "⚠️ Late"
-                                            : "✅ On Time"}
-                                    </p>
-
-                                    <p>
-                                        Submitted:{" "}
-                                        {submission.Submitted_At
-                                            ? new Date(
-                                                  submission.Submitted_At
-                                              ).toLocaleString()
-                                            : "Not available"}
-                                    </p>
-
-                                    {submission.Submission_URL && (
-                                        <a
-                                            href={submission.Submission_URL}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            📄 Open Student Submission
-                                        </a>
-                                    )}
-
-                                    <p>
-                                        Score:{" "}
-                                        {submission.Score !== null &&
-                                        submission.Score !== undefined
-                                            ? `${submission.Score} / ${selectedAssignmentForGrading.Total_Points}`
-                                            : "Not graded"}
-                                    </p>
-
-                                    {submission.Feedback && (
-                                        <p>Feedback: {submission.Feedback}</p>
-                                    )}
-
-                                    <button
-                                        className="btn-primary btn-small"
-                                        onClick={() => {
-                                            setSelectedSubmission(submission);
-                                            setScore(submission.Score ?? "");
-                                            setFeedback(submission.Feedback ?? "");
-                                            setShowGradeModal(true);
-                                        }}
-                                    >
-                                        {submission.Score !== null &&
-                                        submission.Score !== undefined
-                                            ? "✏️ Edit Grade"
-                                            : "📝 Grade"}
-                                    </button>
-                                </div>
-                            ))
-                        )}
-
-                        <div className="modal-buttons">
+                <div className="app-modal-overlay" onClick={() => { setShowSubmissionsModal(false); setSelectedAssignmentForGrading(null); setSubmissions([]); }}>
+                    <div className="app-modal-card" style={{ maxWidth: "600px" }} onClick={(e) => e.stopPropagation()}>
+                        <div className="app-modal-header">
+                            <div className="app-modal-header-text">
+                                <h2>Student Submissions</h2>
+                                <p>
+                                    {selectedAssignmentForGrading?.Assignment_Type} • Total Points: {selectedAssignmentForGrading?.Total_Points}
+                                </p>
+                            </div>
                             <button
-                                className="btn-secondary"
+                                type="button"
+                                className="app-modal-close"
+                                onClick={() => {
+                                    setShowSubmissionsModal(false);
+                                    setSelectedAssignmentForGrading(null);
+                                    setSubmissions([]);
+                                }}
+                                aria-label="Close modal"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="app-modal-body">
+                            {loadingSubmissions ? (
+                                <p style={{ color: "#64748b", margin: "16px 0", textAlign: "center" }}>Loading submissions...</p>
+                            ) : submissions.length === 0 ? (
+                                <p style={{ color: "#64748b", margin: "16px 0", textAlign: "center" }}>No submissions yet.</p>
+                            ) : (
+                                submissions.map((submission) => (
+                                    <div
+                                        key={submission.Submission_ID}
+                                        className="submission-card"
+                                    >
+                                        <h4>👤 {student?.Name}</h4>
+
+                                        <p>
+                                            <strong>Status:</strong> {submission.Status || "Submitted"}
+                                        </p>
+
+                                        <p>
+                                            <strong>Timing:</strong>{" "}
+                                            {submission.Is_Late
+                                                ? "⚠️ Late"
+                                                : "✅ On Time"}
+                                        </p>
+
+                                        <p>
+                                            <strong>Submitted:</strong>{" "}
+                                            {submission.Submitted_At
+                                                ? new Date(
+                                                      submission.Submitted_At
+                                                  ).toLocaleString()
+                                                : "Not available"}
+                                        </p>
+
+                                        {submission.Submission_URL && (
+                                            <a
+                                                href={submission.Submission_URL}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                📄 Open Student Submission
+                                            </a>
+                                        )}
+
+                                        <p>
+                                            <strong>Score:</strong>{" "}
+                                            {submission.Score !== null &&
+                                            submission.Score !== undefined
+                                                ? `${submission.Score} / ${selectedAssignmentForGrading.Total_Points}`
+                                                : "Not graded"}
+                                        </p>
+
+                                        {submission.Feedback && (
+                                            <p><strong>Feedback:</strong> {submission.Feedback}</p>
+                                        )}
+
+                                        <div style={{ marginTop: "6px" }}>
+                                            <button
+                                                type="button"
+                                                className="btn-modal-submit"
+                                                style={{ padding: "6px 14px", fontSize: "0.82rem" }}
+                                                onClick={() => {
+                                                    setSelectedSubmission(submission);
+                                                    setScore(submission.Score ?? "");
+                                                    setFeedback(submission.Feedback ?? "");
+                                                    setShowGradeModal(true);
+                                                }}
+                                            >
+                                                {submission.Score !== null &&
+                                                submission.Score !== undefined
+                                                    ? "✏️ Edit Grade"
+                                                    : "📝 Grade"}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <div className="app-modal-footer">
+                            <button
+                                type="button"
+                                className="btn-modal-cancel"
                                 onClick={() => {
                                     setShowSubmissionsModal(false);
                                     setSelectedAssignmentForGrading(null);
@@ -1131,61 +1300,75 @@ function TeacherSubjects() {
 
             {/* GRADE MODAL */}
             {showGradeModal && (
-                <div className="modal-overlay">
-                    <div className="modal">
-                        <h2>Grade Submission</h2>
-
-                        <h3>{student?.Name}</h3>
-
-                        <p>File: {selectedSubmission?.file_name}</p>
-                        <p>Status: {selectedSubmission?.Status}</p>
-
-                        <p>
-                            Submission:{" "}
-                            {selectedSubmission?.Is_Late
-                                ? "⚠️ Late"
-                                : "✅ On Time"}
-                        </p>
-
-                        <p>
-                            Submitted:{" "}
-                            {selectedSubmission?.Submitted_At
-                                ? new Date(
-                                      selectedSubmission.Submitted_At
-                                  ).toLocaleString()
-                                : "Not available"}
-                        </p>
-
-                        {selectedSubmission?.Submission_URL && (
-                            <a
-                                href={selectedSubmission.Submission_URL}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                📄 Open Student Submission
-                            </a>
-                        )}
-
-                        <label>Score</label>
-                        <input
-                            type="number"
-                            min="0"
-                            max={selectedAssignmentForGrading?.Total_Points}
-                            value={score}
-                            onChange={(e) => setScore(e.target.value)}
-                            placeholder={`Maximum: ${selectedAssignmentForGrading?.Total_Points}`}
-                        />
-
-                        <label>Feedback</label>
-                        <textarea
-                            value={feedback}
-                            onChange={(e) => setFeedback(e.target.value)}
-                            placeholder="Enter feedback for the student..."
-                        />
-
-                        <div className="modal-buttons">
+                <div className="app-modal-overlay" onClick={() => { setShowGradeModal(false); setSelectedSubmission(null); setScore(""); setFeedback(""); }}>
+                    <div className="app-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="app-modal-header">
+                            <div className="app-modal-header-text">
+                                <h2>Grade Submission</h2>
+                                <p>Student: {student?.Name || "Student"}</p>
+                            </div>
                             <button
-                                className="btn-secondary"
+                                type="button"
+                                className="app-modal-close"
+                                onClick={() => {
+                                    setShowGradeModal(false);
+                                    setSelectedSubmission(null);
+                                    setScore("");
+                                    setFeedback("");
+                                }}
+                                aria-label="Close modal"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="app-modal-body">
+                            <div style={{ background: "#f8fafc", padding: "12px 14px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.85rem", display: "flex", flexDirection: "column", gap: "6px" }}>
+                                <div><strong>File:</strong> {selectedSubmission?.file_name || "Attachment"}</div>
+                                <div><strong>Status:</strong> {selectedSubmission?.Status} ({selectedSubmission?.Is_Late ? "⚠️ Late" : "✅ On Time"})</div>
+                                <div><strong>Submitted:</strong> {selectedSubmission?.Submitted_At ? new Date(selectedSubmission.Submitted_At).toLocaleString() : "Not available"}</div>
+                                {selectedSubmission?.Submission_URL && (
+                                    <div style={{ marginTop: "4px" }}>
+                                        <a
+                                            href={selectedSubmission.Submission_URL}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            style={{ color: "#2563eb", fontWeight: 600, textDecoration: "underline" }}
+                                        >
+                                            📄 Open Student Submission
+                                        </a>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Score (Max: {selectedAssignmentForGrading?.Total_Points})</label>
+                                <input
+                                    className="form-control"
+                                    type="number"
+                                    min="0"
+                                    max={selectedAssignmentForGrading?.Total_Points}
+                                    value={score}
+                                    onChange={(e) => setScore(e.target.value)}
+                                    placeholder={`Maximum: ${selectedAssignmentForGrading?.Total_Points}`}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Feedback</label>
+                                <textarea
+                                    className="form-control form-textarea"
+                                    value={feedback}
+                                    onChange={(e) => setFeedback(e.target.value)}
+                                    placeholder="Enter feedback for the student..."
+                                />
+                            </div>
+                        </div>
+
+                        <div className="app-modal-footer">
+                            <button
+                                type="button"
+                                className="btn-modal-cancel"
                                 onClick={() => {
                                     setShowGradeModal(false);
                                     setSelectedSubmission(null);
@@ -1197,7 +1380,8 @@ function TeacherSubjects() {
                             </button>
 
                             <button
-                                className="btn-primary"
+                                type="button"
+                                className="btn-modal-submit"
                                 onClick={gradeSubmission}
                                 disabled={isGrading}
                             >

@@ -1,14 +1,27 @@
-import { useEffect, useState } from 'react';
-import './adminPayment.css'
+import { useEffect, useState, useMemo } from 'react';
+import './adminPayment.css';
 import { supabase } from '../../lib/supabase';
 import { createNotification } from '../../Services/notificationService';
+import {
+    getMerchandiseList,
+    saveMerchandiseItem,
+    restockMerchandise,
+    decrementMerchandiseStock,
+    deleteMerchandiseItem
+} from '../../Services/merchandiseService';
 
-// Preset prices shown as quick-pick buttons in the "Add Sales" modal
+// Academic Tutoring Services (separated from physical merchandise)
+const ACADEMIC_SERVICES = [
+    { label: "Hourly Tutoring", price: 200, category: "Academic Tutoring" },
+    { label: "Reading Sessions", price: 3500, category: "Literacy & Reading" },
+    { label: "Diagnostic Assessment", price: 500, category: "Assessment & Testing" },
+];
+
+// Preserved for backwards compatibility with any existing lookups
 const SALE_ITEMS = [
-    { label: "Notebooks", price: 80 },
-    { label: "T-shirt", price: 300 },
-    { label: "Hourly Tutoring", price: 200 },
-    { label: "Reading Sessions", price: 3500 },
+    ...ACADEMIC_SERVICES,
+    { label: "Notebooks", price: 80, category: "Merchandise" },
+    { label: "T-shirt", price: 300, category: "Merchandise" }
 ];
 
 const CUSTOM_ITEM = "Custom";
@@ -39,8 +52,12 @@ function AdminPayment(){
     const [paymentToDelete, setPaymentToDelete] = useState(null);
     const [deleting, setDeleting] = useState(false);
 
-    // Add Sales modal
+    // Main Navigation Tab: "subscriptions" | "merchandise"
+    const [paymentTab, setPaymentTab] = useState("subscriptions");
+
+    // Add Sales modal state
     const [showSaleModal, setShowSaleModal] = useState(false);
+    const [saleCategory, setSaleCategory] = useState("academic"); // "academic" | "merchandise" | "custom"
     const [saleName, setSaleName] = useState("");
     const [saleService, setSaleService] = useState("");
     const [salePrice, setSalePrice] = useState("");
@@ -50,12 +67,47 @@ function AdminPayment(){
     const [saleItem, setSaleItem] = useState("");
     const [saleQuantity, setSaleQuantity] = useState(1);
 
+    // Merchandise Catalog & Inventory State
+    const [merchandiseList, setMerchandiseList] = useState([]);
+    const [merchSearch, setMerchSearch] = useState("");
+    const [merchCategoryFilter, setMerchCategoryFilter] = useState("All");
+
+    // Merchandise Modals
+    const [showAddMerchModal, setShowAddMerchModal] = useState(false);
+    const [editingMerchItem, setEditingMerchItem] = useState(null);
+    const [merchForm, setMerchForm] = useState({
+        name: "",
+        category: "Apparel",
+        size: "",
+        price: "",
+        stock: "",
+        description: ""
+    });
+
+    const [showRestockModal, setShowRestockModal] = useState(false);
+    const [restockTarget, setRestockTarget] = useState(null);
+    const [restockAmount, setRestockAmount] = useState(10);
+
+    const [showQuickSellModal, setShowQuickSellModal] = useState(false);
+    const [quickSellItem, setQuickSellItem] = useState(null);
+    const [quickSellCustomer, setQuickSellCustomer] = useState("");
+    const [quickSellQty, setQuickSellQty] = useState(1);
+    const [quickSellMethod, setQuickSellMethod] = useState("CASH");
+    const [quickSelling, setQuickSelling] = useState(false);
+
     // Derived sale values (recalculate on every render, so the total updates live)
-    const isCustomSale = saleItem === CUSTOM_ITEM;
-    const selectedSaleItem = SALE_ITEMS.find(item => item.label === saleItem);
+    const isCustomSale = saleCategory === "custom" || saleItem === CUSTOM_ITEM;
+    const selectedAcademic = ACADEMIC_SERVICES.find(item => item.label === saleItem);
+    const selectedMerch = merchandiseList.find(item => item.name === saleItem || item.id === saleItem);
+
     const saleUnitPrice = isCustomSale
         ? Number(salePrice) || 0
-        : selectedSaleItem?.price || 0;
+        : selectedAcademic
+        ? selectedAcademic.price
+        : selectedMerch
+        ? selectedMerch.price
+        : (SALE_ITEMS.find(item => item.label === saleItem)?.price || 0);
+
     const saleQty = Math.max(1, parseInt(saleQuantity, 10) || 1);
     const saleTotal = saleUnitPrice * saleQty;
 
@@ -73,6 +125,7 @@ function AdminPayment(){
             getUsers();
             getPaymentList();
             getRenewalRequests();
+            setMerchandiseList(getMerchandiseList());
         }, []);
     
     
@@ -545,6 +598,12 @@ function AdminPayment(){
                 return;
             }
 
+            // Decrement merchandise stock if an inventory item was sold
+            if (selectedMerch) {
+                decrementMerchandiseStock(selectedMerch.id, saleQty);
+                setMerchandiseList(getMerchandiseList());
+            }
+
             closeSaleModal();
             alert("Sale added successfully.");
             getPaymentList();
@@ -563,6 +622,7 @@ function AdminPayment(){
 
     function closeSaleModal(){
         setShowSaleModal(false);
+        setSaleCategory("academic");
         setSaleName("");
         setSaleItem("");
         setSaleService("");
@@ -570,6 +630,206 @@ function AdminPayment(){
         setSaleQuantity(1);
         setSaleMethod("CASH");
     }
+
+    // ==========================================
+    // MERCHANDISE INVENTORY HANDLERS
+    // ==========================================
+
+    function openAddMerchModal(item = null) {
+        if (item) {
+            setEditingMerchItem(item);
+            setMerchForm({
+                name: item.name,
+                category: item.category || "Apparel",
+                size: item.size || "",
+                price: item.price,
+                stock: item.stock,
+                description: item.description || ""
+            });
+        } else {
+            setEditingMerchItem(null);
+            setMerchForm({
+                name: "",
+                category: "Apparel",
+                size: "",
+                price: "300",
+                stock: "20",
+                description: ""
+            });
+        }
+        setShowAddMerchModal(true);
+    }
+
+    function handleSaveMerchItem() {
+        if (!merchForm.name.trim()) {
+            alert("Please enter a product name.");
+            return;
+        }
+        if (!merchForm.price || Number(merchForm.price) < 0) {
+            alert("Please enter a valid price.");
+            return;
+        }
+        if (merchForm.stock === "" || Number(merchForm.stock) < 0) {
+            alert("Please enter a valid stock count.");
+            return;
+        }
+
+        saveMerchandiseItem({
+            ...(editingMerchItem ? { id: editingMerchItem.id } : {}),
+            name: merchForm.name.trim(),
+            category: merchForm.category,
+            size: (merchForm.size || "").trim() || null,
+            price: Number(merchForm.price),
+            stock: parseInt(merchForm.stock, 10),
+            description: merchForm.description.trim()
+        });
+
+        setMerchandiseList(getMerchandiseList());
+        setShowAddMerchModal(false);
+        alert(editingMerchItem ? "Product updated successfully." : "New product added to catalog.");
+    }
+
+    function handleDeleteMerchItem(id, name) {
+        if (window.confirm(`Are you sure you want to remove "${name}" from the catalog?`)) {
+            deleteMerchandiseItem(id);
+            setMerchandiseList(getMerchandiseList());
+        }
+    }
+
+    function handleRestockSubmit() {
+        if (!restockTarget) return;
+        const qty = parseInt(restockAmount, 10);
+        if (!qty || qty <= 0) {
+            alert("Please enter a positive quantity to add.");
+            return;
+        }
+
+        restockMerchandise(restockTarget.id, qty);
+        setMerchandiseList(getMerchandiseList());
+        setShowRestockModal(false);
+        alert(`Restocked ${qty} units of ${restockTarget.name}.`);
+    }
+
+    async function handleQuickSellSubmit() {
+        if (!quickSellItem) return;
+        if (!quickSellCustomer.trim()) {
+            alert("Please enter a customer or student name.");
+            return;
+        }
+        const qty = parseInt(quickSellQty, 10);
+        if (!qty || qty <= 0) {
+            alert("Quantity must be at least 1.");
+            return;
+        }
+        if (qty > (quickSellItem.stock || 0)) {
+            alert(`Cannot sell ${qty} units. Only ${quickSellItem.stock || 0} in stock.`);
+            return;
+        }
+        if (!admin) {
+            alert("Admin not recognized. Please refresh.");
+            return;
+        }
+
+        setQuickSelling(true);
+        const total = quickSellItem.price * qty;
+
+        try {
+            const { error } = await supabase
+                .from("payments")
+                .insert({
+                    student_id: null,
+                    customer_name: quickSellCustomer.trim(),
+                    service: qty > 1 ? `${quickSellItem.name} (x${qty})` : quickSellItem.name,
+                    amount: total,
+                    months: 0,
+                    payment_date: new Date().toISOString(),
+                    admin_id: admin.id,
+                    status: "Completed",
+                    method: quickSellMethod
+                });
+
+            if (error) {
+                console.error(error);
+                alert("Failed to record merchandise sale: " + error.message);
+                return;
+            }
+
+            decrementMerchandiseStock(quickSellItem.id, qty);
+            setMerchandiseList(getMerchandiseList());
+            getPaymentList();
+            setShowQuickSellModal(false);
+            alert(`Successfully sold ${qty}x ${quickSellItem.name} for ₱${total.toLocaleString()}.`);
+        } catch (err) {
+            console.error(err);
+            alert("Something went wrong recording the sale.");
+        } finally {
+            setQuickSelling(false);
+        }
+    }
+
+    function getUnitsSold(item) {
+        const sLower = item.name.toLowerCase();
+        const itemSize = (item.size || "").toLowerCase();
+        let total = 0;
+        paymentLists.forEach(p => {
+            if (p.status !== "Completed" || !p.service) return;
+            const pLower = p.service.toLowerCase();
+            
+            let isMatch = false;
+            if (pLower.includes(sLower)) {
+                isMatch = true;
+            } else if (itemSize && (pLower.includes("shirt") || pLower.includes("t-shirt"))) {
+                // If payment mentions a specific size
+                const sizeMatch = pLower.match(/\b(xs|xl|2xl|s|m|l)\b/i);
+                if (sizeMatch) {
+                    if (sizeMatch[1].toLowerCase() === itemSize) {
+                        isMatch = true;
+                    }
+                } else if (itemSize === "m") {
+                    // Attribute legacy un-sized "T-shirt" sales to Medium
+                    isMatch = true;
+                }
+            } else if (sLower.includes("notebook") && pLower.includes("notebook")) {
+                isMatch = true;
+            }
+
+            if (isMatch) {
+                const match = p.service.match(/\(x(\d+)\)/);
+                total += match ? parseInt(match[1], 10) : 1;
+            }
+        });
+        return total;
+    }
+
+    // Merchandise Analytics
+    const totalMerchRevenue = useMemo(() => {
+        return paymentLists
+            .filter(p => p.status === "Completed")
+            .reduce((sum, p) => {
+                const sLower = (p.service || "").toLowerCase();
+                const isMerch = merchandiseList.some(m => sLower.includes(m.name.toLowerCase())) ||
+                    sLower.includes("t-shirt") || sLower.includes("shirt") || sLower.includes("notebook");
+                return isMerch ? sum + Number(p.amount || 0) : sum;
+            }, 0);
+    }, [paymentLists, merchandiseList]);
+
+    const totalStockUnits = useMemo(() => {
+        return merchandiseList.reduce((sum, m) => sum + (Number(m.stock) || 0), 0);
+    }, [merchandiseList]);
+
+    const lowStockCount = useMemo(() => {
+        return merchandiseList.filter(m => (Number(m.stock) || 0) <= 10).length;
+    }, [merchandiseList]);
+
+    const filteredMerchandise = useMemo(() => {
+        return merchandiseList.filter(item => {
+            const matchesCat = merchCategoryFilter === "All" || item.category === merchCategoryFilter;
+            const matchesSearch = !merchSearch.trim() ||
+                item.name.toLowerCase().includes(merchSearch.toLowerCase()) ||
+                (item.description && item.description.toLowerCase().includes(merchSearch.toLowerCase()));
+            return matchesCat && matchesSearch;
+        });
+    }, [merchandiseList, merchCategoryFilter, merchSearch]);
     // A payment is either a student subscription (has a student) or a
     // walk-in sale (has customer_name instead).
     function getPaymentName(payment){
@@ -977,50 +1237,106 @@ function AdminPayment(){
                                 <option value="GCASH">GCASH</option>
                             </select>
 
-                            <button  disabled={!selectedStudent} onClick={addPayment}>  {loading ? "Processing..." : "Activate User"} </button>
-
-                      <button onClick={() => {
-                            setSelectedStudent(null);
-                            setStudentSearch("");
-                            setDropdownOpen(false);
-                            setShowModal(false);
-                        }}>
-                            Close
-                        </button>
+                            <div className="modal-buttons">
+                                <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    onClick={() => {
+                                        setSelectedStudent(null);
+                                        setStudentSearch("");
+                                        setDropdownOpen(false);
+                                        setShowModal(false);
+                                    }}
+                                >
+                                    Close
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-primary"
+                                    disabled={!selectedStudent || loading}
+                                    onClick={addPayment}
+                                >
+                                    {loading ? "Processing..." : "Activate User"}
+                                </button>
+                            </div>
                     </div>
                 </div>
             )}
 
         {showSaleModal && (
             <div className="modal-overlay">
-                <div className="modal">
-                    <h2>Add Sales</h2>
+                <div className="modal add-sale-modal-enhanced">
+                    <h2>Add Sales & Services</h2>
+
+                    {/* Category Selection Tabs (Separating Academic Services from Merchandise) */}
+                    <div className="sale-category-toggle">
+                        <button
+                            type="button"
+                            className={`sale-cat-btn ${saleCategory === "academic" ? "active" : ""}`}
+                            onClick={() => { setSaleCategory("academic"); setSaleItem(""); }}
+                        >
+                            🎓 Academic Services
+                        </button>
+                        <button
+                            type="button"
+                            className={`sale-cat-btn ${saleCategory === "merchandise" ? "active" : ""}`}
+                            onClick={() => { setSaleCategory("merchandise"); setSaleItem(""); }}
+                        >
+                            🛍️ Merchandise Catalog
+                        </button>
+                        <button
+                            type="button"
+                            className={`sale-cat-btn ${saleCategory === "custom" ? "active" : ""}`}
+                            onClick={() => { setSaleCategory("custom"); setSaleItem(CUSTOM_ITEM); }}
+                        >
+                            ✏️ Custom
+                        </button>
+                    </div>
 
                     <input
                         type="text"
-                        placeholder="Name"
+                        placeholder="Customer / Student Name"
                         value={saleName}
                         onChange={(e) => setSaleName(e.target.value)}
                     />
 
-                    <select
-                        value={saleItem}
-                        onChange={(e) => setSaleItem(e.target.value)}
-                    >
-                        <option value="">Select an item</option>
-                        {SALE_ITEMS.map(item => (
-                            <option key={item.label} value={item.label}>
-                                {item.label} - ₱{item.price.toLocaleString()}
-                            </option>
-                        ))}
-                        <option value={CUSTOM_ITEM}>Custom</option>
-                    </select>
+                    {saleCategory === "academic" && (
+                        <select
+                            value={saleItem}
+                            onChange={(e) => setSaleItem(e.target.value)}
+                        >
+                            <option value="">Select an academic service</option>
+                            {ACADEMIC_SERVICES.map(item => (
+                                <option key={item.label} value={item.label}>
+                                    {item.label} - ₱{item.price.toLocaleString()}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+
+                    {saleCategory === "merchandise" && (
+                        <select
+                            value={saleItem}
+                            onChange={(e) => setSaleItem(e.target.value)}
+                        >
+                            <option value="">Select physical merchandise</option>
+                            {merchandiseList.map(item => (
+                                <option
+                                    key={item.id}
+                                    value={item.name}
+                                    disabled={item.stock <= 0}
+                                >
+                                    {item.name} - ₱{item.price.toLocaleString()} ({item.stock > 0 ? `${item.stock} in stock` : "Out of stock"})
+                                </option>
+                            ))}
+                        </select>
+                    )}
 
                     {isCustomSale && (
                         <>
                             <input
                                 type="text"
-                                placeholder="Service title (e.g. Book, Printing)"
+                                placeholder="Service title (e.g. Assessment, Study Pack)"
                                 value={saleService}
                                 onChange={(e) => setSaleService(e.target.value)}
                             />
@@ -1028,7 +1344,7 @@ function AdminPayment(){
                             <input
                                 type="number"
                                 min="0"
-                                placeholder="Price per unit"
+                                placeholder="Price per unit (PHP)"
                                 value={salePrice}
                                 onChange={(e) => setSalePrice(e.target.value)}
                             />
@@ -1038,7 +1354,7 @@ function AdminPayment(){
                     {saleItem && (
                         <>
                             <div className="sale-quantity">
-                                <span>Quantity</span>
+                                <span>Quantity {selectedMerch && `(Max ${selectedMerch.stock})`}</span>
 
                                 <div className="sale-quantity-controls">
                                     <button
@@ -1051,15 +1367,22 @@ function AdminPayment(){
                                     <input
                                         type="number"
                                         min="1"
+                                        max={selectedMerch ? selectedMerch.stock : undefined}
                                         step="1"
                                         value={saleQuantity}
                                         onChange={(e) => setSaleQuantity(e.target.value)}
-                                        onBlur={() => setSaleQuantity(saleQty)}  // snap empty/invalid back to a valid number
+                                        onBlur={() => setSaleQuantity(saleQty)}
                                     />
 
                                     <button
                                         type="button"
-                                        onClick={() => setSaleQuantity(saleQty + 1)}
+                                        onClick={() => {
+                                            if (selectedMerch && saleQty >= selectedMerch.stock) {
+                                                alert(`Only ${selectedMerch.stock} units available in stock.`);
+                                                return;
+                                            }
+                                            setSaleQuantity(saleQty + 1);
+                                        }}
                                     >
                                         +
                                     </button>
@@ -1084,13 +1407,284 @@ function AdminPayment(){
                         <option value="GCASH">GCASH</option>
                     </select>
 
-                    <button disabled={savingSale || !saleItem} onClick={addSale}>
-                        {savingSale ? "Saving..." : "Add Sale"}
-                    </button>
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={closeSaleModal}
+                        >
+                            Close
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={savingSale || !saleItem}
+                            onClick={addSale}
+                        >
+                            {savingSale ? "Saving..." : "Add Sale"}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
 
-                    <button onClick={closeSaleModal}>
-                        Close
-                    </button>
+        {/* ==========================================
+            MERCHANDISE MODAL: QUICK SELL ITEM
+        ========================================== */}
+        {showQuickSellModal && quickSellItem && (
+            <div className="modal-overlay">
+                <div className="modal quick-sell-modal">
+                    <h2>Sell Merchandise Item</h2>
+                    <div style={{ marginBottom: "12px" }}>
+                        <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#334155", display: "block", marginBottom: "4px" }}>
+                            Select Product & Size
+                        </label>
+                        <select
+                            value={quickSellItem.id}
+                            onChange={(e) => {
+                                const found = merchandiseList.find(m => m.id === e.target.value);
+                                if (found) {
+                                    setQuickSellItem(found);
+                                    setQuickSellQty(1);
+                                }
+                            }}
+                        >
+                            {merchandiseList.map(item => (
+                                <option key={item.id} value={item.id} disabled={item.stock <= 0}>
+                                    {item.name} {item.size ? `[Size ${item.size}]` : ""} — ₱{item.price.toLocaleString()} ({item.stock > 0 ? `${item.stock} in stock` : "Out of stock"})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="quick-sell-item-summary">
+                        <div className="quick-sell-name">
+                            {quickSellItem.name}
+                            {quickSellItem.size && <span className="merch-size-badge" style={{ marginLeft: "8px" }}>Size: {quickSellItem.size}</span>}
+                        </div>
+                        <div className="quick-sell-price">₱{quickSellItem.price.toLocaleString()} each</div>
+                        <span className={`stock-pill ${quickSellItem.stock > 10 ? "in-stock" : quickSellItem.stock > 0 ? "low-stock" : "out-of-stock"}`}>
+                            {quickSellItem.stock > 0 ? `${quickSellItem.stock} in stock` : "Out of stock"}
+                        </span>
+                    </div>
+
+                    <input
+                        type="text"
+                        placeholder="Customer / Student Name"
+                        value={quickSellCustomer}
+                        onChange={(e) => setQuickSellCustomer(e.target.value)}
+                    />
+
+                    <div className="sale-quantity">
+                        <span>Quantity (Max: {quickSellItem.stock})</span>
+                        <div className="sale-quantity-controls">
+                            <button
+                                type="button"
+                                onClick={() => setQuickSellQty(Math.max(1, quickSellQty - 1))}
+                            >
+                                −
+                            </button>
+                            <input
+                                type="number"
+                                min="1"
+                                max={quickSellItem.stock}
+                                value={quickSellQty}
+                                onChange={(e) => setQuickSellQty(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setQuickSellQty(Math.min(quickSellItem.stock, quickSellQty + 1))}
+                                disabled={quickSellQty >= quickSellItem.stock}
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="sale-total">
+                        <span>₱{quickSellItem.price.toLocaleString()} × {quickSellQty}</span>
+                        <strong>₱{(quickSellItem.price * quickSellQty).toLocaleString()}</strong>
+                    </div>
+
+                    <select
+                        value={quickSellMethod}
+                        onChange={(e) => setQuickSellMethod(e.target.value)}
+                    >
+                        <option value="CASH">CASH</option>
+                        <option value="PAY MAYA">PAY MAYA</option>
+                        <option value="GCASH">GCASH</option>
+                    </select>
+
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => setShowQuickSellModal(false)}
+                            disabled={quickSelling}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={quickSelling || !quickSellCustomer.trim() || quickSellItem.stock <= 0}
+                            onClick={handleQuickSellSubmit}
+                        >
+                            {quickSelling ? "Recording..." : "Confirm & Record Sale"}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* ==========================================
+            MERCHANDISE MODAL: RESTOCK QUANTITY
+        ========================================== */}
+        {showRestockModal && restockTarget && (
+            <div className="modal-overlay">
+                <div className="modal restock-modal">
+                    <h2>Restock Inventory</h2>
+                    <p style={{ margin: "4px 0 16px", color: "#64748b", fontSize: "0.88rem" }}>
+                        Adding units for <strong>{restockTarget.name}</strong> (Current Stock: {restockTarget.stock})
+                    </p>
+
+                    <label style={{ fontSize: "0.84rem", fontWeight: 600, color: "#334155" }}>
+                        Units to Add:
+                    </label>
+                    <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={restockAmount}
+                        onChange={(e) => setRestockAmount(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    />
+
+                    <div className="restock-quick-pills">
+                        {[5, 10, 25, 50, 100].map(amt => (
+                            <button
+                                key={amt}
+                                type="button"
+                                className="restock-pill-btn"
+                                onClick={() => setRestockAmount(amt)}
+                            >
+                                +{amt}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="restock-preview">
+                        New Stock Level: <strong>{(restockTarget.stock || 0) + (parseInt(restockAmount, 10) || 0)} units</strong>
+                    </div>
+
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => setShowRestockModal(false)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={handleRestockSubmit}
+                        >
+                            Save Restock
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* ==========================================
+            MERCHANDISE MODAL: ADD / EDIT PRODUCT
+        ========================================== */}
+        {showAddMerchModal && (
+            <div className="modal-overlay">
+                <div className="modal add-merch-modal">
+                    <h2>{editingMerchItem ? "Edit Merchandise Product" : "Add New Merchandise Product"}</h2>
+
+                    <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#334155" }}>Product Name</label>
+                    <input
+                        type="text"
+                        placeholder="e.g. YOSEF Polo Shirt, Practice Workbook"
+                        value={merchForm.name}
+                        onChange={(e) => setMerchForm({ ...merchForm, name: e.target.value })}
+                    />
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                        <div>
+                            <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#334155" }}>Category</label>
+                            <select
+                                value={merchForm.category}
+                                onChange={(e) => setMerchForm({ ...merchForm, category: e.target.value })}
+                            >
+                                <option value="Apparel">Apparel (Shirts, Uniforms)</option>
+                                <option value="Stationery">Stationery (Notebooks, Paper)</option>
+                                <option value="Supplies">Supplies (Kits, Pens, Bags)</option>
+                                <option value="Accessories">Accessories</option>
+                                <option value="Other">Other Merchandise</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#334155" }}>Size / Variant (Optional)</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. XS, S, M, L, XL"
+                                value={merchForm.size || ""}
+                                onChange={(e) => setMerchForm({ ...merchForm, size: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                        <div>
+                            <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#334155" }}>Unit Price (PHP)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="300"
+                                value={merchForm.price}
+                                onChange={(e) => setMerchForm({ ...merchForm, price: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#334155" }}>Stock Count</label>
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="50"
+                                value={merchForm.stock}
+                                onChange={(e) => setMerchForm({ ...merchForm, stock: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <label style={{ fontSize: "0.82rem", fontWeight: 600, color: "#334155" }}>Description & Details</label>
+                    <textarea
+                        rows={3}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", resize: "vertical", fontFamily: "inherit", fontSize: "0.88rem" }}
+                        placeholder="Brief item description, material, or available sizes..."
+                        value={merchForm.description}
+                        onChange={(e) => setMerchForm({ ...merchForm, description: e.target.value })}
+                    />
+
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => setShowAddMerchModal(false)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={handleSaveMerchItem}
+                        >
+                            {editingMerchItem ? "Save Changes" : "Add Product"}
+                        </button>
+                    </div>
                 </div>
             </div>
         )}
@@ -1184,43 +1778,92 @@ function AdminPayment(){
             )}
 
 
-        <div className='Payment-Header'>
-        <h1> ADMIN PAYMENT</h1>
-        <div>
-            <button className='ActiveUser-Button' onClick={()=>setShowSaleModal(true)}>Add Sales</button>
-            <button className='ActiveUser-Button' onClick={()=>setShowModal(true)}>Active User</button>
-        </div>
-        </div>
-         <div className="AdminPaymentNumberPanel">
-            <div className='PaymentNumberBox'>
-                <text>Total Revenue (YTR)</text>
-                
-                <h1>
-                ₱{totalRevenue}
-                </h1>
+        <div className="payment-sticky-header">
+            <div className='Payment-Header'>
+                <div className="payment-header-text">
+                    <h1>ADMIN PAYMENT</h1>
+                    <p className="payment-header-sub">
+                        {paymentTab === "subscriptions"
+                            ? "Manage student subscriptions, renewal requests, and academic service sales."
+                            : "Manage physical merchandise inventory, center stock counts, and retail sales."}
+                    </p>
+                </div>
+                <div className="payment-header-actions">
+                    {paymentTab === "subscriptions" ? (
+                        <>
+                            <button className='ActiveUser-Button' onClick={()=>setShowSaleModal(true)}>+ Add Sales</button>
+                            <button className='ActiveUser-Button secondary-header-btn' onClick={()=>setShowModal(true)}>Active User</button>
+                        </>
+                    ) : (
+                        <>
+                            <button className='ActiveUser-Button' onClick={() => {
+                                if (merchandiseList.length > 0) {
+                                    setQuickSellItem(merchandiseList[0]);
+                                    setQuickSellQty(1);
+                                    setQuickSellCustomer("");
+                                    setShowQuickSellModal(true);
+                                } else {
+                                    alert("Please add at least one product to the catalog first.");
+                                }
+                            }}>
+                                🛒 Sell Item
+                            </button>
+                            <button className='ActiveUser-Button secondary-header-btn' onClick={() => openAddMerchModal()}>
+                                + New Product
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
 
-            <div className='PaymentNumberBox'>
-                <text>Success Rate</text>
-                <h1>{successRate}%</h1>
+            {/* Primary Navigation Tabs */}
+            <div className="admin-payment-tabs">
+                <button
+                    type="button"
+                    className={`admin-tab-pill ${paymentTab === "subscriptions" ? "active" : ""}`}
+                    onClick={() => setPaymentTab("subscriptions")}
+                >
+                    <span>💳 Subscriptions & Services</span>
+                    {pendingRequestCount > 0 && (
+                        <span className="tab-pill-badge">{pendingRequestCount} pending</span>
+                    )}
+                </button>
+                <button
+                    type="button"
+                    className={`admin-tab-pill ${paymentTab === "merchandise" ? "active" : ""}`}
+                    onClick={() => setPaymentTab("merchandise")}
+                >
+                    <span>🛍️ Merchandise & Inventory</span>
+                    {lowStockCount > 0 && (
+                        <span className="tab-pill-badge warning">{lowStockCount} low stock</span>
+                    )}
+                </button>
             </div>
-
-            <div className='PaymentNumberBox'>
-                <text>Refunds</text>
-                <h1>
-                {
-                paymentLists.filter(
-                payment=>payment.status==="Refunded"
-                ).length
-                }
-                </h1>
-            </div>
-
-
-
         </div>
 
-        <div className='AdminLowerPaymentPanel RenewalPanel'>
+        {/* TAB 1: SUBSCRIPTIONS & SERVICES */}
+        {paymentTab === "subscriptions" && (
+            <>
+                <div className="AdminPaymentNumberPanel">
+                    <div className='PaymentNumberBox'>
+                        <text>Total Revenue (YTR)</text>
+                        <h1>₱{totalRevenue}</h1>
+                    </div>
+
+                    <div className='PaymentNumberBox'>
+                        <text>Success Rate</text>
+                        <h1>{successRate}%</h1>
+                    </div>
+
+                    <div className='PaymentNumberBox'>
+                        <text>Refunds</text>
+                        <h1>
+                            {paymentLists.filter(p => p.status === "Refunded").length}
+                        </h1>
+                    </div>
+                </div>
+
+                <div className='AdminLowerPaymentPanel RenewalPanel'>
 
             <h1 className='TransactionHistory-Title'>
                 Renewal Requests
@@ -1255,7 +1898,7 @@ function AdminPayment(){
 
                         <thead>
                             <tr>
-                                <th>Request ID</th>
+                                <th>Reference #</th>
                                 <th>Student</th>
                                 <th>Months</th>
                                 <th>Submitted</th>
@@ -1276,7 +1919,7 @@ function AdminPayment(){
                             ) : (
                                 filteredRequests.map((request) => (
                                     <tr key={request.request_id}>
-                                        <td>{request.request_id}</td>
+                                        <td><strong>REQ-{String(request.request_id).padStart(4, '0')}</strong></td>
                                         <td>{request.student?.Name || "Unknown"}</td>
                                         <td>{request.months}</td>
                                         <td>{new Date(request.created_at).toLocaleDateString()}</td>
@@ -1377,7 +2020,7 @@ function AdminPayment(){
 
                         <thead>
                             <tr>
-                                <th>Transaction ID</th>
+                                <th>Receipt Ref #</th>
                                 <th>Student</th>
                                 <th>Service</th>
                                 <th>Amount</th>
@@ -1393,7 +2036,7 @@ function AdminPayment(){
                                 filteredPayments.map((payment) => 
                                 (
                                     <tr key={payment.payment_id}>
-                                        <td>{payment.payment_id}</td>
+                                        <td><strong>RCPT-{String(payment.payment_id).padStart(5, '0')}</strong></td>
                                         <td>{getPaymentName(payment)}</td>
                                         <td>{payment.service || "Subscription"}</td>
                                         <td>{payment.amount}</td>
@@ -1454,7 +2097,172 @@ function AdminPayment(){
                 </div>
             </div>
         </div>
+        </>
+        )}
 
+        {/* TAB 2: MERCHANDISE & INVENTORY */}
+        {paymentTab === "merchandise" && (
+            <div className="merchandise-tab-container">
+                {/* Merchandise Summary Cards */}
+                <div className="AdminPaymentNumberPanel">
+                    <div className='PaymentNumberBox'>
+                        <text>Merchandise Revenue</text>
+                        <h1>₱{totalMerchRevenue.toLocaleString()}</h1>
+                    </div>
+
+                    <div className='PaymentNumberBox'>
+                        <text>Products in Catalog</text>
+                        <h1>{merchandiseList.length} Items</h1>
+                    </div>
+
+                    <div className='PaymentNumberBox'>
+                        <text>Total Stock on Hand</text>
+                        <h1>{totalStockUnits} Units</h1>
+                    </div>
+                </div>
+
+                {/* Merchandise Inventory Management Panel */}
+                <div className='AdminLowerPaymentPanel'>
+                    <div className="merch-panel-header">
+                        <div>
+                            <h1 className='TransactionHistory-Title' style={{ margin: 0 }}>
+                                Physical Merchandise Catalog
+                            </h1>
+                            <p style={{ margin: "4px 0 0", color: "#64748b", fontSize: "0.82rem" }}>
+                                Official center merchandise (Tutorial Shirt & Tutorial Notebook) per fee rates schedule.
+                            </p>
+                        </div>
+                        <div className="merch-quick-header-actions">
+                            <button
+                                type="button"
+                                className="ActiveUser-Button"
+                                onClick={() => openAddMerchModal()}
+                            >
+                                + Add Product
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="payment-toolbar" style={{ marginTop: "14px" }}>
+                        <input
+                            type="text"
+                            placeholder="Search merchandise..."
+                            value={merchSearch}
+                            onChange={(e) => setMerchSearch(e.target.value)}
+                        />
+
+                        <div className="button-panel">
+                            {["All", "Apparel", "Stationery"].map(cat => (
+                                <button
+                                    key={cat}
+                                    type="button"
+                                    className={merchCategoryFilter === cat ? "active-filter" : ""}
+                                    onClick={() => setMerchCategoryFilter(cat)}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className='mainTable'>
+                        <table className='user-table'>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product Name & Category</th>
+                                    <th>Description</th>
+                                    <th>Unit Price</th>
+                                    <th>Stock Level</th>
+                                    <th>Units Sold</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredMerchandise.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="empty-row">
+                                            No merchandise items found matching your filters.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredMerchandise.map((item, idx) => (
+                                        <tr key={item.id}>
+                                            <td>{idx + 1}</td>
+                                            <td>
+                                                <div className="merch-name-cell">
+                                                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                                        <strong>{item.name}</strong>
+                                                        {item.size && <span className="merch-size-badge">Size: {item.size}</span>}
+                                                    </div>
+                                                    <span className="merch-cat-pill">{item.category || "Item"}</span>
+                                                </div>
+                                            </td>
+                                            <td style={{ maxWidth: "240px", fontSize: "0.82rem", color: "#64748b" }}>
+                                                {item.description || "—"}
+                                            </td>
+                                            <td>
+                                                <strong style={{ color: "#0f172a" }}>₱{item.price.toLocaleString()}</strong>
+                                            </td>
+                                            <td>
+                                                <span className={`stock-pill ${item.stock > 10 ? "in-stock" : item.stock > 0 ? "low-stock" : "out-of-stock"}`}>
+                                                    {item.stock > 10 ? `In Stock (${item.stock})` : item.stock > 0 ? `Low Stock (${item.stock})` : "Out of Stock (0)"}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span style={{ fontWeight: 600, color: "#1e293b" }}>{getUnitsSold(item)} sold</span>
+                                            </td>
+                                            <td>
+                                                <div className="action-buttons">
+                                                    <button
+                                                        type="button"
+                                                        className="btn-merch-action sell"
+                                                        disabled={item.stock <= 0}
+                                                        onClick={() => {
+                                                            setQuickSellItem(item);
+                                                            setQuickSellQty(1);
+                                                            setQuickSellCustomer("");
+                                                            setShowQuickSellModal(true);
+                                                        }}
+                                                    >
+                                                        Sell
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-merch-action restock"
+                                                        onClick={() => {
+                                                            setRestockTarget(item);
+                                                            setRestockAmount(10);
+                                                            setShowRestockModal(true);
+                                                        }}
+                                                    >
+                                                        Restock
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-merch-action edit"
+                                                        onClick={() => openAddMerchModal(item)}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="delete-button"
+                                                        onClick={() => handleDeleteMerchItem(item.id, item.name)}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        )}
 
         {
             showRefundModal && (
@@ -1489,21 +2297,26 @@ function AdminPayment(){
 
                     />
 
-                    <button
-                        disabled={loading}
-                        onClick={refundPayment}
-                    >
-                        {loading ? "Refunding..." : "Confirm Refund"}
-                    </button>
-
-                    <button
-                        onClick={()=>{
-                            setShowRefundModal(false);
-                            setSelectedPayment(null);
-                        }}
-                    >
-                        Cancel
-                    </button>
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={()=>{
+                                setShowRefundModal(false);
+                                setSelectedPayment(null);
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={loading}
+                            onClick={refundPayment}
+                        >
+                            {loading ? "Refunding..." : "Confirm Refund"}
+                        </button>
+                    </div>
 
                 </div>
 
@@ -1540,22 +2353,26 @@ function AdminPayment(){
                         student's subscription status. This cannot be undone.
                     </p>
 
-                    <button
-                        className="delete-button"
-                        disabled={deleting}
-                        onClick={deletePayment}
-                    >
-                        {deleting ? "Deleting..." : "Confirm Delete"}
-                    </button>
-
-                    <button
-                        onClick={()=>{
-                            setShowDeleteModal(false);
-                            setPaymentToDelete(null);
-                        }}
-                    >
-                        Cancel
-                    </button>
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={()=>{
+                                setShowDeleteModal(false);
+                                setPaymentToDelete(null);
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-danger"
+                            disabled={deleting}
+                            onClick={deletePayment}
+                        >
+                            {deleting ? "Deleting..." : "Confirm Delete"}
+                        </button>
+                    </div>
 
                 </div>
 

@@ -1,4 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+    Download,
+    FileText,
+    FileSpreadsheet,
+    X,
+    Banknote,
+    Calendar,
+    Star,
+    Users,
+    ShoppingBag,
+    Filter,
+    RotateCcw,
+    BookOpen
+} from "lucide-react";
 
 import {
     BarChart,
@@ -17,6 +31,7 @@ import {
 import { supabase } from "../../lib/supabase";
 
 import LogoImage from "../../assets/yosefLogo.jpg";
+import { getMerchandiseList } from "../../Services/merchandiseService";
 
 import "./adminReport.css";
 
@@ -32,18 +47,10 @@ const DATE_RANGE_LABELS = {
     "365": "Last Year"
 };
 
-const MONTHS = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-];
-
 const EMPTY_FILTERS = {
     subject: "",
     location: "",
     school: "",
-    ageMin: "",
-    ageMax: "",
-    birthMonth: "",
     grade: "",
     learningMode: "",
     learningTime: "",
@@ -52,12 +59,24 @@ const EMPTY_FILTERS = {
     tutorId: ""
 };
 
+const STATUS_COLORS = {
+    Confirmed: "#10b981",          // Emerald Green
+    Attended: "#2563eb",           // Modern Blue
+    Pending: "#f59e0b",            // Amber
+    "Reschedule Pending": "#8b5cf6", // Purple/Indigo
+    Cancelled: "#ef4444",          // Crimson/Red
+    Absent: "#64748b"              // Slate/Grey
+};
+
 const pieColors = [
-    "#315B78",
-    "#6C8EAD",
-    "#8FB3C9",
-    "#B7CAD8",
-    "#D9E3EA"
+    "#10b981",
+    "#2563eb",
+    "#f59e0b",
+    "#8b5cf6",
+    "#ef4444",
+    "#64748b",
+    "#06b6d4",
+    "#ec4899"
 ];
 
 
@@ -187,29 +206,7 @@ function matchesFilters(student, filters) {
         return false;
     }
 
-    // Birthday month
-    if (
-        filters.birthMonth &&
-        student.birthMonth !== Number(filters.birthMonth)
-    ) {
-        return false;
-    }
 
-    // Age range (students without a birthdate are excluded
-    // whenever an age filter is set)
-    if (
-        filters.ageMin !== "" &&
-        (student.age === null || student.age < Number(filters.ageMin))
-    ) {
-        return false;
-    }
-
-    if (
-        filters.ageMax !== "" &&
-        (student.age === null || student.age > Number(filters.ageMax))
-    ) {
-        return false;
-    }
 
     return true;
 
@@ -223,8 +220,31 @@ function AdminReport() {
     // ==========================================
 
     const [loading, setLoading] = useState(true);
+    const reportContentRef = useRef(null);
 
     const [exporting, setExporting] = useState(false);
+
+    const [showExportModal, setShowExportModal] = useState(false);
+
+    const [exportFormat, setExportFormat] = useState("excel_pdf");
+
+    const [selectedSheets, setSelectedSheets] = useState({
+        summary: true,
+        payments: true,
+        sessions: true,
+        ratings: true,
+        students: true,
+        merchandise: true,
+        tutors: true
+    });
+
+    const [adminUser, setAdminUser] = useState({
+        name: "Admin",
+        role: "Admin",
+        email: ""
+    });
+
+    const [reporterName, setReporterName] = useState("");
 
     const [dateRange, setDateRange] = useState("30");
 
@@ -352,11 +372,12 @@ function AdminReport() {
                     `)
                     .eq("Role", "Student"),
 
-                // TUTORS (for names + tutor filter)
+                // TUTORS (for profiles, names + tutor filter)
                 supabase
                     .from("users")
-                    .select("id, Name")
+                    .select("id, Name, Email, Status, Joined, Role")
                     .eq("Role", "Tutor")
+                    .order("Name", { ascending: true })
 
             ]);
 
@@ -488,13 +509,48 @@ function AdminReport() {
             subjects: uniqueSorted(students.flatMap(s => s.subjectList)),
             grades: uniqueSorted(students.map(s => s.Grade_Level)),
             modes: uniqueSorted(students.map(s => s.Learning_Mode)),
-            times: uniqueSorted(students.map(s => s.Learning_Time)),
+            times: uniqueSorted(students.map(s => s.Learning_Time)).filter(t => t && t.toLowerCase() !== "evening"),
             statuses: uniqueSorted(students.map(s => s.Status)),
             locationSuggestions
         };
 
     }, [students]);
 
+
+
+    // ==========================================
+    // LOAD CURRENT LOGGED-IN ADMIN USER
+    // ==========================================
+
+    useEffect(() => {
+        async function loadAdminProfile() {
+            try {
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                if (user && !authError) {
+                    const { data: userData } = await supabase
+                        .from("users")
+                        .select("id, Name, Role, Email")
+                        .eq("auth_id", user.id)
+                        .single();
+
+                    if (userData?.Name) {
+                        const isStudent = (userData.Role || "").toLowerCase() === "student";
+                        const name = isStudent ? "Admin Office" : userData.Name;
+                        const role = isStudent ? "Administrator" : (userData.Role || "Admin");
+                        setAdminUser({
+                            name,
+                            role,
+                            email: userData.Email || user.email || ""
+                        });
+                        setReporterName(`${name} (${role})`);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to load admin profile for report:", error);
+            }
+        }
+        loadAdminProfile();
+    }, []);
 
     // ==========================================
     // DERIVED: APPLY FILTERS
@@ -513,24 +569,13 @@ function AdminReport() {
         if (filters.school.trim())
             list.push({ label: "School contains", value: filters.school.trim() });
 
-        if (filters.ageMin !== "" || filters.ageMax !== "") {
-            const from = filters.ageMin !== "" ? filters.ageMin : "any";
-            const to = filters.ageMax !== "" ? filters.ageMax : "any";
 
-            list.push({ label: "Age", value: `${from} to ${to}` });
-        }
-
-        if (filters.birthMonth)
-            list.push({
-                label: "Birthday month",
-                value: MONTHS[Number(filters.birthMonth) - 1]
-            });
 
         if (filters.grade)
             list.push({ label: "Grade", value: filters.grade });
 
         if (filters.learningMode)
-            list.push({ label: "Learning mode", value: filters.learningMode });
+            list.push({ label: "Learning Modality", value: filters.learningMode });
 
         if (filters.learningTime)
             list.push({ label: "Learning time", value: filters.learningTime });
@@ -681,8 +726,101 @@ function AdminReport() {
         );
 
 
+        // ---------- MERCHANDISE & INVENTORY STATS ----------
+        const catalogList = getMerchandiseList();
+
+        function isMerchService(serviceStr) {
+            if (!serviceStr) return false;
+            const sLower = serviceStr.toLowerCase();
+            if (sLower.includes("shirt") || sLower.includes("t-shirt") || sLower.includes("notebook")) {
+                return true;
+            }
+            return catalogList.some(m => sLower.includes((m.name || "").toLowerCase()));
+        }
+
+        const merchandisePayments = completedPayments.filter(p => isMerchService(p.service));
+        const academicPayments = completedPayments.filter(p => !isMerchService(p.service));
+
+        const merchandiseRevenue = merchandisePayments.reduce(
+            (sum, p) => sum + Number(p.amount || 0),
+            0
+        );
+        const academicRevenue = academicPayments.reduce(
+            (sum, p) => sum + Number(p.amount || 0),
+            0
+        );
+
+        function matchItemToPayment(item, serviceStr) {
+            if (!serviceStr) return false;
+            const pLower = serviceStr.toLowerCase();
+            const sLower = item.name.toLowerCase();
+            const itemSize = (item.size || "").toLowerCase();
+
+            if (pLower.includes(sLower)) return true;
+            if (itemSize && (pLower.includes("shirt") || pLower.includes("t-shirt"))) {
+                const sizeMatch = pLower.match(/\b(xs|xl|2xl|s|m|l)\b/i);
+                if (sizeMatch) {
+                    return sizeMatch[1].toLowerCase() === itemSize;
+                }
+                if (itemSize === "m") return true;
+            }
+            if (sLower.includes("notebook") && pLower.includes("notebook")) return true;
+            return false;
+        }
+
+        const merchandiseSummary = catalogList.map(item => {
+            let unitsSold = 0;
+            let periodRevenue = 0;
+            merchandisePayments.forEach(p => {
+                if (matchItemToPayment(item, p.service)) {
+                    const match = (p.service || "").match(/\(x(\d+)\)/);
+                    const qty = match ? parseInt(match[1], 10) : 1;
+                    unitsSold += qty;
+                    periodRevenue += Number(p.amount || 0);
+                }
+            });
+            return {
+                ...item,
+                unitsSold,
+                periodRevenue
+            };
+        });
+
+        const totalMerchUnitsSold = merchandiseSummary.reduce((sum, m) => sum + m.unitsSold, 0);
+        const totalMerchStock = catalogList.reduce((sum, m) => sum + (Number(m.stock) || 0), 0);
+
+        const tutorsList = (raw.tutors || []).map(tutor => {
+            const assignedStudents = raw.students.filter(s => {
+                const det = Array.isArray(s.user_details) ? s.user_details[0] || {} : s.user_details || {};
+                return Number(det.Tutor_ID) === Number(tutor.id);
+            });
+            const tutorSessions = raw.sessions.filter(s => Number(s.tutor_id) === Number(tutor.id));
+            const tutorRatings = raw.ratings.filter(r => Number(r.Tutor_ID) === Number(tutor.id) && r.Rating !== null && r.Rating !== undefined);
+            const avgScore = tutorRatings.length
+                ? Number((tutorRatings.reduce((sum, r) => sum + Number(r.Rating), 0) / tutorRatings.length).toFixed(1))
+                : null;
+
+            return {
+                id: tutor.id,
+                Name: tutor.Name,
+                Email: tutor.Email || "—",
+                Status: tutor.Status || "Active",
+                Joined: tutor.Joined || null,
+                assignedStudentsCount: assignedStudents.length,
+                sessionsCount: tutorSessions.length,
+                avgRating: avgScore !== null ? `${avgScore} / 5.0` : "No ratings yet"
+            };
+        });
+
         return {
             revenue: totalRevenue,
+            academicRevenue,
+            merchandiseRevenue,
+            totalMerchUnitsSold,
+            totalMerchStock,
+            merchandiseList: merchandiseSummary,
+            merchandisePayments,
+
             sessions: sessionsData.length,
             avgRating: Number(averageRating.toFixed(1)),
             newEnrollments: enrollmentsData.length,
@@ -694,7 +832,8 @@ function AdminReport() {
             sessionsData,
             ratingsData,
             enrollmentsData,
-            studentsList: filteredStudents
+            studentsList: filteredStudents,
+            tutorsList
         };
 
     }, [
@@ -704,6 +843,116 @@ function AdminReport() {
         studentById,
         tutorNameById
     ]);
+
+
+    // ==========================================
+    // EXPORT SHEET SELECTION DEFINITIONS & ACTIONS
+    // ==========================================
+
+    const sheetDefinitions = useMemo(() => [
+        {
+            id: "summary",
+            sheetNum: "1",
+            title: "Executive KPI Summary",
+            description: "High-level performance metrics, revenue sums, and report audit metadata",
+            count: 6,
+            unit: "metrics"
+        },
+        {
+            id: "payments",
+            sheetNum: "2",
+            title: "Completed Payments",
+            description: "Student payment transactions, amounts (PHP), and subscription dates",
+            count: reportData.completedPayments.length,
+            unit: "records"
+        },
+        {
+            id: "sessions",
+            sheetNum: "3",
+            title: "Sessions Schedule & Activity",
+            description: "Scheduled and completed tutorial sessions, tutor assignments, and times",
+            count: reportData.sessionsData.length,
+            unit: "records"
+        },
+        {
+            id: "ratings",
+            sheetNum: "4",
+            title: "Session Ratings & Evaluations",
+            description: "Student reviews, tutor performance scores, and evaluation dates",
+            count: reportData.ratingsData.length,
+            unit: "evaluations"
+        },
+        {
+            id: "students",
+            sheetNum: "5",
+            title: "Student Roster & Academic Profiles",
+            description: "Demographics, birthdates, locations, grade levels, and subjects",
+            count: filteredStudents.length,
+            unit: "profiles"
+        },
+        {
+            id: "merchandise",
+            sheetNum: "6",
+            title: "Physical Merchandise & Inventory",
+            description: "Tutorial Shirts (XS-XL), notebooks, inventory stock levels, and sales transactions",
+            count: (reportData.merchandiseList || []).length,
+            unit: "products"
+        },
+        {
+            id: "tutors",
+            sheetNum: "7",
+            title: "Tutor Profiles & Faculty Performance",
+            description: "Faculty roster, active assigned student caseloads, delivered sessions, and evaluation scores",
+            count: (reportData.tutorsList || []).length,
+            unit: "tutors"
+        }
+    ], [reportData, filteredStudents]);
+
+    const selectedSheetCount = useMemo(() => {
+        return Object.values(selectedSheets).filter(Boolean).length;
+    }, [selectedSheets]);
+
+    function toggleSheet(id) {
+        setSelectedSheets(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
+    }
+
+    function selectOnlySheet(id, e) {
+        if (e) e.stopPropagation();
+        setSelectedSheets({
+            summary: id === "summary",
+            payments: id === "payments",
+            sessions: id === "sessions",
+            ratings: id === "ratings",
+            students: id === "students",
+            merchandise: id === "merchandise",
+            tutors: id === "tutors"
+        });
+    }
+
+    function selectAllSheets() {
+        setSelectedSheets({
+            summary: true,
+            payments: true,
+            sessions: true,
+            ratings: true,
+            students: true,
+            merchandise: true
+        });
+    }
+
+    function deselectAllSheets() {
+        setSelectedSheets({
+            summary: false,
+            payments: false,
+            sessions: false,
+            ratings: false,
+            students: false,
+            merchandise: false
+        });
+    }
 
 
     // ==========================================
@@ -769,44 +1018,74 @@ function AdminReport() {
 
 
     // ==========================================
-    // EXPORT PDF
+    // EXPORT REPORT (PDF OR EXCEL)
     // ==========================================
 
-    async function exportReportData() {
+    async function handleExecuteExport() {
+        if (exportFormat !== "pdf" && selectedSheetCount === 0) {
+            alert("Please select at least one sheet to export.");
+            return;
+        }
 
         setExporting(true);
 
+        const finalReporter = reporterName.trim() || `${adminUser.name} (${adminUser.role})`;
+        const stamp = new Date().toISOString().split("T")[0];
+
+        // Determine filename suffix if only 1 sheet is selected
+        const singleSheetId = selectedSheetCount === 1 ? Object.keys(selectedSheets).find(k => selectedSheets[k]) : null;
+        const sheetNameMap = {
+            summary: "KPI_Summary",
+            payments: "Completed_Payments",
+            sessions: "Sessions_Schedule",
+            ratings: "Session_Ratings",
+            students: "Student_Roster",
+            merchandise: "Merchandise_Inventory",
+            tutors: "Tutor_Profiles"
+        };
+        const sheetSuffix = singleSheetId ? `_${sheetNameMap[singleSheetId] || singleSheetId}_Only` : "";
+
         try {
+            if (exportFormat === "excel_pdf") {
+                // Generate Excel-formatted PDF with spreadsheet gridlines & tables
+                const { generateExcelStyledPdf } = await import("../../lib/reportExcelPdf");
 
-            // loaded on demand so jsPDF is not part of the initial bundle
-            const { generateReportPdf } =
-                await import("../../lib/reportPdf");
+                await generateExcelStyledPdf({
+                    reportData,
+                    dateRangeLabel: DATE_RANGE_LABELS[dateRange],
+                    appliedFilters,
+                    matchedStudentCount: filteredStudents.length,
+                    reporterName: finalReporter,
+                    selectedSheets,
+                    fileName:
+                        `YOSEF${sheetSuffix}_Spreadsheet_Report_${dateRange}_Days` +
+                        `${filtersActive ? "_Filtered" : ""}_${stamp}.pdf`
+                });
+            } else {
+                // Generate raw Excel .xlsx file
+                const { generateReportExcel } = await import("../../lib/reportExcel");
 
-            const stamp = new Date().toISOString().split("T")[0];
+                await generateReportExcel({
+                    reportData,
+                    dateRangeLabel: DATE_RANGE_LABELS[dateRange],
+                    appliedFilters,
+                    matchedStudentCount: filteredStudents.length,
+                    reportedBy: finalReporter,
+                    reporterRole: adminUser.role,
+                    selectedSheets,
+                    fileName:
+                        `YOSEF${sheetSuffix}_Report_Last_${dateRange}_Days` +
+                        `${filtersActive ? "_Filtered" : ""}_${stamp}.xlsx`
+                });
+            }
 
-            await generateReportPdf({
-                reportData,
-                dateRangeLabel: DATE_RANGE_LABELS[dateRange],
-                appliedFilters,
-                matchedStudentCount: filteredStudents.length,
-                logoSrc: LogoImage,
-                fileName:
-                    `YOSEF_Report_Last_${dateRange}_Days` +
-                    `${filtersActive ? "_Filtered" : ""}_${stamp}.pdf`
-            });
-
+            setShowExportModal(false);
         } catch (error) {
-
-            console.error("PDF export error:", error);
-
-            alert("Unable to generate the PDF report. Please try again.");
-
+            console.error("Export error:", error);
+            alert(`Unable to generate the ${exportFormat === "excel" ? "Excel" : "PDF"} report. Please try again.`);
         } finally {
-
             setExporting(false);
-
         }
-
     }
 
 
@@ -887,23 +1166,6 @@ function AdminReport() {
                         )}
                     </select>
 
-                    <select
-                        value={filters.subject}
-                        onChange={event =>
-                            updateFilter("subject", event.target.value)
-                        }
-                    >
-                        <option value="">
-                            All Subjects
-                        </option>
-
-                        {filterOptions.subjects.map(subject => (
-                            <option key={subject} value={subject}>
-                                {subject}
-                            </option>
-                        ))}
-                    </select>
-
                     <button
                         type="button"
                         className="report-more-button"
@@ -911,7 +1173,8 @@ function AdminReport() {
                             setShowMoreFilters(previous => !previous)
                         }
                     >
-                        {showMoreFilters ? "Hide filters" : "More filters"}
+                        <Filter size={15} />
+                        <span>{showMoreFilters ? "Hide filters" : "More filters"}</span>
 
                         {filtersActive && (
                             <span className="report-filter-badge">
@@ -926,18 +1189,25 @@ function AdminReport() {
                             className="report-reset-button"
                             onClick={resetFilters}
                         >
-                            Reset
+                            <RotateCcw size={14} />
+                            <span>Reset</span>
                         </button>
                     )}
 
                 </div>
 
                 <button
+                    type="button"
                     className="export-report-button"
-                    onClick={exportReportData}
-                    disabled={exporting}
+                    onClick={() => {
+                        if (!reporterName) {
+                            setReporterName(`${adminUser.name} (${adminUser.role})`);
+                        }
+                        setShowExportModal(true);
+                    }}
                 >
-                    {exporting ? "Generating PDF..." : "↓ Export PDF"}
+                    <Download size={16} />
+                    <span>Export Report</span>
                 </button>
 
             </div>
@@ -989,51 +1259,7 @@ function AdminReport() {
                             />
                         </div>
 
-                        {/* AGE */}
-                        <div className="report-filter-field">
-                            <label>Age (from – to)</label>
-                            <div className="report-age-range">
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="99"
-                                    placeholder="Min"
-                                    value={filters.ageMin}
-                                    onChange={event =>
-                                        updateFilter("ageMin", event.target.value)
-                                    }
-                                />
-                                <span>–</span>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="99"
-                                    placeholder="Max"
-                                    value={filters.ageMax}
-                                    onChange={event =>
-                                        updateFilter("ageMax", event.target.value)
-                                    }
-                                />
-                            </div>
-                        </div>
 
-                        {/* BIRTHDAY MONTH */}
-                        <div className="report-filter-field">
-                            <label>Birthday month</label>
-                            <select
-                                value={filters.birthMonth}
-                                onChange={event =>
-                                    updateFilter("birthMonth", event.target.value)
-                                }
-                            >
-                                <option value="">Any month</option>
-                                {MONTHS.map((month, index) => (
-                                    <option key={month} value={index + 1}>
-                                        {month}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
 
                         {/* GRADE */}
                         <div className="report-filter-field">
@@ -1053,16 +1279,18 @@ function AdminReport() {
                             </select>
                         </div>
 
-                        {/* LEARNING MODE */}
+
+
+                                                {/* LEARNING MODALITY */}
                         <div className="report-filter-field">
-                            <label>Learning mode</label>
+                            <label>Learning modality</label>
                             <select
                                 value={filters.learningMode}
                                 onChange={event =>
                                     updateFilter("learningMode", event.target.value)
                                 }
                             >
-                                <option value="">All modes</option>
+                                <option value="">All modalities</option>
                                 {filterOptions.modes.map(mode => (
                                     <option key={mode} value={mode}>
                                         {mode}
@@ -1148,119 +1376,117 @@ function AdminReport() {
 
 
             {/* ==================================
-                FILTER SUMMARY
+                REPORT DASHBOARD SNAPSHOT AREA
             ================================== */}
+            <div className="report-content-snapshot" ref={reportContentRef}>
 
-            {filtersActive && (
+                {/* ACTIVE PROFILE FILTERS (IF APPLIED) */}
+                {filtersActive && (
+                    <div className="report-snapshot-filters">
+                        <span className="snapshot-filter-title">Active Profile Filters:</span>
+                        {appliedFilters.map((f, i) => (
+                            <span key={i} className="snapshot-filter-tag">
+                                <strong>{f.label}:</strong> {f.value}
+                            </span>
+                        ))}
+                    </div>
+                )}
 
-                <div className="report-filter-summary">
+                {/* FILTER SUMMARY */}
+                {filtersActive && (
+                    <div className="report-filter-summary">
+                        <strong>
+                            {filteredStudents.length}
+                        </strong>
+                        {" "}student{filteredStudents.length === 1 ? "" : "s"} match
+                        {filteredStudents.length === 1 ? "es" : ""} your filters.
+                        Revenue, sessions, ratings and enrollments below only
+                        include these students.
+                    </div>
+                )}
 
-                    <strong>
-                        {filteredStudents.length}
-                    </strong>
-                    {" "}student{filteredStudents.length === 1 ? "" : "s"} match
-                    {filteredStudents.length === 1 ? "es" : ""} your filters.
-                    Revenue, sessions, ratings and enrollments below only
-                    include these students.
-
-                </div>
-
-            )}
-
-
-            {/* ==================================
-                KPI CARDS
-            ================================== */}
+                {/* ==================================
+                    KPI CARDS
+                ================================== */}
 
             <div className="report-kpi-grid">
 
                 <div className="report-kpi-card">
-
                     <div className="kpi-card-top">
-
-                        <span>
-                            Total Revenue
-                        </span>
-
-                        <span className="kpi-icon">
-                            ₱
-                        </span>
-
+                        <span>Total Revenue</span>
+                        <div className="kpi-icon-pill kpi-icon-emerald">
+                            <Banknote size={17} />
+                        </div>
                     </div>
-
                     <h2>
-                        {formatCurrency(
-                            reportData.revenue
-                        )}
+                        {formatCurrency(reportData.revenue)}
                     </h2>
-
+                    <div className="kpi-subtitle">
+                        From completed payments
+                    </div>
                 </div>
 
-
                 <div className="report-kpi-card">
-
                     <div className="kpi-card-top">
-
-                        <span>
-                            Total Sessions
-                        </span>
-
-                        <span className="kpi-icon">
-                            ◫
-                        </span>
-
+                        <span>Total Sessions</span>
+                        <div className="kpi-icon-pill kpi-icon-blue">
+                            <Calendar size={17} />
+                        </div>
                     </div>
-
                     <h2>
                         {reportData.sessions.toLocaleString()}
                     </h2>
-
+                    <div className="kpi-subtitle">
+                        Schedule volume & activity
+                    </div>
                 </div>
 
-
                 <div className="report-kpi-card">
-
                     <div className="kpi-card-top">
-
-                        <span>
-                            Avg. Tutor Rating
-                        </span>
-
-                        <span className="kpi-icon">
-                            ☆
-                        </span>
-
+                        <span>Avg. Tutor Rating</span>
+                        <div className="kpi-icon-pill kpi-icon-amber">
+                            <Star size={17} />
+                        </div>
                     </div>
-
                     <h2>
                         {reportData.avgRating}
-
                         <span className="rating-small">
-                            /5.0
+                            / 5.0
                         </span>
                     </h2>
-
+                    <div className="kpi-subtitle">
+                        Student evaluations
+                    </div>
                 </div>
 
-
                 <div className="report-kpi-card">
-
                     <div className="kpi-card-top">
-
-                        <span>
-                            New Enrollments
-                        </span>
-
-                        <span className="kpi-icon">
-                            ♙
-                        </span>
-
+                        <span>New Enrollments</span>
+                        <div className="kpi-icon-pill kpi-icon-purple">
+                            <Users size={17} />
+                        </div>
                     </div>
-
                     <h2>
                         {reportData.newEnrollments.toLocaleString()}
                     </h2>
+                    <div className="kpi-subtitle">
+                        Active student profiles
+                    </div>
+                </div>
 
+                <div className="report-kpi-card">
+                    <div className="kpi-card-top">
+                        <span>Merchandise Sales</span>
+                        <div className="kpi-icon-pill kpi-icon-indigo">
+                            <ShoppingBag size={17} />
+                        </div>
+                    </div>
+                    <h2>
+                        {formatCurrency(reportData.merchandiseRevenue || 0)}
+                    </h2>
+                    <div className="kpi-subtitle">
+                        <strong>{reportData.totalMerchUnitsSold || 0}</strong> sold • <strong>{reportData.totalMerchStock || 0}</strong> in stock
+                    </div>
                 </div>
 
             </div>
@@ -1319,31 +1545,45 @@ function AdminReport() {
 
                                 <BarChart
                                     data={reportData.revenueByMonth}
+                                    margin={{ top: 12, right: 16, left: 10, bottom: 4 }}
                                 >
-
                                     <CartesianGrid
                                         strokeDasharray="3 3"
                                         vertical={false}
+                                        stroke="#f1f5f9"
                                     />
-
                                     <XAxis
                                         dataKey="month"
+                                        tick={{ fill: "#64748b", fontSize: 12 }}
+                                        axisLine={{ stroke: "#e2e8f0" }}
+                                        tickLine={false}
                                     />
-
-                                    <YAxis />
-
+                                    <YAxis
+                                        tick={{ fill: "#64748b", fontSize: 12 }}
+                                        axisLine={{ stroke: "#e2e8f0" }}
+                                        tickLine={false}
+                                        tickFormatter={val => `₱${Number(val).toLocaleString()}`}
+                                    />
                                     <Tooltip
-                                        formatter={value =>
-                                            formatCurrency(value)
-                                        }
+                                        formatter={value => [formatCurrency(value), "Total Revenue"]}
+                                        contentStyle={{
+                                            backgroundColor: "#1e293b",
+                                            color: "#ffffff",
+                                            borderRadius: "8px",
+                                            border: "none",
+                                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                            fontSize: "12px",
+                                            padding: "8px 12px"
+                                        }}
+                                        itemStyle={{ color: "#ffffff" }}
+                                        labelStyle={{ color: "#94a3b8", fontWeight: 600, marginBottom: "4px" }}
                                     />
-
                                     <Bar
                                         dataKey="revenue"
-                                        radius={[4, 4, 0, 0]}
-                                        fill="#315B78"
+                                        maxBarSize={48}
+                                        radius={[6, 6, 0, 0]}
+                                        fill="#2563eb"
                                     />
-
                                 </BarChart>
 
                             </ResponsiveContainer>
@@ -1398,9 +1638,10 @@ function AdminReport() {
                                         dataKey="value"
                                         nameKey="name"
                                         cx="50%"
-                                        cy="45%"
-                                        outerRadius={85}
-                                        label={({ name, value }) => `${name}: ${value}`}
+                                        cy="42%"
+                                        innerRadius={50}
+                                        outerRadius={80}
+                                        paddingAngle={3}
                                     >
 
                                         {reportData.sessionsByStatus.map(
@@ -1408,6 +1649,7 @@ function AdminReport() {
                                                 <Cell
                                                     key={`cell-${index}`}
                                                     fill={
+                                                        STATUS_COLORS[entry.name] ||
                                                         pieColors[
                                                             index %
                                                             pieColors.length
@@ -1419,9 +1661,31 @@ function AdminReport() {
 
                                     </Pie>
 
-                                    <Tooltip />
+                                    <Tooltip
+                                        formatter={(val, name) => [`${val} sessions`, name]}
+                                        contentStyle={{
+                                            backgroundColor: "#1e293b",
+                                            color: "#ffffff",
+                                            borderRadius: "8px",
+                                            border: "none",
+                                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                            fontSize: "12px",
+                                            padding: "8px 12px"
+                                        }}
+                                        itemStyle={{ color: "#ffffff" }}
+                                    />
 
-                                    <Legend />
+                                    <Legend
+                                        verticalAlign="bottom"
+                                        iconType="circle"
+                                        iconSize={8}
+                                        wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }}
+                                        formatter={(value, entry) => (
+                                            <span style={{ color: "#334155", fontSize: "12px", fontWeight: 500, marginRight: "8px" }}>
+                                                {value}: <strong style={{ color: "#0f172a" }}>{entry.payload.value}</strong>
+                                            </span>
+                                        )}
+                                    />
 
                                 </PieChart>
 
@@ -1435,8 +1699,165 @@ function AdminReport() {
 
             </div>
 
-
             {/* ==================================
+                PHYSICAL MERCHANDISE & INVENTORY PERFORMANCE
+            ================================== */}
+            <div className="report-merch-section">
+                <div className="report-merch-header">
+                    <div>
+                        <h3>Physical Merchandise & Inventory Performance</h3>
+                        <p>Official center merchandise sales (Tutorial Shirts & Notebooks) and current stock levels</p>
+                    </div>
+                    <div className="report-merch-badges">
+                        <span className="merch-stat-chip highlight">
+                            🛍️ <strong>{formatCurrency(reportData.merchandiseRevenue || 0)}</strong> Merch Sales
+                        </span>
+                        <span className="merch-stat-chip">
+                            📦 <strong>{reportData.totalMerchStock || 0}</strong> Items in Stock
+                        </span>
+                    </div>
+                </div>
+
+                <div className="report-table-wrapper" style={{ maxHeight: "360px" }}>
+                    <table className="report-details-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product & Variant</th>
+                                <th>Category</th>
+                                <th>Unit Price</th>
+                                <th>Current Stock</th>
+                                <th>Units Sold ({DATE_RANGE_LABELS[dateRange]})</th>
+                                <th>Revenue Generated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(reportData.merchandiseList || []).map((item, idx) => (
+                                <tr key={item.id}>
+                                    <td>{idx + 1}</td>
+                                    <td>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                            <strong>{item.name}</strong>
+                                            {item.size && <span className="merch-size-badge">Size: {item.size}</span>}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className="merch-cat-pill">{item.category}</span>
+                                    </td>
+                                    <td>
+                                        <strong>₱{item.price.toLocaleString()}</strong>
+                                    </td>
+                                    <td>
+                                        <span className={`stock-pill ${item.stock > 10 ? "in-stock" : item.stock > 0 ? "low-stock" : "out-of-stock"}`}>
+                                            {item.stock > 10 ? `${item.stock} in stock` : item.stock > 0 ? `Low (${item.stock})` : "Out of stock (0)"}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>{item.unitsSold || 0} units</strong>
+                                    </td>
+                                    <td className="report-amount">
+                                        {formatCurrency(item.periodRevenue || 0)}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                            <tr className="report-table-total-row">
+                                <td colSpan={4} style={{ textAlign: "right", fontWeight: 700 }}>
+                                    Catalog Total:
+                                </td>
+                                <td>
+                                    <strong>{reportData.totalMerchStock || 0} in stock</strong>
+                                </td>
+                                <td>
+                                    <strong>{reportData.totalMerchUnitsSold || 0} sold</strong>
+                                </td>
+                                <td className="report-amount" style={{ fontWeight: 800, color: "#1e40af" }}>
+                                    {formatCurrency(reportData.merchandiseRevenue || 0)}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+                            {/* ==================================
+                TUTOR PROFILES & FACULTY PERFORMANCE
+            ================================== */}
+            <div className="report-merch-section report-tutor-section" style={{ marginTop: "24px" }}>
+                <div className="report-merch-header">
+                    <div>
+                        <h3>Tutor Profiles & Faculty Performance</h3>
+                        <p>Official faculty roster, assigned student caseloads, sessions delivered, and student ratings</p>
+                    </div>
+                    <div className="report-merch-badges">
+                        <span className="merch-stat-chip highlight">
+                            🧑‍🏫 <strong>{(reportData.tutorsList || []).length}</strong> Active Tutors
+                        </span>
+                        <span className="merch-stat-chip">
+                            ⭐ <strong>{reportData.avgRating || 0} / 5.0</strong> Center Rating
+                        </span>
+                    </div>
+                </div>
+
+                <div className="report-table-wrapper" style={{ maxHeight: "360px" }}>
+                    <table className="report-details-table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: "40px" }}>#</th>
+                                <th>Tutor Name</th>
+                                <th>Email Address</th>
+                                <th>Account Status</th>
+                                <th>Date Joined</th>
+                                <th>Assigned Students</th>
+                                <th>Total Sessions</th>
+                                <th>Average Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(reportData.tutorsList || []).length === 0 ? (
+                                <tr>
+                                    <td colSpan={8} style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>
+                                        No tutor records found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                (reportData.tutorsList || []).map((tutor, idx) => (
+                                    <tr key={tutor.id}>
+                                        <td>{idx + 1}</td>
+                                        <td><strong>{tutor.Name}</strong></td>
+                                        <td>{tutor.Email}</td>
+                                        <td>
+                                            <span className={`status ${String(tutor.Status).toLowerCase() === "active" ? "active" : "inactive"}`}>
+                                                {tutor.Status}
+                                            </span>
+                                        </td>
+                                        <td>{formatDate(tutor.Joined)}</td>
+                                        <td><strong>{tutor.assignedStudentsCount}</strong> students</td>
+                                        <td>{tutor.sessionsCount} sessions</td>
+                                        <td><strong style={{ color: "#2563eb" }}>{tutor.avgRating}</strong></td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+                {/* SNAPSHOT FOOTER */}
+                <div className="report-snapshot-footer">
+                    <div>
+                        <strong>YOSEF Tutorial Center</strong> • Confidential Institutional Analytics
+                    </div>
+                    <div>
+                        Certified & Verified by: <strong>{reporterName || `${adminUser.name} (${adminUser.role})`}</strong>
+                    </div>
+                </div>
+
+            </div>
+
+
+{/* ==================================
                 REVENUE DETAILS MODAL
             ================================== */}
 
@@ -1483,32 +1904,26 @@ function AdminReport() {
                         </div>
 
 
-                        <div className="report-modal-summary">
+                        <div className="report-modal-summary" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px" }}>
 
                             <div>
-
-                                <span>
-                                    Total Revenue
-                                </span>
-
-                                <strong>
-                                    {formatCurrency(
-                                        reportData.revenue
-                                    )}
-                                </strong>
-
+                                <span>Total Revenue</span>
+                                <strong>{formatCurrency(reportData.revenue)}</strong>
                             </div>
 
                             <div>
+                                <span>Academic Subscriptions</span>
+                                <strong style={{ color: "#2563eb" }}>{formatCurrency(reportData.academicRevenue || 0)}</strong>
+                            </div>
 
-                                <span>
-                                    Transactions
-                                </span>
+                            <div>
+                                <span>Physical Merchandise</span>
+                                <strong style={{ color: "#059669" }}>{formatCurrency(reportData.merchandiseRevenue || 0)}</strong>
+                            </div>
 
-                                <strong>
-                                    {reportData.completedPayments.length}
-                                </strong>
-
+                            <div>
+                                <span>Total Transactions</span>
+                                <strong>{reportData.completedPayments.length}</strong>
                             </div>
 
                         </div>
@@ -1530,8 +1945,9 @@ function AdminReport() {
                                     <thead>
 
                                         <tr>
-                                            <th>Payment ID</th>
-                                            <th>Student</th>
+                                            <th style={{ width: "40px" }}>#</th>
+                                            <th>Service / Item</th>
+                                            <th>Customer / Student</th>
                                             <th>Amount</th>
                                             <th>Payment Date</th>
                                             <th>Status</th>
@@ -1542,12 +1958,16 @@ function AdminReport() {
                                     <tbody>
 
                                         {reportData.completedPayments.map(
-                                            payment => (
+                                            (payment, idx) => (
 
                                                 <tr key={payment.payment_id}>
 
                                                     <td>
-                                                        #{payment.payment_id}
+                                                        {idx + 1}
+                                                    </td>
+
+                                                    <td>
+                                                        <strong>{payment.service || "Tutoring Subscription"}</strong>
                                                     </td>
 
                                                     <td>
@@ -1591,6 +2011,239 @@ function AdminReport() {
 
             )}
 
+
+            {/* ==================================
+                EXPORT REPORT OPTIONS MODAL
+            ================================== */}
+            {showExportModal && (
+                <div className="app-modal-overlay" onClick={() => !exporting && setShowExportModal(false)}>
+                    <div className="app-modal-card export-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="app-modal-header">
+                            <div className="app-modal-header-text">
+                                <h2>Export Analytics Report</h2>
+                                <p>Select your export format and verify reporting credentials</p>
+                            </div>
+                            <button
+                                type="button"
+                                className="app-modal-close"
+                                onClick={() => setShowExportModal(false)}
+                                disabled={exporting}
+                                aria-label="Close dialog"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="app-modal-body">
+                            {/* Format Selection Cards */}
+                            <div className="form-group">
+                                <label className="form-label" style={{ fontWeight: 700 }}>Choose Export Format</label>
+                                <div className="export-format-grid">
+                                    <div
+                                        className={`export-format-card ${exportFormat === "excel_pdf" ? "active" : ""}`}
+                                        onClick={() => setExportFormat("excel_pdf")}
+                                        role="button"
+                                        tabIndex={0}
+                                    >
+                                        <span className="export-badge-pill">Recommended</span>
+                                        <div className="export-format-icon excel-pdf-icon">
+                                            <FileSpreadsheet size={26} />
+                                        </div>
+                                        <div className="export-format-info">
+                                            <h4>Excel-Style Report (.pdf)</h4>
+                                            <p>Spreadsheet format with gridlines, complete audit tables & financial sums, saved directly as PDF.</p>
+                                        </div>
+                                        <div className={`format-radio-dot ${exportFormat === "excel_pdf" ? "selected" : ""}`} />
+                                    </div>
+
+
+
+                                    <div
+                                        className={`export-format-card ${exportFormat === "excel" ? "active" : ""}`}
+                                        onClick={() => setExportFormat("excel")}
+                                        role="button"
+                                        tabIndex={0}
+                                    >
+                                        <div className="export-format-icon excel-icon">
+                                            <FileSpreadsheet size={26} />
+                                        </div>
+                                        <div className="export-format-info">
+                                            <h4>Excel Workbook (.xlsx)</h4>
+                                            <p>Raw multi-sheet spreadsheet workbook with dedicated sheets for MS Excel or Google Sheets.</p>
+                                        </div>
+                                        <div className={`format-radio-dot ${exportFormat === "excel" ? "selected" : ""}`} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Sheet Selection Section */}
+                                <div className="form-group sheet-selection-group">
+                                    <div className="sheet-selection-header">
+                                        <div>
+                                            <label className="form-label" style={{ fontWeight: 700, margin: 0 }}>
+                                                Select Sheets to Include
+                                            </label>
+                                            <span className="sheet-selection-subtitle">
+                                                Choose which sheets to export ({selectedSheetCount} of {sheetDefinitions.length} selected)
+                                            </span>
+                                        </div>
+                                        <div className="sheet-quick-actions">
+                                            <button
+                                                type="button"
+                                                className="btn-sheet-quick"
+                                                onClick={selectAllSheets}
+                                                disabled={selectedSheetCount === sheetDefinitions.length}
+                                            >
+                                                Select All
+                                            </button>
+                                            <span className="sheet-quick-sep">•</span>
+                                            <button
+                                                type="button"
+                                                className="btn-sheet-quick"
+                                                onClick={deselectAllSheets}
+                                                disabled={selectedSheetCount === 0}
+                                            >
+                                                Clear All
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="sheet-checkbox-grid">
+                                        {sheetDefinitions.map(sheet => {
+                                            const isSelected = !!selectedSheets[sheet.id];
+                                            return (
+                                                <div
+                                                    key={sheet.id}
+                                                    className={`sheet-checkbox-card ${isSelected ? "selected" : ""}`}
+                                                    onClick={() => toggleSheet(sheet.id)}
+                                                    role="checkbox"
+                                                    aria-checked={isSelected}
+                                                    tabIndex={0}
+                                                >
+                                                    <div className="sheet-card-left">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() => toggleSheet(sheet.id)}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="sheet-checkbox-input"
+                                                        />
+                                                        <span className="sheet-number-pill">Sheet {sheet.sheetNum}</span>
+                                                        <div className="sheet-text-info">
+                                                            <span className="sheet-name-text">{sheet.title}</span>
+                                                            <span className="sheet-desc-text">{sheet.description}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="sheet-card-right">
+                                                        <span className="sheet-meta-pill">
+                                                            {sheet.count} {sheet.unit}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className="btn-only-this-sheet"
+                                                            title={`Export only Sheet ${sheet.sheetNum}: ${sheet.title}`}
+                                                            onClick={(e) => selectOnlySheet(sheet.id, e)}
+                                                        >
+                                                            Only this
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {selectedSheetCount === 0 && (
+                                        <div className="sheet-selection-warning">
+                                            ⚠️ Please select at least one sheet to export.
+                                        </div>
+                                    )}
+                                </div>
+
+                            {/* Reporter Identification Box */}
+                            <div className="form-group">
+                                <label className="form-label" style={{ fontWeight: 700 }}>
+                                    Reported / Prepared By <span style={{ fontSize: "0.78rem", fontWeight: 400, color: "#64748b" }}>(Embedded in audit metadata & footer)</span>
+                                </label>
+                                <div className="reporter-input-wrapper">
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={reporterName}
+                                        onChange={(e) => setReporterName(e.target.value)}
+                                        placeholder="e.g. Den (Admin)"
+                                        disabled={exporting}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Report Summary Details Card */}
+                            <div className="export-summary-box">
+                                <div className="export-summary-row">
+                                    <span className="summary-label">Reporting Period:</span>
+                                    <span className="summary-value">{DATE_RANGE_LABELS[dateRange]}</span>
+                                </div>
+                                <div className="export-summary-row">
+                                    <span className="summary-label">Active Filters:</span>
+                                    <span className="summary-value">
+                                        {appliedFilters.length ? `${appliedFilters.length} filter(s) active` : "All students included"}
+                                    </span>
+                                </div>
+                                <div className="export-summary-row">
+                                    <span className="summary-label">Sheets Included:</span>
+                                    <span className="summary-value">
+                                        {selectedSheetCount === 0
+                                            ? "None selected"
+                                            : selectedSheetCount === sheetDefinitions.length
+                                            ? `All ${sheetDefinitions.length} Sheets Selected`
+                                            : `${selectedSheetCount} of ${sheetDefinitions.length} Sheets Selected`}
+                                    </span>
+                                </div>
+                                <div className="export-summary-row">
+                                    <span className="summary-label">Records Included:</span>
+                                    <span className="summary-value">
+                                        {[
+                                            selectedSheets.summary ? "KPI Summary" : null,
+                                            selectedSheets.payments ? `${reportData.completedPayments.length} Payments` : null,
+                                            selectedSheets.sessions ? `${reportData.sessionsData.length} Sessions` : null,
+                                            selectedSheets.ratings ? `${reportData.ratingsData.length} Ratings` : null,
+                                            selectedSheets.students ? `${filteredStudents.length} Students` : null,
+                                            selectedSheets.merchandise ? `${(reportData.merchandiseList || []).length} Merch Items` : null
+                                        ].filter(Boolean).join(" • ") || "No sheets selected"}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="app-modal-footer">
+                            <button
+                                type="button"
+                                className="btn-modal-cancel"
+                                onClick={() => setShowExportModal(false)}
+                                disabled={exporting}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                className="btn-modal-submit"
+                                onClick={handleExecuteExport}
+                                disabled={exporting || selectedSheetCount === 0}
+                            >
+                                <Download size={15} style={{ marginRight: "6px" }} />
+                                {exporting
+                                    ? `Generating ${exportFormat === "excel" ? "XLSX" : "PDF"}...`
+                                    : selectedSheetCount === 0
+                                    ? "Select at Least 1 Sheet"
+                                    : selectedSheetCount === 1
+                                    ? `Download ${sheetDefinitions.find(s => selectedSheets[s.id])?.title} (${exportFormat === "excel" ? ".xlsx" : ".pdf"})`
+                                    : `Download ${exportFormat === "excel" ? "Excel Workbook (.xlsx)" : "Excel-Style PDF Report"}`}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
 
     );

@@ -449,11 +449,9 @@ function StudentHome() {
 
                     {nextClass ? (
                         <>
-                            <h2>{nextClass.title}</h2>
+                            <h2>{formatDate(nextClass.start_datetime)}</h2>
 
                             <p>
-                                {formatDate(nextClass.start_datetime)}
-                                {" • "}
                                 {formatTime(
                                     nextClass.start_datetime,
                                     nextClass.end_datetime

@@ -699,12 +699,12 @@ function TeacherMessages() {
         if (!messagesEndRef.current) return;
 
         requestAnimationFrame(() => {
-
-            messagesEndRef.current?.scrollIntoView({
-                behavior: "smooth",
-                block: "end"
-            });
-
+            if (messagesContainerRef.current) {
+                messagesContainerRef.current.scrollTo({
+                    top: messagesContainerRef.current.scrollHeight,
+                    behavior: "smooth"
+                });
+            }
         });
 
     }, [messages, messagesLoading, selectedStudent]);

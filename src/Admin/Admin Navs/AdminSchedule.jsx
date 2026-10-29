@@ -11,7 +11,23 @@ import FullCalendar from "@fullcalendar/react";
     import { createNotification } from "../../Services/notificationService";
 
 
-    function AdminSchedule(){
+    function formatEventTimeRange(start, end, fallback) {
+    if (!start) return fallback || "";
+    try {
+        const fmt = (d) =>
+            new Date(d).toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true
+            });
+        if (!end) return fmt(start);
+        return `${fmt(start)} - ${fmt(end)}`;
+    } catch (_) {
+        return fallback || "";
+    }
+}
+
+function AdminSchedule(){
         const [events,setEvents]=useState([]);
         const [showModal, setShowModal] = useState(false);
         const [availableStudents, setAvailableStudents] = useState([]);
@@ -1008,6 +1024,8 @@ import FullCalendar from "@fullcalendar/react";
 
             <div >
                 <FullCalendar
+                eventTimeFormat={{ hour: "numeric", minute: "2-digit", meridiem: "short" }}
+                slotLabelFormat={{ hour: "numeric", minute: "2-digit", omitZeroMinute: true, meridiem: "short" }}
 
                 plugins={[
 
@@ -1063,7 +1081,7 @@ import FullCalendar from "@fullcalendar/react";
                                 {eventInfo.event.title}
                             </div>
                             <div className="fc-event-time" style={{ fontSize: '0.85em' , color:'#2563eb'}}>
-                                {eventInfo.timeText}
+                                {formatEventTimeRange(eventInfo.event.start, eventInfo.event.end, eventInfo.timeText)}
                             </div>
 
                               <div
@@ -1249,25 +1267,29 @@ import FullCalendar from "@fullcalendar/react";
 
                             />
 
-                            <button
-                                onClick={createSchedule}
-                                disabled={!selectedStudent}
-                            >
-                                Schedule Session
-                            </button>
-
-
-                            <button
-                            onClick={() => {
-                                setShowModal(false);
-                                setSelectedStudent(null);
-                                setAssignedTutor(null);
-                                setNotes("");
-                                setDuration(1);
-                            }}
-                        >
-                            Cancel
-                        </button>
+                            <div className="modal-buttons">
+                                <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    onClick={() => {
+                                        setShowModal(false);
+                                        setSelectedStudent(null);
+                                        setAssignedTutor(null);
+                                        setNotes("");
+                                        setDuration(1);
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-primary"
+                                    onClick={createSchedule}
+                                    disabled={!selectedStudent}
+                                >
+                                    Schedule Session
+                                </button>
+                            </div>
                         </div>
                 </div>
                     
@@ -1276,14 +1298,17 @@ import FullCalendar from "@fullcalendar/react";
 
 
             {selectedEvent && (
-
-                <div className="modal-overlay">
-                    <div className="modal">
+            <div className="modal-overlay" onClick={() => setSelectedEvent(null)}>
+                <div className={`modal session-detail-modal session-modal-${(selectedEvent.status || "").toLowerCase().replace(/\s+/g, '-')}`} onClick={(e) => e.stopPropagation()}>
 
                         <h2>{selectedEvent.title}</h2>
 
-                        <p>
-                            <strong>Status:</strong> {selectedEvent.status}
+                        <p style={{ display: "flex", alignItems: "center", gap: "8px", margin: "6px 0 12px 0" }}>
+                            <strong>Status:</strong>{" "}
+                            <span className={`session-status-pill status-${(selectedEvent.status || "").toLowerCase().replace(/\s+/g, '-')}`}>
+                                <span className="status-dot"></span>
+                                {selectedEvent.status}
+                            </span>
                         </p>
 
                         <p>
@@ -1373,30 +1398,26 @@ import FullCalendar from "@fullcalendar/react";
                         <br/><br/>
                         {(selectedEvent.status === "Pending" && selectedEvent.admin_approval !== "Approved") && (
 
-                            <>
-                                <button onClick={approveSession}>
-                                    Approve
-                                </button>
-
-                                <button onClick={rejectSession}>
+                            <div className="modal-buttons" style={{ borderTop: "none", marginTop: 0 }}>
+                                <button type="button" className="btn-danger" onClick={rejectSession}>
                                     Reject
                                 </button>
-                            </>
+                                <button type="button" className="btn-success" onClick={approveSession}>
+                                    Approve
+                                </button>
+                            </div>
 
                         )}
 
                         {selectedEvent.status === "Reschedule Pending" && (
-                        <>
-
-                            <button onClick={approveReschedule}>
-                                Approve Reschedule
-                            </button>
-
-                            <button onClick={rejectReschedule}>
+                        <div className="modal-buttons" style={{ borderTop: "none", marginTop: 0 }}>
+                            <button type="button" className="btn-danger" onClick={rejectReschedule}>
                                 Reject Reschedule
                             </button>
-
-                        </>
+                            <button type="button" className="btn-success" onClick={approveReschedule}>
+                                Approve Reschedule
+                            </button>
+                        </div>
                         )}
 
                         {selectedEvent.status === "Reschedule Pending" && (
@@ -1455,11 +1476,15 @@ import FullCalendar from "@fullcalendar/react";
 
                             )}
 
-                        <button
-                            onClick={()=>setSelectedEvent(null)}
-                        >
-                            Close
-                        </button>
+                        <div className="modal-buttons">
+                            <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={()=>setSelectedEvent(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
 
                     </div>
                 </div>

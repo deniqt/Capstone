@@ -5,14 +5,21 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   z-index: 9999;
-  padding: 20px;
+  padding: 24px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
   animation: satFadeIn 0.2s ease;
 }
 
@@ -20,11 +27,41 @@
   background: #ffffff;
   padding: 28px;
   border-radius: var(--radius-xl, 20px);
-  width: 480px;
-  max-width: 95%;
+  width: 520px;
+  max-width: 100%;
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  margin: auto;
   border: 1px solid var(--border-subtle);
   box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
   animation: satModalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.reschedule-status {
+  margin-top: 14px;
+  padding: 16px;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: var(--radius-md, 12px);
+}
+
+.reschedule-status h3 {
+  margin-top: 0;
+  color: #7e22ce;
+  font-size: 1.05rem;
+  margin-bottom: 10px;
+}
+
+.reschedule-status p {
+  margin: 0 0 6px 0;
+  font-size: 0.88rem;
+  color: #4b5563;
 }
 
 .modal h3 {
@@ -226,4 +263,58 @@
 
 .custom-event-content{
   gap:0px;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (TABLETS & MOBILE)
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .schedule-filters {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px 16px;
+    gap: 12px;
+  }
+  .schedule-filter-field {
+    width: 100%;
+    min-width: 0;
+  }
+  .schedule-filter-summary {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .fc .fc-toolbar.fc-header-toolbar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .fc .fc-toolbar-title {
+    font-size: 1.15rem;
+    text-align: center;
+  }
+  .modal-overlay {
+    padding: 14px 10px;
+  }
+  .modal {
+    padding: 20px 16px;
+    max-height: calc(100dvh - 20px);
+    border-radius: 16px;
+  }
+  .modal-buttons {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .modal-buttons button {
+    flex: 1 1 120px;
+  }
 }

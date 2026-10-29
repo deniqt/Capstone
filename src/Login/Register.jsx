@@ -4,7 +4,21 @@ import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import logoImage from '../assets/logo.png'
 
-const GRADES = ["Grade 1","Grade 2","Grade 3","Grade 4","Grade 5","Grade 6","Grade 7","Grade 8"];
+const GRADES = [
+    "Kindergarten",
+    "Grade 1",
+    "Grade 2",
+    "Grade 3",
+    "Grade 4",
+    "Grade 5",
+    "Grade 6",
+    "Grade 7",
+    "Grade 8",
+    "Grade 9",
+    "Grade 10",
+    "Grade 11",
+    "Grade 12"
+];
 
 const MODE_OPTIONS = [
     { value: "Face-to-Face", label: "Face-to-Face", description: "Traditional in-person classes" },
@@ -13,9 +27,8 @@ const MODE_OPTIONS = [
 ];
 
 const TIME_OPTIONS = [
-    { value: "Morning", label: "Morning", description: "Sessions before noon" },
-    { value: "Afternoon", label: "Afternoon", description: "Sessions after school hours" },
-    { value: "Evening", label: "Evening", description: "Sessions in the evening" },
+    { value: "Morning", label: "Morning", description: "Sessions before noon (8:00 AM – 12:00 PM)" },
+    { value: "Afternoon", label: "Afternoon", description: "Sessions after noon (1:00 PM – 5:00 PM)" },
 ];
 
 function Register(){
@@ -86,7 +99,7 @@ function Register(){
         if (!guardian.Email.trim()) nextErrors.guardianEmail = "Email is required.";
         if (!guardian.Relationship) nextErrors.relationship = "Relationship is required.";
 
-        if (!preferences.Mode) nextErrors.mode = "Select a preferred mode of learning.";
+        if (!preferences.Mode) nextErrors.mode = "Select a preferred learning modality.";
         if (!preferences.Time) nextErrors.time = "Select a preferred time of learning.";
 
         if (enrolledStudent && !documents.Certificate) nextErrors.certificate = "Certificate of Enrollment is required.";
@@ -242,12 +255,17 @@ function Register(){
         <div className="register-page">
             <div className="register-header">
                 <div id="logo-container">
-                    <img id="landing-logo" src={logoImage || "tite"}></img>
+                    <img id="landing-logo" src={logoImage || ""} alt="YOSEF Tutorial Center Logo" />
                     <p>YOSEF's Tutorial Center</p>
                 </div>
-                <button className="cancel-button" onClick={() => navigate("/")}>
-                    Cancel
-                </button>
+                <div style={{ display: "flex", gap: "10px" }}>
+                    <button type="button" className="cancel-button" onClick={() => navigate("/landing")}>
+                        ← Back to Overview
+                    </button>
+                    <button type="button" className="confirm-button" style={{ padding: "8px 18px" }} onClick={() => navigate("/")}>
+                        Log In
+                    </button>
+                </div>
             </div>
 
             <div className="register-body">
@@ -276,7 +294,7 @@ function Register(){
                                 value={student.FullName}
                                 onChange={handleStudentChange}
                             />
-                            {errors.studentFullName && <span className="field-error">{errors.studentFullName}</span>}
+                            {errors.studentFullName && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.studentFullName}</span>}
                         </div>
 
                         <div className="form-field">
@@ -291,7 +309,7 @@ function Register(){
                                 onChange={handleStudentChange}
                             />
                             <span className="field-hint">Used to log in.</span>
-                            {errors.studentEmail && <span className="field-error">{errors.studentEmail}</span>}
+                            {errors.studentEmail && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.studentEmail}</span>}
                         </div>
 
                         <div className="form-field">
@@ -304,7 +322,7 @@ function Register(){
                                 value={student.DOB}
                                 onChange={handleStudentChange}
                             />
-                            {errors.dob && <span className="field-error">{errors.dob}</span>}
+                            {errors.dob && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.dob}</span>}
                         </div>
 
                         <div className="form-field">
@@ -374,7 +392,7 @@ function Register(){
                                 value={student.Password}
                                 onChange={handleStudentChange}
                             />
-                            {errors.password && <span className="field-error">{errors.password}</span>}
+                            {errors.password && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.password}</span>}
                         </div>
                     </div>
                 </section>
@@ -399,7 +417,7 @@ function Register(){
                                 value={guardian.FullName}
                                 onChange={handleGuardianChange}
                             />
-                            {errors.guardianFullName && <span className="field-error">{errors.guardianFullName}</span>}
+                            {errors.guardianFullName && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.guardianFullName}</span>}
                         </div>
 
                         <div className="form-field">
@@ -413,7 +431,7 @@ function Register(){
                                 value={guardian.Contact}
                                 onChange={handleGuardianChange}
                             />
-                            {errors.guardianContact && <span className="field-error">{errors.guardianContact}</span>}
+                            {errors.guardianContact && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.guardianContact}</span>}
                         </div>
 
                         <div className="form-field">
@@ -427,7 +445,7 @@ function Register(){
                                 value={guardian.Email}
                                 onChange={handleGuardianChange}
                             />
-                            {errors.guardianEmail && <span className="field-error">{errors.guardianEmail}</span>}
+                            {errors.guardianEmail && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.guardianEmail}</span>}
                         </div>
 
                         <div className="form-field">
@@ -444,7 +462,7 @@ function Register(){
                                 <option value="Father">Father</option>
                                 <option value="Guardian">Guardian</option>
                             </select>
-                            {errors.relationship && <span className="field-error">{errors.relationship}</span>}
+                            {errors.relationship && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.relationship}</span>}
                         </div>
                     </div>
                 </section>
@@ -458,7 +476,7 @@ function Register(){
                     <hr />
 
                     <div className="preference-group">
-                        <label className="preference-label">Preferred Mode of Learning <span className="required">*</span></label>
+                        <label className="preference-label">Preferred Learning Modality <span className="required">*</span></label>
                         <div className="preference-grid">
                             {MODE_OPTIONS.map((option) => (
                                 <button
@@ -480,7 +498,7 @@ function Register(){
                                 </button>
                             ))}
                         </div>
-                        {errors.mode && <span className="field-error">{errors.mode}</span>}
+                        {errors.mode && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.mode}</span>}
                     </div>
 
                     <div className="preference-group">
@@ -497,7 +515,6 @@ function Register(){
                                         <span className="preference-icon">
                                             {option.value === "Morning" && "🌅"}
                                             {option.value === "Afternoon" && "☀️"}
-                                            {option.value === "Evening" && "🌙"}
                                         </span>
                                         <span className={`radio-dot ${preferences.Time === option.value ? "checked" : ""}`} />
                                     </div>
@@ -506,7 +523,7 @@ function Register(){
                                 </button>
                             ))}
                         </div>
-                        {errors.time && <span className="field-error">{errors.time}</span>}
+                        {errors.time && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.time}</span>}
                     </div>
                 </section>
 
@@ -551,8 +568,8 @@ function Register(){
                             {documents.GuardianID && <span className="file-name">{documents.GuardianID.name}</span>}
                         </div>
                     </div>
-                    {errors.certificate && <span className="field-error">{errors.certificate}</span>}
-                    {errors.guardianId && <span className="field-error">{errors.guardianId}</span>}
+                    {errors.certificate && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.certificate}</span>}
+                    {errors.guardianId && <span className="field-error"><span aria-hidden="true">⚠️ </span>{errors.guardianId}</span>}
 
                     <label className="checkbox-row">
                         <input
@@ -565,11 +582,11 @@ function Register(){
                 </section>
 
                 <div className="register-actions">
-                    <button className="cancel-button" onClick={() => navigate("/")}>
+                    <button type="button" className="cancel-button" onClick={() => navigate("/landing")}>
                         Cancel
                     </button>
                     <button className="confirm-button" onClick={handleRegister} disabled={submitting}>
-                        {submitting ? "Registering..." : "Confirm"}
+                        {submitting ? "Submitting Application..." : "Submit Application"}
                     </button>
                 </div>
             </div>

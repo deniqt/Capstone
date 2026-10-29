@@ -508,3 +508,111 @@
 .custom-event-content {
     overflow: visible;
 }
+
+/* ==========================================================================
+   RED CANCEL SESSION BUTTON (MODAL & ACTIONS)
+   ========================================================================== */
+
+.modal button.cancel-session-btn,
+.modal button.btn-danger,
+button.cancel-session-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #ffffff !important;
+  border: 1px solid #dc2626 !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35) !important;
+  font-weight: 700 !important;
+  padding: 10px 20px;
+  border-radius: var(--radius-md, 10px) !important;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.modal button.cancel-session-btn:hover:not(:disabled),
+.modal button.btn-danger:hover:not(:disabled),
+button.cancel-session-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  border-color: #b91c1c !important;
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+
+
+
+/* Modal Overlay & Scrollable Container Overrides */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 9999;
+  padding: 24px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: var(--radius-xl, 20px);
+  width: 520px;
+  max-width: 100%;
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  margin: auto;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .TeacherScheduleHeader {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .TeacherScheduleHeader > div:last-child {
+    flex-direction: column;
+  }
+  .TeacherScheduleHeader > div:last-child button {
+    width: 100%;
+    justify-content: center;
+  }
+  .CalendarPanel .fc .fc-toolbar.fc-header-toolbar {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .CalendarPanel .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .CalendarPanel .fc .fc-toolbar-title {
+    font-size: 1.15rem;
+    text-align: center;
+  }
+  .modal-overlay {
+    padding: 14px 10px;
+  }
+  .modal {
+    padding: 20px 16px;
+    max-height: calc(100dvh - 20px);
+    border-radius: 16px;
+  }
+}

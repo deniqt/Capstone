@@ -53,7 +53,16 @@ function Login() {
         // Login error
         if (error) {
 
-            alert(error.message);
+            if (error.message && error.message.toLowerCase().includes("fetch")) {
+                alert(
+                    "Network error: Unable to connect to Supabase database.\n\n" +
+                    "Possible causes:\n" +
+                    "1. The .env file is missing in the project folder.\n" +
+                    "2. The laptop is not connected to the internet."
+                );
+            } else {
+                alert(error.message);
+            }
 
             setPassword("");
 

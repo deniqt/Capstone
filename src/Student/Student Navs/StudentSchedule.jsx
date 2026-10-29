@@ -12,6 +12,22 @@ import { createNotification } from "../../Services/notificationService";
 
 import "./studentSchedule.css";
 
+function formatEventTimeRange(start, end, fallback) {
+    if (!start) return fallback || "";
+    try {
+        const fmt = (d) =>
+            new Date(d).toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true
+            });
+        if (!end) return fmt(start);
+        return `${fmt(start)} - ${fmt(end)}`;
+    } catch (_) {
+        return fallback || "";
+    }
+}
+
 function StudentSchedule(){
     const [events, setEvents] = useState([]);
     const [loggedStudent, setLoggedStudent] = useState(null);
@@ -70,7 +86,10 @@ function StudentSchedule(){
 
                             const { data } = await supabase
                                 .from("calendar")
-                                .select("*")
+                                .select(`
+                                    *,
+                                    tutor:users!calendar_tutor_id_fkey(id, Name)
+                                `)
                                 .eq("id", selectedEvent.id)
                                 .single();
 
@@ -79,6 +98,7 @@ function StudentSchedule(){
                                 setSelectedEvent({
                                     id: data.id,
                                     title: data.title,
+                                    tutor_name: data.tutor?.Name || null,
                                     start: new Date(data.start_datetime),
                                     end: new Date(data.end_datetime),
                                     ...data
@@ -128,7 +148,10 @@ function StudentSchedule(){
 
         const { data, error } = await supabase
             .from("calendar")
-            .select("*")
+            .select(`
+                *,
+                tutor:users!calendar_tutor_id_fkey(id, Name)
+            `)
             .eq("student_id", studentId);
 
         if(error){
@@ -140,6 +163,7 @@ function StudentSchedule(){
 
                 id:event.id,
                 title:event.title,
+                tutor_name: event.tutor?.Name || null,
 
                 start:event.start_datetime,
                 end:event.end_datetime,
@@ -867,7 +891,7 @@ function StudentSchedule(){
                             <>
 
                                 <h4>
-                                    {previousSession.title}
+                                    {previousSession.tutor_name ? `Tutor: ${previousSession.tutor_name}` : previousSession.title}
                                 </h4>
 
                                 <p>
@@ -901,6 +925,8 @@ function StudentSchedule(){
                     <h3>Calendar</h3>
 
                     <FullCalendar
+                        eventTimeFormat={{ hour: "numeric", minute: "2-digit", meridiem: "short" }}
+                        slotLabelFormat={{ hour: "numeric", minute: "2-digit", omitZeroMinute: true, meridiem: "short" }}
 
                         plugins={[
                             dayGridPlugin,
@@ -942,13 +968,15 @@ function StudentSchedule(){
 
                          eventContent={(eventInfo) => {
                             const status = eventInfo.event.extendedProps.status;
+                            const tutorName = eventInfo.event.extendedProps.tutor_name;
+                            const displayTitle = tutorName ? `Tutor: ${tutorName}` : eventInfo.event.title;
                                 return (
                                     <div className="custom-event-content" style={{ display: 'flex', flexDirection: 'column' }}>
                                         <div className="fc-event-title" style={{ fontSize: '0.75em',fontWeight: 'bold', color:'#2563eb'}}>
-                                            {eventInfo.event.title}
+                                            {displayTitle}
                                         </div>
                                         <div className="fc-event-time" style={{ fontSize: '0.65em' , color:'#2563eb'}}>
-                                            {eventInfo.timeText}
+                                            {formatEventTimeRange(eventInfo.event.start, eventInfo.event.end, eventInfo.timeText)}
                                         </div>
                                          <div
                                             className={`fc-event-status ${
@@ -1011,15 +1039,24 @@ function StudentSchedule(){
     */}
 
     {selectedEvent && (
+        <div className="modal-overlay" onClick={() => setSelectedEvent(null)}>
+             <div className={`modal session-detail-modal session-modal-${(selectedEvent.status || "").toLowerCase().replace(/\s+/g, '-')}`} onClick={(e) => e.stopPropagation()}>
 
-            <div className="modal-overlay">
-                <div className="modal">
+                    <h2>{selectedEvent.tutor_name ? `Session with ${selectedEvent.tutor_name}` : selectedEvent.title}</h2>
 
-                    <h2>{selectedEvent.title}</h2>
+                    {selectedEvent.tutor_name && (
+                        <p>
+                            <strong>Tutor:</strong>{" "}
+                            {selectedEvent.tutor_name}
+                        </p>
+                    )}
 
-                    <p>
+                    <p style={{ display: "flex", alignItems: "center", gap: "8px", margin: "6px 0 12px 0" }}>
                         <strong>Status:</strong>{" "}
-                        {selectedEvent.status}
+                        <span className={`session-status-pill status-${(selectedEvent.status || "").toLowerCase().replace(/\s+/g, '-')}`}>
+                            <span className="status-dot"></span>
+                            {selectedEvent.status}
+                        </span>
                     </p>
 
                     <p>
@@ -1175,11 +1212,15 @@ function StudentSchedule(){
 
                     )}
 
-                    <button
-                        onClick={() => setSelectedEvent(null)}
-                    >
-                        Close
-                    </button>
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => setSelectedEvent(null)}
+                        >
+                            Close
+                        </button>
+                    </div>
 
                 </div>
             </div>
@@ -1281,27 +1322,27 @@ function StudentSchedule(){
                         }
                     />
 
-                    <button
-                        onClick={requestReschedule}
-                    >
-                        Submit Request
-                    </button>
-
-                    <button
-                        onClick={()=>{
-
-                            setShowRescheduleModal(false);
-
-                            setNewScheduleDate(null);
-
-                            setRescheduleDuration(1);
-
-                            setRescheduleReason("");
-
-                        }}
-                    >
-                        Cancel
-                    </button>
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={()=>{
+                                setShowRescheduleModal(false);
+                                setNewScheduleDate(null);
+                                setRescheduleDuration(1);
+                                setRescheduleReason("");
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={requestReschedule}
+                        >
+                            Submit Request
+                        </button>
+                    </div>
 
                 </div>
             </div>
@@ -1324,8 +1365,8 @@ function StudentSchedule(){
                         Rate Your Session
                     </h2>
 
-                    <p>
-                        {ratingSession.title}
+                    <p style={{ fontWeight: 600, color: "#1e40af", fontSize: "1.05rem", margin: "6px 0 10px 0" }}>
+                        {ratingSession.tutor_name ? `Tutor: ${ratingSession.tutor_name}` : ratingSession.title}
                     </p>
 
                     <p>

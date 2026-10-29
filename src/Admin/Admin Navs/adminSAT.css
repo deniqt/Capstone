@@ -29,15 +29,15 @@
 }
 
 .add-user-button {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
   border: none;
   border-radius: var(--radius-md, 10px);
   padding: 10px 20px;
   color: #ffffff;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.92rem;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -45,19 +45,24 @@
 }
 
 .add-user-button:hover {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+  background: linear-gradient(135deg, #1e40af, #172554);
+  box-shadow: 0 6px 18px rgba(29, 78, 216, 0.45);
   transform: translateY(-1px);
+}
+
+.add-user-button:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .export-csv-button {
   background: #ffffff;
-  border: 1px solid var(--border-subtle);
+  border: 1.5px solid #64748b;
   border-radius: var(--radius-md, 10px);
-  padding: 10px 18px;
-  color: var(--slate-700);
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: 9.5px 18px;
+  color: #0f172a;
+  font-size: 0.92rem;
+  font-weight: 700;
   cursor: pointer;
   box-shadow: var(--shadow-xs);
   display: inline-flex;
@@ -67,10 +72,15 @@
 }
 
 .export-csv-button:hover {
-  background: var(--slate-50);
-  border-color: var(--slate-300);
-  color: var(--slate-900);
+  background: var(--slate-100);
+  border-color: #334155;
+  color: #0f172a;
   transform: translateY(-1px);
+}
+
+.export-csv-button:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .export-csv-icon {
@@ -490,27 +500,40 @@
 }
 
 .sat-cancel-button {
-  border: 1px solid var(--border-subtle);
+  border: 1.5px solid #64748b;
   background: #ffffff;
-  color: var(--slate-700);
+  color: #1e293b;
+  font-weight: 700;
 }
 
 .sat-cancel-button:hover {
   background: var(--slate-100);
-  color: var(--slate-900);
+  border-color: #334155;
+  color: #0f172a;
+}
+
+.sat-cancel-button:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .sat-save-button {
   border: none;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
 }
 
 .sat-save-button:hover {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.38);
+  background: linear-gradient(135deg, #1e40af, #172554);
+  box-shadow: 0 6px 18px rgba(29, 78, 216, 0.45);
   transform: translateY(-1px);
+}
+
+.sat-save-button:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .sat-cancel-button:disabled,

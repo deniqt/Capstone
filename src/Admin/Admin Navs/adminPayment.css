@@ -3,28 +3,68 @@
    Layout and placement are unchanged; only visuals updated.
    ========================================================= */
 
+/* ---------- Sticky Header Container ---------- */
+
+.payment-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(241, 245, 249, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    margin: -24px -32px 20px -32px;
+    padding: 20px 32px 14px 32px;
+    border-bottom: 1px solid rgba(203, 213, 225, 0.85);
+    box-shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.08);
+}
+
+.payment-sticky-header .Payment-Header {
+    margin-bottom: 12px;
+}
+
+.payment-sticky-header .admin-payment-tabs {
+    margin: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
 /* ---------- Header ---------- */
 
-.Payment-Header{
+.Payment-Header {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 0;
     font-family: 'Inter', sans-serif;
 }
 
-.Payment-Header h1{
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    color: #111827;
+.Payment-Header h1 {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.2;
 }
 
-.Payment-Header > div{
+.Payment-Header > div:first-child,
+.Payment-Header .payment-header-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.Payment-Header > div:last-child,
+.Payment-Header .payment-header-actions {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .ActiveUser-Button{
@@ -57,25 +97,25 @@
 /* ---------- Summary Cards ---------- */
 
 .AdminPaymentNumberPanel{
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: row;
-    margin: 20px 0px;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 0 0 24px 0;
     font-family: 'Inter', sans-serif;
 }
 
 .PaymentNumberBox{
-    width: 32% !important;
-    min-height: 50px;
-    margin: 5px 0px 5px 0px;
-    border: 1px #e5e7eb solid;
+    width: 100% !important;
+    min-height: 80px;
+    margin: 0;
+    border: 1px #e2e8f0 solid;
     border-radius: 14px;
     background: #ffffff;
-    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.05);
     display: flex;
     flex-direction: column;
-    padding: 16px 18px;
+    justify-content: center;
+    padding: 18px 22px;
     box-sizing: border-box;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -88,17 +128,17 @@
 .PaymentNumberBox text{
     display: block;
     font-size: 13px;
-    font-weight: 500;
-    color: #6b7280;
+    font-weight: 600;
+    color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.6px;
 }
 
 .PaymentNumberBox h1{
-    margin: 8px 0 0 0;
-    font-size: 28px;
-    font-weight: 700;
-    color: #111827;
+    margin: 6px 0 0 0;
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
 }
 
 
@@ -106,12 +146,13 @@
 
 .AdminLowerPaymentPanel{
     height: fit-content;
-    width: 99%;
-    border: #e5e7eb solid 1px;
+    width: 100%;
+    margin-bottom: 24px;
+    border: #e2e8f0 solid 1px;
     border-radius: 16px;
     background: #ffffff;
-    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
-    padding: 16px;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.05);
+    padding: 20px;
     box-sizing: border-box;
     font-family: 'Inter', sans-serif;
 }
@@ -319,31 +360,43 @@
 
 .modal-overlay{
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
 
-    background: rgba(17, 24, 39, 0.55);
-    backdrop-filter: blur(3px);
+    background: rgba(17, 24, 39, 0.65);
+    backdrop-filter: blur(4px);
 
     display: flex;
     justify-content: center;
-    align-items: center;
-
+    align-items: flex-start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    padding: 24px 16px;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
     z-index: 1000;
 }
 
 .modal{
     background: #ffffff;
-    width: 500px;
-    max-width: 90%;
+    width: 520px;
+    max-width: 100%;
+    max-height: calc(100vh - 48px);
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    margin: auto;
     padding: 28px;
     border-radius: 18px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
     box-sizing: border-box;
     font-family: 'Inter', sans-serif;
     color: #374151;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal h2{
@@ -733,12 +786,13 @@
 
 
 /* ---------- Responsive Design ---------- */
-@media (max-width: 992px) {
+@media (max-width: 1024px) {
+  .payment-sticky-header {
+    margin: -20px -24px 20px -24px;
+    padding: 16px 24px 12px 24px;
+  }
   .AdminPaymentNumberPanel {
     gap: 12px;
-  }
-  .PaymentNumberBox {
-    width: calc(50% - 8px) !important;
   }
   .Payment-Header {
     flex-wrap: wrap;
@@ -746,17 +800,34 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .payment-sticky-header {
+    margin: -72px -18px 20px -18px;
+    padding: 72px 18px 12px 18px;
+  }
+  .AdminPaymentNumberPanel {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
   .PaymentNumberBox {
     width: 100% !important;
   }
   .Payment-Header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 14px;
   }
-  .Payment-Header > div {
+  .Payment-Header > div:first-child,
+  .Payment-Header .payment-header-text {
     width: 100%;
-    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .Payment-Header > div:last-child,
+  .Payment-Header .payment-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
   }
   .button-panel {
     flex-wrap: wrap;
@@ -824,33 +895,49 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    padding: 4px 0;
 }
 
 .sale-quantity > span {
     font-size: 0.9rem;
     font-weight: 600;
     color: #334155;
+    line-height: 1;
 }
 
 .sale-quantity-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .sale-quantity-controls button {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
     padding: 0;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     line-height: 1;
-    margin-top: 0px;
+    margin: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
 .sale-quantity-controls input {
-    width: 64px;
+    width: 60px;
+    height: 36px;
     text-align: center;
-    margin-bottom: 5px;
+    margin: 0 !important;
+    padding: 0 4px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    box-sizing: border-box;
 }
 
 .sale-total {
@@ -866,4 +953,837 @@
 
 .sale-total strong {
     font-size: 1.25rem;
+}
+
+
+/* ==========================================================================
+   MERCHANDISE & INVENTORY STYLES
+   ========================================================================== */
+
+/* Top Tab Switcher */
+.payment-view-tabs {
+    display: flex;
+    gap: 12px;
+    margin: 18px 0 24px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 12px;
+}
+
+.payment-tab-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #475569;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.94rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.payment-tab-button:hover {
+    border-color: #93c5fd;
+    color: #1e40af;
+    background: #f8fafc;
+}
+
+.payment-tab-button.active {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.25);
+}
+
+.payment-tab-badge {
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    line-height: 1.4;
+}
+
+.payment-tab-badge.warning {
+    background: #f59e0b;
+    color: #ffffff;
+}
+
+.payment-tab-button.active .payment-tab-badge {
+    background: #ffffff;
+    color: #2563eb;
+}
+
+.warning-box h1 {
+    color: #d97706 !important;
+}
+
+/* Merchandise Container */
+.merchandise-view-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Toolbar */
+.merch-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+
+.merch-search-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 250px;
+    max-width: 360px;
+    display: flex;
+    align-items: center;
+}
+
+.merch-search-icon {
+    position: absolute;
+    left: 14px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+
+.merch-search-input {
+    width: 100%;
+    padding: 9px 14px 9px 38px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    font-size: 0.88rem !important;
+    background: #f8fafc !important;
+    outline: none;
+    margin: 0 !important;
+}
+
+.merch-search-input:focus {
+    border-color: #2563eb !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.merch-category-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.merch-cat-pill {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: 1.5px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.merch-cat-pill:hover {
+    border-color: #93c5fd;
+    color: #1e40af;
+    background: #eff6ff;
+}
+
+.merch-cat-pill.active {
+    background: #1e3a8a;
+    color: #ffffff;
+    border-color: #1e3a8a;
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.25);
+}
+
+.merch-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-add-product,
+.btn-quick-sell {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 38px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-add-product {
+    background: #f8fafc;
+    color: #1e293b;
+    border: 1.5px solid #cbd5e1;
+}
+
+.btn-add-product:hover {
+    background: #ffffff;
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.btn-quick-sell {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+.btn-quick-sell:hover {
+    background: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+/* Merchandise Grid */
+.merch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 20px;
+}
+
+.merch-card {
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.merch-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+    border-color: #93c5fd;
+}
+
+.merch-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.merch-cat-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.merch-cat-badge.cat-apparel {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.merch-cat-badge.cat-stationery {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.merch-cat-badge.cat-supplies {
+    background: #f5f3ff;
+    color: #7c3aed;
+    border: 1px solid #ddd6fe;
+}
+
+.merch-cat-badge.cat-accessories {
+    background: #fff7ed;
+    color: #ea580c;
+    border: 1px solid #fed7aa;
+}
+
+.merch-stock-badge {
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.merch-stock-badge.ok {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.merch-stock-badge.low {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+.merch-stock-badge.out {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.merch-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.merch-item-name {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+}
+
+.merch-item-desc {
+    margin: 0;
+    font-size: 0.84rem;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.merch-item-price {
+    margin-top: 8px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #1e3a8a;
+}
+
+.merch-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.btn-card-sell {
+    flex: 1;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-card-sell:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
+.btn-card-sell:disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.btn-card-restock {
+    height: 36px;
+    padding: 0 10px;
+    border: 1.5px solid #bbf7d0;
+    border-radius: 8px;
+    background: #f0fdf4;
+    color: #16a34a;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-card-restock:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+}
+
+.btn-card-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-card-icon:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+    background: #ffffff;
+}
+
+.btn-card-icon.danger:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
+}
+
+/* Empty State */
+.merch-empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    background: #ffffff;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: #64748b;
+}
+
+.merch-empty-state h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1e293b;
+}
+
+/* Modal Extensions */
+.merch-modal {
+    max-width: 500px !important;
+}
+
+.merch-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.merch-modal-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #0f172a;
+}
+
+.merch-modal-header .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.customer-type-toggle {
+    display: flex;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+}
+
+.customer-type-toggle .toggle-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.customer-type-toggle .toggle-btn.active {
+    background: #ffffff;
+    color: #2563eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.restock-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    font-size: 0.9rem;
+}
+
+.restock-quick-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.restock-quick-buttons .quick-btn {
+    flex: 1;
+    padding: 7px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #334155;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.restock-quick-buttons .quick-btn:hover,
+.restock-quick-buttons .quick-btn.active {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.restock-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 10px;
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: #065f46;
+}
+
+.form-row {
+    display: flex;
+    gap: 12px;
+}
+
+.form-row > .form-group {
+    flex: 1;
+}
+
+.academic-sales-hint {
+    margin: -6px 0 14px;
+    font-size: 0.8rem;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px dashed #cbd5e1;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   MERCHANDISE & INVENTORY TAB + SERVICE SEPARATION STYLING
+   ========================================================================== */
+
+.payment-header-sub {
+    font-size: 14px;
+    color: #1e293b;
+    margin: 4px 0 0 0;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.45;
+}
+
+.ActiveUser-Button.secondary-header-btn {
+    background: #ffffff;
+    color: #2563eb;
+    border: 1.5px solid #2563eb;
+    box-shadow: none;
+}
+
+.ActiveUser-Button.secondary-header-btn:hover {
+    background: #eff6ff;
+}
+
+/* Primary Tabs */
+.admin-payment-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+    flex-wrap: wrap;
+}
+
+.admin-tab-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    border: 1.5px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: all 0.2s ease;
+}
+
+.admin-tab-pill:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.admin-tab-pill.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.tab-pill-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #ffffff;
+    color: #2563eb;
+}
+
+.admin-tab-pill:not(.active) .tab-pill-badge {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.tab-pill-badge.warning {
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+}
+
+/* Category Toggle inside Add Sales Modal */
+.sale-category-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 10px;
+}
+
+.sale-cat-btn {
+    flex: 1;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.sale-cat-btn:hover {
+    color: #0f172a;
+}
+
+.sale-cat-btn.active {
+    background: #ffffff;
+    color: #2563eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Merchandise Stock Level Pills */
+.stock-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.stock-pill.in-stock {
+    background: #ecfdf5;
+    color: #065f46;
+}
+
+.stock-pill.low-stock {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.stock-pill.out-of-stock {
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+/* Merchandise Table Cells & Badges */
+.merch-name-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.merch-cat-pill {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #475569;
+    background: #f1f5f9;
+    padding: 2px 7px;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+.merch-size-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1d4ed8;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    padding: 1px 7px;
+    border-radius: 9999px;
+    letter-spacing: 0.3px;
+    width: fit-content;
+}
+
+.btn-merch-action {
+    padding: 5px 12px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.btn-merch-action.sell {
+    background: #16a34a;
+    color: white;
+}
+
+.btn-merch-action.sell:hover:not(:disabled) {
+    background: #15803d;
+}
+
+.btn-merch-action.sell:disabled {
+    background: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+.btn-merch-action.restock {
+    background: #f8fafc;
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+}
+
+.btn-merch-action.restock:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+.btn-merch-action.edit {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.btn-merch-action.edit:hover {
+    background: #dbeafe;
+}
+
+/* Restock and Quick Sell Modal Elements */
+.restock-quick-pills {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0 14px;
+}
+
+.restock-pill-btn {
+    flex: 1;
+    padding: 6px 0;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.restock-pill-btn:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.restock-preview {
+    padding: 10px 14px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #166534;
+    margin-bottom: 16px;
+}
+
+.quick-sell-item-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.quick-sell-name {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 14px;
+}
+
+.quick-sell-price {
+    font-weight: 600;
+    color: #2563eb;
+    font-size: 13px;
+}
+
+.merch-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.merch-tab-container {
+    animation: fadeIn 0.2s ease-in-out;
 }

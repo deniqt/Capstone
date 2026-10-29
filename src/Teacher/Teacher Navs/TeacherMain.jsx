@@ -22,6 +22,8 @@ function TeacherMain() {
   });
 
   const [upcomingSchedule, setUpcomingSchedule] = useState([]);
+  const [pastSchedule, setPastSchedule] = useState([]);
+  const [scheduleTab, setScheduleTab] = useState("upcoming");
   const [recentMaterials, setRecentMaterials] = useState([]);
 
   useEffect(() => {
@@ -160,8 +162,7 @@ function TeacherMain() {
           `
         )
         .eq("tutor_id", tutor.id)
-        .in("status", ["Pending", "Confirmed"])
-        .order("start_datetime", { ascending: true });
+        .order("start_datetime", { ascending: false });
 
       if (scheduleError) {
         console.error("Calendar query error:", scheduleError);
@@ -177,15 +178,25 @@ function TeacherMain() {
 
       const now = new Date();
 
-      const futureSchedules = (schedules || []).filter((schedule) => {
-        if (!schedule.start_datetime) return false;
+      const futureSchedules = (schedules || [])
+        .filter((schedule) => {
+          if (!schedule.start_datetime) return false;
+          const endDate = schedule.end_datetime
+            ? new Date(schedule.end_datetime)
+            : new Date(schedule.start_datetime);
+          return endDate >= now && (schedule.status === "Confirmed" || schedule.status === "Pending");
+        })
+        .sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime));
 
-        const endDate = schedule.end_datetime
-          ? new Date(schedule.end_datetime)
-          : new Date(schedule.start_datetime);
-
-        return endDate >= now;
-      });
+      const pastSchedules = (schedules || [])
+        .filter((schedule) => {
+          if (!schedule.start_datetime) return false;
+          const endDate = schedule.end_datetime
+            ? new Date(schedule.end_datetime)
+            : new Date(schedule.start_datetime);
+          return endDate < now || schedule.status === "Attended" || schedule.status === "Absent" || schedule.status === "Cancelled";
+        })
+        .sort((a, b) => new Date(b.start_datetime) - new Date(a.start_datetime));
 
       /*
        * =========================================================
@@ -195,8 +206,7 @@ function TeacherMain() {
 
       const scheduleStudentIds = [
         ...new Set(
-          futureSchedules
-            .map((schedule) => schedule.student_id)
+          [...futureSchedules, ...pastSchedules].map((schedule) => schedule.student_id)
             .filter(Boolean)
         ),
       ];
@@ -338,6 +348,34 @@ function TeacherMain() {
         });
 
       setUpcomingSchedule(formattedSchedules);
+
+      const formattedPastSchedules = pastSchedules.slice(0, 10).map((schedule) => {
+        const student = scheduleStudentMap[schedule.student_id];
+        const startDate = new Date(schedule.start_datetime);
+        const endDate = schedule.end_datetime ? new Date(schedule.end_datetime) : startDate;
+        const durationMinutes = Math.max(0, Math.round((endDate.getTime() - startDate.getTime()) / 60000));
+        const dateStr = startDate.toLocaleDateString([], { month: "short", day: "numeric" });
+        const time = startDate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        const initials = student?.Name
+          ? student.Name.trim().split(/\s+/).map((n) => n.charAt(0)).slice(0, 2).join("").toUpperCase()
+          : "ST";
+
+        return {
+          id: schedule.id,
+          date: dateStr,
+          time,
+          duration: durationMinutes > 0 ? `${durationMinutes} mins` : "Session",
+          student: student?.Name || "Unknown Student",
+          grade: student?.Grade_Level || "Grade N/A",
+          subject: schedule.title || "Tutorial Session",
+          mode: schedule.meeting_platform || "Face to Face",
+          avatar: initials,
+          profileUrl: student?.profile_url || null,
+          status: schedule.status || "Completed",
+        };
+      });
+
+      setPastSchedule(formattedPastSchedules);
 
       /*
        * =========================================================
@@ -608,10 +646,26 @@ function TeacherMain() {
 
         {/* Upcoming Schedule */}
         <section className="schedule-card">
-
-          <div className="dashboard-card-header">
-
-            <h2>Upcoming Schedule</h2>
+          <div className="dashboard-card-header" style={{ flexWrap: "wrap", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <h2 style={{ margin: 0 }}>Schedule</h2>
+              <div className="schedule-tab-pills">
+                <button
+                  type="button"
+                  className={`schedule-tab-pill ${scheduleTab === "upcoming" ? "active" : ""}`}
+                  onClick={() => setScheduleTab("upcoming")}
+                >
+                  📅 Upcoming ({upcomingSchedule.length})
+                </button>
+                <button
+                  type="button"
+                  className={`schedule-tab-pill ${scheduleTab === "past" ? "active" : ""}`}
+                  onClick={() => setScheduleTab("past")}
+                >
+                  ⏱️ Past Sessions ({pastSchedule.length})
+                </button>
+              </div>
+            </div>
 
             <button
               className="view-calendar-button"
@@ -619,81 +673,86 @@ function TeacherMain() {
             >
               View Calendar
             </button>
-
           </div>
 
           <div className="schedule-list">
-
             {loading ? (
-              <div className="empty-dashboard">
-                Loading schedule...
-              </div>
-            ) : upcomingSchedule.length === 0 ? (
-              <div className="empty-dashboard">
-                No upcoming sessions.
-              </div>
+              <div className="empty-dashboard">Loading schedule...</div>
+            ) : scheduleTab === "upcoming" ? (
+              upcomingSchedule.length === 0 ? (
+                <div className="empty-dashboard">No upcoming sessions scheduled.</div>
+              ) : (
+                upcomingSchedule.map((schedule) => (
+                  <div className="schedule-row" key={schedule.id}>
+                    <div className="schedule-time">
+                      <strong>{schedule.time}</strong>
+                      <span>{schedule.duration}</span>
+                    </div>
+
+                    <div className="schedule-student">
+                      <div className="student-avatar">
+                        {schedule.profileUrl ? (
+                          <img src={schedule.profileUrl} alt={schedule.student} className="student-profile-image" />
+                        ) : (
+                          schedule.avatar
+                        )}
+                      </div>
+                      <div className="student-details">
+                        <strong>{schedule.student}</strong>
+                        <span>{schedule.grade}</span>
+                      </div>
+                    </div>
+
+                    <div className="schedule-mode">
+                      <span className="mode-dot"></span>
+                      Learning Modality: {schedule.mode}
+                    </div>
+
+                    <button className="details-button" onClick={() => navigate("/teacher/schedule")}>
+                      Details
+                    </button>
+                  </div>
+                ))
+              )
             ) : (
-              upcomingSchedule.map((schedule) => (
-                <div
-                  className="schedule-row"
-                  key={schedule.id}
-                >
-
-                  <div className="schedule-time">
-
-                    <strong>{schedule.time}</strong>
-
-                    <span>{schedule.duration}</span>
-
-                  </div>
-
-                  <div className="schedule-student">
-
-                    <div className="student-avatar">
-
-                      {schedule.profileUrl ? (
-                        <img
-                          src={schedule.profileUrl}
-                          alt={schedule.student}
-                          className="student-profile-image"
-                        />
-                      ) : (
-                        schedule.avatar
-                      )}
-
+              pastSchedule.length === 0 ? (
+                <div className="empty-dashboard">No past sessions on record.</div>
+              ) : (
+                pastSchedule.map((schedule) => (
+                  <div className="schedule-row past-session-row" key={schedule.id}>
+                    <div className="schedule-time">
+                      <strong>{schedule.date}</strong>
+                      <span>{schedule.time}</span>
                     </div>
 
-                    <div className="student-details">
-
-                      <strong>{schedule.student}</strong>
-
-                      <span>{schedule.grade}</span>
-
+                    <div className="schedule-student">
+                      <div className="student-avatar">
+                        {schedule.profileUrl ? (
+                          <img src={schedule.profileUrl} alt={schedule.student} className="student-profile-image" />
+                        ) : (
+                          schedule.avatar
+                        )}
+                      </div>
+                      <div className="student-details">
+                        <strong>{schedule.student}</strong>
+                        <span>{schedule.grade} • {schedule.duration}</span>
+                      </div>
                     </div>
 
+                    <div className="schedule-mode">
+                      <span className={`status-tag status-${(schedule.status || "").toLowerCase()}`}>
+                        {schedule.status}
+                      </span>
+                    </div>
+
+                    <button className="details-button" onClick={() => navigate("/teacher/schedule")}>
+                      View
+                    </button>
                   </div>
-
-                  <div className="schedule-mode">
-
-                    <span className="mode-dot"></span>
-
-                    {schedule.mode}
-
-                  </div>
-
-                  <button
-                    className="details-button"
-                    onClick={() => navigate("/teacher/schedule")}
-                  >
-                    Details
-                  </button>
-
-                </div>
-              ))
+                ))
+              )
             )}
-
           </div>
-
         </section>
 
         {/* Recent Materials */}

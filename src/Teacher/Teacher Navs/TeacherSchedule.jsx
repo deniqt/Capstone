@@ -7,9 +7,26 @@ import listPlugin from "@fullcalendar/list";
 import { createNotification } from "../../Services/notificationService";
 
 import { supabase } from "../../lib/supabase";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+
+function formatEventTimeRange(start, end, fallback) {
+    if (!start) return fallback || "";
+    try {
+        const fmt = (d) =>
+            new Date(d).toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true
+            });
+        if (!end) return fmt(start);
+        return `${fmt(start)} - ${fmt(end)}`;
+    } catch (_) {
+        return fallback || "";
+    }
+}
 
 function TeacherSchedule(){
+    const calendarRef = useRef(null);
     const [events, setEvents] = useState([]);
     const [loggedTutor, setLoggedTutor] = useState(null);
     const [showModal, setShowModal] = useState(false);
@@ -19,6 +36,8 @@ function TeacherSchedule(){
     const [duration, setDuration] = useState(1);
     const [notes, setNotes] = useState("");
     const [upcomingSessions, setUpcomingSessions] = useState([]);
+    const [pastSessions, setPastSessions] = useState([]);
+    const [panelTab, setPanelTab] = useState("upcoming");
     const [newScheduleRequest, setNewScheduleRequest] = useState([]);
     const [todayCount, setTodayCount] = useState(0);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -55,6 +74,7 @@ function TeacherSchedule(){
         getEvents(loggedTutor.id);
         loadStudents();
         loadUpcomingSessions();
+        loadPastSessions();
         loadNewScheduleRequest();
         loadTodayCount();
         loadTutorRatings();
@@ -404,6 +424,7 @@ function TeacherSchedule(){
         await Promise.all([
             getEvents(loggedTutor.id),
             loadUpcomingSessions(),
+            loadPastSessions(),
             loadTodayCount()
         ]);
         setShowModal(false);
@@ -435,7 +456,27 @@ function TeacherSchedule(){
 
         setUpcomingSessions(data);
     }
-       
+
+    async function loadPastSessions() {
+        if (!loggedTutor) return;
+        const now = new Date().toISOString();
+
+        const { data, error } = await supabase
+            .from("calendar")
+            .select("*")
+            .eq("tutor_id", loggedTutor.id)
+            .or(`start_datetime.lt.${now},status.in.(Attended,Absent,Cancelled)`)
+            .order("start_datetime", { ascending: false })
+            .limit(8);
+
+        if (error) {
+            console.log("Past sessions error:", error);
+            return;
+        }
+
+        setPastSessions(data || []);
+    }
+
     async function loadNewScheduleRequest() {
         const now = new Date().toISOString();
 
@@ -624,7 +665,7 @@ function TeacherSchedule(){
             getEvents(loggedTutor.id),
 
             loadUpcomingSessions(),
-
+            loadPastSessions(),
             loadTodayCount(),
 
             loadNewScheduleRequest()
@@ -633,6 +674,35 @@ function TeacherSchedule(){
 
         setSelectedEvent(null);
 
+    }
+
+    async function deleteSingleSession() {
+        if (!selectedEvent) return;
+        const confirmDelete = window.confirm(
+            `Permanently delete this session ("${selectedEvent.title}") from your calendar?`
+        );
+        if (!confirmDelete) return;
+
+        const { error } = await supabase
+            .from("calendar")
+            .delete()
+            .eq("id", selectedEvent.id);
+
+        if (error) {
+            console.error(error);
+            alert("Failed to delete session: " + error.message);
+            return;
+        }
+
+        setSelectedEvent(null);
+        await Promise.all([
+            getEvents(loggedTutor.id),
+            loadUpcomingSessions(),
+            loadPastSessions(),
+            loadTodayCount(),
+            loadNewScheduleRequest()
+        ]);
+        alert("Session deleted successfully.");
     }
 
 
@@ -1167,6 +1237,7 @@ function TeacherSchedule(){
         await Promise.all([
             getEvents(loggedTutor.id),
             loadUpcomingSessions(),
+            loadPastSessions(),
             loadTodayCount()
         ]);
     }
@@ -1373,16 +1444,24 @@ function TeacherSchedule(){
                 
     return(<>
         <div className="TeacherScheduleHeader">
-             <h1> TEACHER SCHEDULE</h1>
-             <button
-                className="Teacher-NewSession"
-                onClick={()=>{
-                setSelectedDate(new Date());
-                setShowModal(true);
-                }}
-                >
-                    + New Session
-            </button>
+             <div>
+                 <h1>TEACHER SCHEDULE</h1>
+                 <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: "0.92rem" }}>
+                     Manage tutorial sessions, student bookings, and attendance
+                 </p>
+             </div>
+             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                 <button
+                    type="button"
+                    className="Teacher-NewSession"
+                    onClick={()=>{
+                    setSelectedDate(new Date());
+                    setShowModal(true);
+                    }}
+                 >
+                     + New Session
+                 </button>
+             </div>
         </div>
 
         <div className='TeacherScheduleLowerPanel'>
@@ -1391,6 +1470,9 @@ function TeacherSchedule(){
                     <h3>Calendar</h3>
                         <div className='CalendarPanel'>
                             <FullCalendar
+                                    eventTimeFormat={{ hour: "numeric", minute: "2-digit", meridiem: "short" }}
+                                    slotLabelFormat={{ hour: "numeric", minute: "2-digit", omitZeroMinute: true, meridiem: "short" }}
+                                ref={calendarRef}
                                 plugins={[
                                     dayGridPlugin,
                                     timeGridPlugin,
@@ -1433,7 +1515,7 @@ function TeacherSchedule(){
                                                     {eventInfo.event.title}
                                                 </div>
                                                 <div className="fc-event-time" style={{ color: '#2563eb', fontSize: '9px' }}>
-                                                    {eventInfo.timeText}
+                                                    {formatEventTimeRange(eventInfo.event.start, eventInfo.event.end, eventInfo.timeText)}
                                                 </div>
                                                 <div
                                                     className={`fc-event-status ${
@@ -1464,125 +1546,181 @@ function TeacherSchedule(){
                 </div>
                 <div className="TeacherScheduleUpcomingSessionPanel">
 
-                    <div className="section-title">
-                        <h3>Upcoming Sessions</h3>
+                    <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", marginBottom: "12px" }}>
+                        <h3 style={{ margin: 0 }}>Sessions</h3>
+                        <div className="schedule-tab-pills" style={{ display: "inline-flex", background: "#f1f5f9", padding: "2px", borderRadius: "8px", gap: "2px" }}>
+                            <button
+                                type="button"
+                                style={{
+                                    border: "none",
+                                    padding: "4px 10px",
+                                    borderRadius: "6px",
+                                    fontSize: "11px",
+                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                    background: panelTab === "upcoming" ? "#ffffff" : "transparent",
+                                    color: panelTab === "upcoming" ? "#2563eb" : "#64748b",
+                                    boxShadow: panelTab === "upcoming" ? "0 1px 3px rgba(0,0,0,0.08)" : "none"
+                                }}
+                                onClick={() => setPanelTab("upcoming")}
+                            >
+                                Upcoming ({upcomingSessions.length})
+                            </button>
+                            <button
+                                type="button"
+                                style={{
+                                    border: "none",
+                                    padding: "4px 10px",
+                                    borderRadius: "6px",
+                                    fontSize: "11px",
+                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                    background: panelTab === "past" ? "#ffffff" : "transparent",
+                                    color: panelTab === "past" ? "#2563eb" : "#64748b",
+                                    boxShadow: panelTab === "past" ? "0 1px 3px rgba(0,0,0,0.08)" : "none"
+                                }}
+                                onClick={() => setPanelTab("past")}
+                            >
+                                Past ({pastSessions.length})
+                            </button>
+                        </div>
                     </div>
 
-                    {upcomingSessions.length === 0 ? (
+                    {panelTab === "upcoming" ? (
+                        upcomingSessions.length === 0 ? (
+                            <div className="empty-state">
+                                No upcoming sessions.
+                            </div>
+                        ) : (
+                            upcomingSessions.map(session => {
+                                const start = new Date(session.start_datetime);
+                                const end = new Date(session.end_datetime);
 
-                        <div className="empty-state">
-                            No upcoming sessions.
-                        </div>
-
-                    ) : (
-
-                        upcomingSessions.map(session => {
-
-                            const start = new Date(session.start_datetime);
-                            const end = new Date(session.end_datetime);
-
-                            return (
-
-                                <div
-                                    key={session.id}
-                                    className="UpcomingSessionCard"
-                                >
-
-                                    <div className="session-top">
-
-                                        <div>
-                                            <h4>
-                                                {start.toLocaleTimeString([], {
-                                                    hour: "numeric",
-                                                    minute: "2-digit"
-                                                })}
-                                            </h4>
-
-                                            <span>
-                                                {end.toLocaleTimeString([], {
-                                                    hour: "numeric",
-                                                    minute: "2-digit"
-                                                })}
+                                return (
+                                    <div
+                                        key={session.id}
+                                        className="UpcomingSessionCard"
+                                    >
+                                        <div className="session-top">
+                                            <div>
+                                                <h4>
+                                                    {start.toLocaleTimeString([], {
+                                                        hour: "numeric",
+                                                        minute: "2-digit"
+                                                    })}
+                                                </h4>
+                                                <span>
+                                                    {end.toLocaleTimeString([], {
+                                                        hour: "numeric",
+                                                        minute: "2-digit"
+                                                    })}
+                                                </span>
+                                            </div>
+                                            <span className="session-badge">
+                                                Upcoming
                                             </span>
                                         </div>
 
-                                        <span className="session-badge">
-                                            Upcoming
-                                        </span>
+                                        <h3>{session.title}</h3>
+                                        <p className="session-student">👤 1-on-1 Tutorial</p>
 
-                                    </div>
+                                        <div className="session-platform">
+                                            <span>
+                                                {session.meeting_platform === "Face To Face"
+                                                    ? "📍 Face to Face"
+                                                    : "💻 Online Session"
+                                                }
+                                            </span>
+                                        </div>
 
-                                    <h3>
-                                        {session.title}
-                                    </h3>
-
-                                    <p className="session-student">
-                                        👤 Tutor Session
-                                    </p>
-
-                                    <div className="session-platform">
-
-                                        <span>
-                                            {session.meeting_platform === "Face To Face"
-                                                ? "📍 Face to Face"
-                                                : "💻 Online Session"
-                                            }
-                                        </span>
-
-                                    </div>
-
-                                    <div className="session-actions">
-
-                                        <button
-                                            className="reschedule-btn"
-                                            onClick={() => {
-
-                                                setSelectedEvent({
-                                                    id: session.id,
-                                                    title: session.title,
-                                                    start: start,
-                                                    end: end,
-                                                    ...session
-                                                });
-
-                                                setNewScheduleDate(start);
-
-                                                const hours =
-                                                    (end - start) /
-                                                    (1000 * 60 * 60);
-
-                                                setRescheduleDuration(hours);
-
-                                                setRescheduleReason("");
-
-                                                setShowRescheduleModal(true);
-
-                                            }}
-                                        >
-                                            Reschedule
-                                        </button>
-
-                                        {session.meeting_link && (
-
-                                            <a
-                                                className="join-btn"
-                                                href={session.meeting_link}
-                                                target="_blank"
-                                                rel="noreferrer"
+                                        <div className="session-actions">
+                                            <button
+                                                className="reschedule-btn"
+                                                onClick={() => {
+                                                    setSelectedEvent({
+                                                        id: session.id,
+                                                        title: session.title,
+                                                        start: start,
+                                                        end: end,
+                                                        ...session
+                                                    });
+                                                    setNewScheduleDate(start);
+                                                    const hours = (end - start) / (1000 * 60 * 60);
+                                                    setRescheduleDuration(hours);
+                                                    setRescheduleReason("");
+                                                    setShowRescheduleModal(true);
+                                                }}
                                             >
-                                                Join Meeting
-                                            </a>
-
-                                        )}
-
+                                                Reschedule
+                                            </button>
+                                            {session.meeting_link && (
+                                                <a
+                                                    className="join-btn"
+                                                    href={session.meeting_link}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                >
+                                                    Join Meeting
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
+                                );
+                            })
+                        )
+                    ) : (
+                        pastSessions.length === 0 ? (
+                            <div className="empty-state">
+                                No past sessions on record.
+                            </div>
+                        ) : (
+                            pastSessions.map(session => {
+                                const start = new Date(session.start_datetime);
+                                const dateStr = start.toLocaleDateString([], {
+                                    month: "short",
+                                    day: "numeric"
+                                });
+                                const timeStr = start.toLocaleTimeString([], {
+                                    hour: "numeric",
+                                    minute: "2-digit"
+                                });
 
-                                </div>
+                                return (
+                                    <div
+                                        key={session.id}
+                                        className="UpcomingSessionCard"
+                                        style={{ borderLeft: "3px solid #94a3b8" }}
+                                    >
+                                        <div className="session-top">
+                                            <div>
+                                                <h4>{dateStr}</h4>
+                                                <span>{timeStr}</span>
+                                            </div>
+                                            <span
+                                                className="session-badge"
+                                                style={{
+                                                    background: session.status === "Attended" ? "#dcfce7" : session.status === "Absent" ? "#fee2e2" : "#f1f5f9",
+                                                    color: session.status === "Attended" ? "#15803d" : session.status === "Absent" ? "#b91c1c" : "#475569"
+                                                }}
+                                            >
+                                                {session.status || "Completed"}
+                                            </span>
+                                        </div>
 
-                            );
+                                        <h3>{session.title}</h3>
 
-                        })
-
+                                        <div className="session-platform" style={{ marginTop: "4px" }}>
+                                            <span>
+                                                {session.meeting_platform === "Face To Face"
+                                                    ? "📍 Face to Face"
+                                                    : "💻 Online Session"
+                                                }
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )
                     )}
 
                 </div>
@@ -1843,8 +1981,8 @@ function TeacherSchedule(){
 
         {showModal && (
 
-            <div className="modal-overlay">
-                <div className="modal">
+            <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                <div className="modal" onClick={(e) => e.stopPropagation()}>
                     <h2>New Schedule Request</h2>
                     <select
                         value={selectedStudent?.id || ""}
@@ -1926,29 +2064,34 @@ function TeacherSchedule(){
                         />
                     )}
 
-                   <button
-                        onClick={createRequest}
-                        disabled={
-                            !selectedStudent ||
-                            !selectedDate
-                        }
-                    >
-                        Submit Request
-                    </button>
-
-                    <button
-                        onClick={()=>{
-                            setShowModal(false);
-                            setSelectedStudent(null);
-                            setSelectedDate(null);
-                            setDuration(1);
-                            setNotes("");
-                            setMeetingPlatform("Zoom");
-                            setMeetingLink("");
-                        }}
-                    >
-                        Cancel
-                    </button>
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={()=>{
+                                setShowModal(false);
+                                setSelectedStudent(null);
+                                setSelectedDate(null);
+                                setDuration(1);
+                                setNotes("");
+                                setMeetingPlatform("Zoom");
+                                setMeetingLink("");
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={createRequest}
+                            disabled={
+                                !selectedStudent ||
+                                !selectedDate
+                            }
+                        >
+                            Submit Request
+                        </button>
+                    </div>
                 </div>
             </div>
         )}
@@ -1959,14 +2102,18 @@ function TeacherSchedule(){
 
         {selectedEvent && (
 
-        <div className="modal-overlay">
+        <div className="modal-overlay" onClick={() => setSelectedEvent(null)}>
 
-             <div className="modal">
+             <div className={`modal session-detail-modal session-modal-${(selectedEvent.status || "").toLowerCase().replace(/\s+/g, '-')}`} onClick={(e) => e.stopPropagation()}>
 
                     <h2>{selectedEvent.title}</h2>
 
-                        <p>
-                            <strong>Status:</strong> {selectedEvent.status}
+                        <p style={{ display: "flex", alignItems: "center", gap: "8px", margin: "6px 0 12px 0" }}>
+                            <strong>Status:</strong>{" "}
+                            <span className={`session-status-pill status-${(selectedEvent.status || "").toLowerCase().replace(/\s+/g, '-')}`}>
+                                <span className="status-dot"></span>
+                                {selectedEvent.status}
+                            </span>
                         </p>
 
                         <p>
@@ -2211,17 +2358,22 @@ function TeacherSchedule(){
 
                             <>
 
-                                <button
-                                    onClick={approveReschedule}
-                                >
-                                    Approve
-                                </button>
-
-                                <button
-                                    onClick={()=>{rejectReschedule(selectedEvent.id)}}
-                                >
-                                    Reject
-                                </button>
+                                <div className="modal-buttons">
+                                    <button
+                                        type="button"
+                                        className="btn-danger"
+                                        onClick={()=>{rejectReschedule(selectedEvent.id)}}
+                                    >
+                                        Reject
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn-success"
+                                        onClick={approveReschedule}
+                                    >
+                                        Approve
+                                    </button>
+                                </div>
 
                             </>
 
@@ -2234,6 +2386,9 @@ function TeacherSchedule(){
                 {selectedEvent.status === "Confirmed" &&
                 !selectedEvent.requested_start_datetime && (
                     <button
+                        type="button"
+                        className="btn-reschedule"
+                        style={{ marginTop: "10px" }}
                         onClick={()=>{
                                 setNewScheduleDate(new Date(selectedEvent.start));
                                 const hours =
@@ -2259,11 +2414,19 @@ function TeacherSchedule(){
                         new Date(selectedEvent.end) < new Date() && (
 
                             <>
-                                <button onClick={() => setShowAttendedModal(true)}>
+                                <button
+                                    type="button"
+                                    className="btn-attended"
+                                    onClick={() => setShowAttendedModal(true)}
+                                >
                                     Mark Attended
                                 </button>
 
-                                <button onClick={markAbsent}>
+                                <button
+                                    type="button"
+                                    className="btn-absent"
+                                    onClick={markAbsent}
+                                >
                                     Mark Absent
                                 </button>
                             </>
@@ -2295,8 +2458,26 @@ function TeacherSchedule(){
                     {(selectedEvent.status === "Pending" ||
                         selectedEvent.status === "Confirmed") && (
 
-                            <button onClick={cancelSession}>
+                            <button
+                                type="button"
+                                className="cancel-session-btn btn-danger"
+                                onClick={cancelSession}
+                            >
                                 Cancel Session
+                            </button>
+
+                        )
+                    }
+
+                    {(selectedEvent.status === "Cancelled" ||
+                        selectedEvent.status === "Absent") && (
+
+                            <button
+                                type="button"
+                                className="cancel-session-btn btn-danger"
+                                onClick={deleteSingleSession}
+                            >
+                                Delete Session
                             </button>
 
                         )
@@ -2304,6 +2485,8 @@ function TeacherSchedule(){
 
 
                 <button
+                    type="button"
+                    className="btn-secondary"
                     onClick={()=>{
                     setSelectedEvent(null);
                     setEditMode(false);
@@ -2368,23 +2551,27 @@ function TeacherSchedule(){
                         }
                     />
 
-                    <button
-                            onClick={requestReschedule}
-                    >
-                            Submit Request
-                    </button>
-
-                    <button
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
                             onClick={()=>{setShowRescheduleModal(false)}}
-                    >
-                        Cancel
-                    </button>
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={requestReschedule}
+                        >
+                            Submit Request
+                        </button>
+                    </div>
 
                 </div>
             </div>
 
         )}
-
 
         {showAttendedModal && (
 
@@ -2415,19 +2602,24 @@ function TeacherSchedule(){
                         />
                     )}
 
-                    <button
-                        onClick={markAttended}
-                        disabled={!proofFile || uploadingProof}
-                    >
-                        {uploadingProof ? "Uploading..." : "Confirm Attended"}
-                    </button>
-
-                    <button
-                        onClick={closeAttendedModal}
-                        disabled={uploadingProof}
-                    >
-                        Cancel
-                    </button>
+                    <div className="modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={closeAttendedModal}
+                            disabled={uploadingProof}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-primary"
+                            onClick={markAttended}
+                            disabled={!proofFile || uploadingProof}
+                        >
+                            {uploadingProof ? "Uploading..." : "Confirm Attended"}
+                        </button>
+                    </div>
 
                 </div>
             </div>

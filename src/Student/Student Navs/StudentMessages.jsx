@@ -80,6 +80,9 @@ function StudentMessages() {
     const messagesEndRef =
         useRef(null);
 
+    const chatContainerRef =
+        useRef(null);
+
 
     const fileInputRef =
         useRef(null);
@@ -264,14 +267,17 @@ function StudentMessages() {
 
 
     // ==========================================
-    // AUTO SCROLL
+    // AUTO SCROLL (CONTAINER-ONLY TO PREVENT WINDOW JUMP)
     // ==========================================
 
     useEffect(() => {
 
-        messagesEndRef.current?.scrollIntoView({
-            behavior: "smooth"
-        });
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTo({
+                top: chatContainerRef.current.scrollHeight,
+                behavior: "smooth"
+            });
+        }
 
     }, [messages]);
 
@@ -532,7 +538,7 @@ function StudentMessages() {
 
                     {/* MESSAGES */}
 
-                    <div className="chat-messages">
+                    <div className="chat-messages" ref={chatContainerRef}>
 
                         {messages.length === 0 ? (
 

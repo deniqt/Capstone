@@ -32,10 +32,10 @@
   --slate-900: #0f172a;
 
   /* Surface & Background */
-  --bg-app: #f8fafc;
+  --bg-app: #f1f5f9;
   --bg-surface: #ffffff;
-  --bg-surface-hover: #f1f5f9;
-  --bg-muted: #f8fafc;
+  --bg-surface-hover: #e2e8f0;
+  --bg-muted: #e2e8f0;
 
   /* Text Colors */
   --text-main: #0f172a;
@@ -158,27 +158,31 @@ a:hover {
    SLEEK CUSTOM SCROLLBARS
    ========================================================================== */
 
+/* Accessible, visible and modern scrollbars system-wide */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #f1f5f9;
   border-radius: var(--radius-full);
 }
 
-::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb {
   background: #94a3b8;
+  border-radius: var(--radius-full);
+  border: 2px solid #f1f5f9;
+  min-height: 36px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
 
 /* ==========================================================================
@@ -275,4 +279,607 @@ th {
 
 .animate-fade-in {
   animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ==========================================================================
+   GLOBAL SEMANTIC BUTTONS & HIGH-CONTRAST HIERARCHY
+   ========================================================================== */
+
+.btn-primary,
+button.btn-primary {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 10px 22px;
+  border-radius: var(--radius-md, 10px);
+  font-weight: 700;
+  font-size: 0.94rem;
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.btn-primary:hover:not(:disabled),
+button.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e40af 0%, #172554 100%) !important;
+  box-shadow: 0 6px 18px rgba(29, 78, 216, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-secondary,
+button.btn-secondary {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border: 1.5px solid #64748b !important;
+  padding: 9.5px 20px;
+  border-radius: var(--radius-md, 10px);
+  font-weight: 700;
+  font-size: 0.94rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.btn-secondary:hover:not(:disabled),
+button.btn-secondary:hover:not(:disabled) {
+  background: #f1f5f9 !important;
+  border-color: #334155 !important;
+  color: #0f172a !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.btn-danger,
+button.btn-danger,
+.delete-button {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 10px 22px;
+  border-radius: var(--radius-md, 10px);
+  font-weight: 700;
+  font-size: 0.94rem;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.btn-danger:hover:not(:disabled),
+button.btn-danger:hover:not(:disabled),
+.delete-button:hover:not(:disabled) {
+  background: #b91c1c !important;
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-success,
+button.btn-success {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  border: none !important;
+  padding: 10px 22px;
+  border-radius: var(--radius-md, 10px);
+  font-weight: 700;
+  font-size: 0.94rem;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.btn-success:hover:not(:disabled),
+button.btn-success:hover:not(:disabled) {
+  background: #15803d !important;
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-outline,
+button.btn-outline {
+  background: #ffffff !important;
+  color: #1d4ed8 !important;
+  border: 1.5px solid #1d4ed8 !important;
+  padding: 9.5px 20px;
+  border-radius: var(--radius-md, 10px);
+  font-weight: 700;
+  font-size: 0.94rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.btn-outline:hover:not(:disabled),
+button.btn-outline:hover:not(:disabled) {
+  background: #eff6ff !important;
+  border-color: #1e40af !important;
+  color: #1e40af !important;
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   GLOBAL ACCESSIBLE MODALS
+   ========================================================================== */
+
+/* ==========================================================================
+   GLOBAL ACCESSIBLE & RESPONSIVE MODAL SYSTEM
+   ========================================================================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 9999;
+  padding: 24px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  max-width: 520px;
+  width: 100%;
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  box-sizing: border-box;
+  margin: auto;
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.modal h2 {
+  margin: 0 0 4px 0;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.modal-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  width: 100%;
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  z-index: 10;
+}
+
+/* Specific Modal Scrollbar */
+.modal::-webkit-scrollbar,
+.modal-overlay::-webkit-scrollbar,
+.app-modal-card::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal::-webkit-scrollbar-track,
+.modal-overlay::-webkit-scrollbar-track,
+.app-modal-card::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 9999px;
+}
+
+.modal::-webkit-scrollbar-thumb,
+.modal-overlay::-webkit-scrollbar-thumb,
+.app-modal-card::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+  border: 2px solid #f8fafc;
+}
+
+.modal::-webkit-scrollbar-thumb:hover,
+.modal-overlay::-webkit-scrollbar-thumb:hover,
+.app-modal-card::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 14px 10px;
+  }
+  .modal {
+    padding: 20px 16px;
+    max-height: calc(100dvh - 20px);
+    border-radius: 16px;
+    gap: 12px;
+  }
+  .modal-buttons {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .modal-buttons button {
+    flex: 1 1 120px;
+  }
+}
+
+
+
+/* ==========================================================================
+   GLOBAL APP MODAL DESIGN SYSTEM
+   ========================================================================== */
+
+.app-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+
+.app-modal-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: appModalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes appModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.app-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  background: #ffffff;
+}
+
+.app-modal-header-text h2 {
+  margin: 0 0 4px 0;
+  font-family: var(--font-heading, 'Quicksand', sans-serif);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+.app-modal-header-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.app-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.app-modal-close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.app-modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.app-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-modal-cancel {
+  background: #ffffff !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  padding: 9px 18px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn-modal-cancel:hover {
+  background: #f9fafb !important;
+  border-color: #9ca3af !important;
+  color: #111827 !important;
+}
+
+.btn-modal-submit {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  padding: 9px 20px !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.btn-modal-submit:hover:not(:disabled) {
+  background: #1d4ed8 !important;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.25) !important;
+}
+
+.btn-modal-submit:disabled {
+  background: #93c5fd !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  opacity: 0.8 !important;
+}
+
+
+/* ==========================================================================
+   SESSION MODAL COLOR CODING (SYNCHRONIZED WITH CALENDAR PALETTE)
+   ========================================================================== */
+
+.session-detail-modal {
+  border-top-width: 5px !important;
+  border-top-style: solid !important;
+  border-top-color: var(--primary, #2563eb) !important;
+}
+
+.session-detail-modal.session-modal-confirmed {
+  border-top-color: #22c55e !important;
+}
+
+.session-detail-modal.session-modal-attended {
+  border-top-color: #2563eb !important;
+}
+
+.session-detail-modal.session-modal-cancelled {
+  border-top-color: #ef4444 !important;
+}
+
+.session-detail-modal.session-modal-reschedule-pending {
+  border-top-color: #9333ea !important;
+}
+
+.session-detail-modal.session-modal-pending {
+  border-top-color: #f59e0b !important;
+}
+
+.session-detail-modal.session-modal-absent {
+  border-top-color: #64748b !important;
+}
+
+/* Status Pill Badges */
+.session-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full, 9999px);
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+.session-status-pill .status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Confirmed - Green (matching Image 2) */
+.session-status-pill.status-confirmed {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #86efac !important;
+}
+.session-status-pill.status-confirmed .status-dot {
+  background: #22c55e !important;
+}
+
+/* Attended - Blue (matching Image 2) */
+.session-status-pill.status-attended {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #93c5fd !important;
+}
+.session-status-pill.status-attended .status-dot {
+  background: #2563eb !important;
+}
+
+/* Cancelled - Red (matching Image 2) */
+.session-status-pill.status-cancelled {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fca5a5 !important;
+}
+.session-status-pill.status-cancelled .status-dot {
+  background: #ef4444 !important;
+}
+
+/* Reschedule Pending - Purple (matching Image 2) */
+.session-status-pill.status-reschedule-pending {
+  background: #f3e8ff !important;
+  color: #7e22ce !important;
+  border: 1px solid #d8b4fe !important;
+}
+.session-status-pill.status-reschedule-pending .status-dot {
+  background: #9333ea !important;
+}
+
+/* Pending - Amber (matching Image 2) */
+.session-status-pill.status-pending {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a !important;
+}
+.session-status-pill.status-pending .status-dot {
+  background: #f59e0b !important;
+}
+
+/* Absent - Gray/Slate (matching Image 2) */
+.session-status-pill.status-absent {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+.session-status-pill.status-absent .status-dot {
+  background: #64748b !important;
+}
+
+/* ==========================================================================
+   COLOR-CODED ACTION BUTTONS (SYNCHRONIZED WITH CALENDAR PALETTE)
+   ========================================================================== */
+
+/* Reschedule Button: Solid Purple covering the whole button */
+.modal button.btn-reschedule {
+  background: linear-gradient(135deg, #9333ea, #7e22ce) !important;
+  color: #ffffff !important;
+  border: 1px solid #7e22ce !important;
+  padding: 10px 20px !important;
+  border-radius: var(--radius-md, 10px) !important;
+  font-weight: 700 !important;
+  font-size: 0.94rem !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(147, 51, 234, 0.35) !important;
+  transition: all var(--transition-fast, 0.2s ease) !important;
+}
+
+.modal button.btn-reschedule:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7e22ce, #6b21a8) !important;
+  border-color: #6b21a8 !important;
+  box-shadow: 0 6px 18px rgba(147, 51, 234, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+/* Mark Attended Button: Blue (matching Attended) */
+.modal button.btn-attended {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: #ffffff !important;
+  border: 1px solid #1d4ed8 !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+  padding: 10px 20px !important;
+  border-radius: var(--radius-md, 10px) !important;
+  font-weight: 700 !important;
+  font-size: 0.94rem !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-fast, 0.2s ease) !important;
+}
+
+.modal button.btn-attended:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+  border-color: #1e40af !important;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45) !important;
+  transform: translateY(-1px);
+}
+
+/* Mark Absent Button: Slate / Gray (matching Absent) */
+.modal button.btn-absent {
+  background: linear-gradient(135deg, #64748b, #475569) !important;
+  color: #ffffff !important;
+  border: 1px solid #475569 !important;
+  box-shadow: 0 4px 14px rgba(71, 85, 105, 0.35) !important;
+  padding: 10px 20px !important;
+  border-radius: var(--radius-md, 10px) !important;
+  font-weight: 700 !important;
+  font-size: 0.94rem !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--transition-fast, 0.2s ease) !important;
+}
+
+.modal button.btn-absent:hover:not(:disabled) {
+  background: linear-gradient(135deg, #475569, #334155) !important;
+  border-color: #334155 !important;
+  box-shadow: 0 6px 18px rgba(71, 85, 105, 0.45) !important;
+  transform: translateY(-1px);
 }

@@ -182,7 +182,7 @@
   justify-content: center;
   background: transparent !important;
   border: none !important;
-  color: #94a3b8;
+  color: #64748b;
   cursor: pointer;
   border-radius: 8px;
   padding: 0 !important;
@@ -191,7 +191,12 @@
 }
 
 .passwordToggle:hover {
-  color: #2563eb;
+  color: #1d4ed8;
+}
+
+.passwordToggle:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 /* Remember Me & Forgot Password */
@@ -225,17 +230,23 @@
 #Forgot-Button {
   background: transparent;
   border: none;
-  color: #2563eb;
+  color: #1d4ed8;
   font-size: 14px;
-  font-weight: 600;
-  padding: 0;
+  font-weight: 700;
+  padding: 2px 4px;
+  border-radius: 4px;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 #Forgot-Button:hover {
-  color: #1d4ed8;
+  color: #1e40af;
   text-decoration: underline;
+}
+
+#Forgot-Button:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 /* Login Action Button */
@@ -245,21 +256,27 @@
   height: 52px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
   color: #ffffff;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 4px 16px rgba(29, 78, 216, 0.38);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .loginButton:hover,
 .loginPanel > button.loginButton:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+  background: linear-gradient(135deg, #1e40af 0%, #172554 100%) !important;
+  box-shadow: 0 8px 24px rgba(29, 78, 216, 0.48);
   transform: translateY(-1.5px);
+}
+
+.loginButton:focus-visible,
+.loginPanel > button.loginButton:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .loginButton:active,
@@ -282,17 +299,23 @@
 .createAccount button {
   border: none;
   background: transparent;
-  color: #2563eb;
+  color: #1d4ed8;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  padding: 0;
+  padding: 2px 4px;
+  border-radius: 4px;
   transition: color 0.2s ease;
 }
 
 .createAccount button:hover {
-  color: #1d4ed8;
+  color: #1e40af;
   text-decoration: underline;
+}
+
+.createAccount button:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 /* ==========================================================================
@@ -419,19 +442,24 @@
   margin-top: 8px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
   color: #ffffff;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 4px 16px rgba(29, 78, 216, 0.38);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .authSubmitButton:hover {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+  background: linear-gradient(135deg, #1e40af, #172554);
+  box-shadow: 0 8px 24px rgba(29, 78, 216, 0.48);
   transform: translateY(-1.5px);
+}
+
+.authSubmitButton:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .authSubmitButton:disabled {

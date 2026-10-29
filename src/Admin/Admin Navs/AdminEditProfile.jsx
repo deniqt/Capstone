@@ -11,6 +11,7 @@ function AdminEditProfile() {
     const [infos, setInfos] = useState(null);
     const [otherInfos, setOtherInfos] = useState(null);
     const [tutors, setTutors] = useState([]);
+    const [previousTutors, setPreviousTutors] = useState([]);
 
     const [image, setImage] = useState(null);
     const [imageFile, setImageFile] = useState(null);
@@ -153,6 +154,50 @@ function AdminEditProfile() {
 
             setOtherInfos(detailData);
 
+            // Load past sessions from calendar to detect previous tutors
+            if (userData.Role === "Student") {
+                const { data: pastSessions } = await supabase
+                    .from("calendar")
+                    .select("tutor_id, start_datetime")
+                    .eq("student_id", id)
+                    .order("start_datetime", { ascending: true });
+
+                if (pastSessions && pastSessions.length > 0) {
+                    const { data: tutorUsers } = await supabase
+                        .from("users")
+                        .select("id, Name")
+                        .eq("Role", "Tutor");
+
+                    const tMap = {};
+                    (tutorUsers || []).forEach(t => { tMap[t.id] = t.Name; });
+
+                    const pMap = {};
+                    pastSessions.forEach(s => {
+                        const sTutorId = Number(s.tutor_id);
+                        const currId = Number(detailData.Tutor_ID);
+                        if (sTutorId && sTutorId !== currId) {
+                            if (!pMap[sTutorId]) {
+                                pMap[sTutorId] = {
+                                    id: sTutorId,
+                                    name: tMap[sTutorId] || ("Tutor #" + sTutorId),
+                                    count: 0,
+                                    firstDate: s.start_datetime,
+                                    lastDate: s.start_datetime
+                                };
+                            }
+                            pMap[sTutorId].count++;
+                            if (new Date(s.start_datetime) < new Date(pMap[sTutorId].firstDate)) {
+                                pMap[sTutorId].firstDate = s.start_datetime;
+                            }
+                            if (new Date(s.start_datetime) > new Date(pMap[sTutorId].lastDate)) {
+                                pMap[sTutorId].lastDate = s.start_datetime;
+                            }
+                        }
+                    });
+                    setPreviousTutors(Object.values(pMap));
+                }
+            }
+
         } catch (error) {
 
             console.error(
@@ -204,7 +249,28 @@ function AdminEditProfile() {
             );
 
             if (error) {
-                throw error;
+                let errorMsg = error.message;
+                try {
+                    if (error.context && typeof error.context.json === "function") {
+                        const errJson = await error.context.json();
+                        if (errJson?.error) {
+                            errorMsg = errJson.error;
+                        }
+                    } else if (error.context && typeof error.context.text === "function") {
+                        const errText = await error.context.text();
+                        if (errText) {
+                            try {
+                                const parsed = JSON.parse(errText);
+                                if (parsed?.error) errorMsg = parsed.error;
+                            } catch (_) {
+                                errorMsg = errText;
+                            }
+                        }
+                    }
+                } catch (parseErr) {
+                    console.warn("Could not parse Edge Function error context:", parseErr);
+                }
+                throw new Error(errorMsg);
             }
 
             if (data?.error) {
@@ -1034,6 +1100,22 @@ function AdminEditProfile() {
                                     )}
 
                                 </select>
+
+                                {previousTutors.length > 0 ? (
+                                    <div className="aep-prev-tutor-banner">
+                                        <span className="aep-prev-tutor-label">⏮️ Previous Tutor History:</span>
+                                        {previousTutors.map(pt => (
+                                            <div key={pt.id} className="aep-prev-tutor-item">
+                                                <strong>{pt.name}</strong>
+                                                <span> — {pt.count} session{pt.count === 1 ? "" : "s"} ({formatDate(pt.firstDate)} – {formatDate(pt.lastDate)})</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="aep-prev-tutor-muted">
+                                        ℹ️ First assigned tutor (no previous reassignments on record)
+                                    </div>
+                                )}
 
                             </div>
 

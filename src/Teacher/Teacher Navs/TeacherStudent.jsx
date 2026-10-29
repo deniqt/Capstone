@@ -11,6 +11,10 @@ function TeacherStudent() {
     const [userDetails, setUserDetails] = useState(null);
     const [parent, setParent] = useState(null);
 
+    const [previousTutors, setPreviousTutors] = useState([]);
+    const [currentTutorName, setCurrentTutorName] = useState("");
+    const [tutorMap, setTutorMap] = useState({});
+
     const [sessions, setSessions] = useState([]);
     const [assignments, setAssignments] = useState([]);
 
@@ -122,21 +126,40 @@ function TeacherStudent() {
             );
 
             // =========================================================
-            // 5. SECURITY CHECK
+            // 5. SECURITY CHECK & TUTOR RESOLUTION
             //
             // user_details.Tutor_ID references users.id
-            //
-            // Therefore:
-            // detailsData.Tutor_ID === tutor.id
+            // Authorize if currently assigned OR previously taught this student
             // =========================================================
 
-            if (
-                Number(detailsData.Tutor_ID) !==
-                Number(tutor.id)
-            ) {
-                throw new Error(
-                    "You are not authorized to view this student."
-                );
+            const isCurrentlyAssigned = Number(detailsData.Tutor_ID) === Number(tutor.id);
+            const isStaff = (tutor.Role || "").toLowerCase() === "admin";
+
+            if (!isCurrentlyAssigned && !isStaff) {
+                const { data: pastSessionCheck } = await supabase
+                    .from("calendar")
+                    .select("id")
+                    .eq("student_id", studentData.id)
+                    .eq("tutor_id", tutor.id)
+                    .limit(1);
+
+                if (!pastSessionCheck || pastSessionCheck.length === 0) {
+                    throw new Error("You are not authorized to view this student.");
+                }
+            }
+
+            // Load all tutors to map IDs to Names
+            const { data: allTutors } = await supabase
+                .from("users")
+                .select("id, Name")
+                .eq("Role", "Tutor");
+
+            const tMap = {};
+            (allTutors || []).forEach(t => { tMap[t.id] = t.Name; });
+            setTutorMap(tMap);
+
+            if (detailsData?.Tutor_ID && tMap[detailsData.Tutor_ID]) {
+                setCurrentTutorName(tMap[detailsData.Tutor_ID]);
             }
 
             // =========================================================
@@ -180,7 +203,7 @@ function TeacherStudent() {
             // 8. Load sessions
             // =========================================================
 
-            await loadSessions(studentData.id);
+            await loadSessions(studentData.id, detailsData.Tutor_ID, tMap);
 
             // =========================================================
             // 9. Load assignments / grading
@@ -207,10 +230,21 @@ function TeacherStudent() {
     // LOAD STUDENT SESSIONS
     // =============================================================
 
-    const loadSessions = async (studentId) => {
+    const loadSessions = async (studentId, currentTutorId, preloadedMap) => {
         try {
             setSessionsLoading(true);
             setSessionsError("");
+
+            let map = preloadedMap;
+            if (!map || Object.keys(map).length === 0) {
+                const { data: tutorList } = await supabase
+                    .from("users")
+                    .select("id, Name")
+                    .eq("Role", "Tutor");
+                map = {};
+                (tutorList || []).forEach(t => { map[t.id] = t.Name; });
+                setTutorMap(map);
+            }
 
             const {
                 data: sessionData,
@@ -254,6 +288,33 @@ function TeacherStudent() {
             );
 
             setSessions(sessionData || []);
+
+            // Identify previous tutors from past sessions
+            const prevMap = {};
+            (sessionData || []).forEach(s => {
+                const sTutorId = Number(s.tutor_id);
+                const currId = Number(currentTutorId);
+                if (sTutorId && sTutorId !== currId) {
+                    if (!prevMap[sTutorId]) {
+                        prevMap[sTutorId] = {
+                            tutorId: sTutorId,
+                            name: (map && map[sTutorId]) || ("Tutor #" + sTutorId),
+                            sessionCount: 0,
+                            firstDate: s.start_datetime,
+                            lastDate: s.start_datetime
+                        };
+                    }
+                    prevMap[sTutorId].sessionCount++;
+                    if (new Date(s.start_datetime) < new Date(prevMap[sTutorId].firstDate)) {
+                        prevMap[sTutorId].firstDate = s.start_datetime;
+                    }
+                    if (new Date(s.start_datetime) > new Date(prevMap[sTutorId].lastDate)) {
+                        prevMap[sTutorId].lastDate = s.start_datetime;
+                    }
+                }
+            });
+
+            setPreviousTutors(Object.values(prevMap));
 
         } catch (error) {
             console.error(
@@ -766,6 +827,18 @@ function TeacherStudent() {
 
                     </div>
 
+                    {/* TUTOR ASSIGNMENT & PREVIOUS TUTOR BADGES */}
+                    <div className="student-tutor-badges">
+                        <span className="student-tutor-chip current">
+                            👨‍🏫 <strong>Current Tutor:</strong> {currentTutorName || (userDetails?.Tutor_ID && tutorMap[userDetails.Tutor_ID]) || "Assigned"}
+                        </span>
+                        {previousTutors.length > 0 && (
+                            <span className="student-tutor-chip previous">
+                                🔄 <strong>Previous Tutor:</strong> {previousTutors.map(pt => `${pt.name} (${pt.sessionCount} sessions)`).join(", ")}
+                            </span>
+                        )}
+                    </div>
+
                 </div>
 
             </div>
@@ -895,6 +968,39 @@ function TeacherStudent() {
                                         {userDetails?.phone_number ||
                                             "—"}
                                     </p>
+                                </div>
+
+                                <div className="info-item">
+                                    <label>
+                                        Current Assigned Tutor
+                                    </label>
+
+                                    <p>
+                                        {currentTutorName || (userDetails?.Tutor_ID && tutorMap[userDetails.Tutor_ID]) || "None Assigned"}
+                                    </p>
+                                </div>
+
+                                <div className="info-item">
+                                    <label>
+                                        Previous Tutor History
+                                    </label>
+
+                                    {previousTutors.length > 0 ? (
+                                        <div className="previous-tutor-box">
+                                            {previousTutors.map(pt => (
+                                                <div key={pt.tutorId} className="previous-tutor-item">
+                                                    <strong>{pt.name}</strong>
+                                                    <span>
+                                                        {pt.sessionCount} session{pt.sessionCount === 1 ? "" : "s"} ({formatDate(pt.firstDate)} – {formatDate(pt.lastDate)})
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p style={{ color: "#64748b", fontWeight: 500 }}>
+                                            None on record (First assigned tutor)
+                                        </p>
+                                    )}
                                 </div>
 
                             </div>
@@ -1037,6 +1143,17 @@ function TeacherStudent() {
                                                             session.end_datetime
                                                         )}
                                                     </p>
+
+                                                    <div className="session-conductor-line">
+                                                        <span>
+                                                            Tutor: <strong>{tutorMap[session.tutor_id] || "Assigned Tutor"}</strong>
+                                                        </span>
+                                                        {Number(session.tutor_id) !== Number(userDetails?.Tutor_ID) && (
+                                                            <span className="session-prev-tutor-badge">
+                                                                Previous Tutor
+                                                            </span>
+                                                        )}
+                                                    </div>
 
                                                 </div>
 

@@ -378,6 +378,66 @@
   background: var(--slate-100);
 }
 
+/* Schedule Tabs (Upcoming vs Past) */
+.schedule-tab-pills {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 10px;
+  gap: 4px;
+}
+
+.schedule-tab-pill {
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.schedule-tab-pill:hover {
+  color: #0f172a;
+}
+
+.schedule-tab-pill.active {
+  background: #ffffff;
+  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.status-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.status-tag.status-attended {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-tag.status-absent {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.status-tag.status-cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-tag.status-completed {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
 /* ==========================================================================
    RESPONSIVE DESIGN
    ========================================================================== */
