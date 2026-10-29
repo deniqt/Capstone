@@ -402,8 +402,10 @@
   flex: 1;
   width: 100%;
   background: #ffffff;
-  color: #334155;
+  color: white
+  ;
   border: 1px solid #cbd5e1;
+  background-color: #1d4ed8;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
@@ -1086,4 +1088,321 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+.btn-card-delete {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+.btn-card-delete:hover {
+    background: #fee2e2;
+}
+
+
+/* =========================================
+   TEACHER MATERIALS — RESPONSIVE LAYOUT FIX
+   ========================================= */
+
+/* Main page */
+.teacher-subject-container {
+    width: 100%;
+    max-width: 1400px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 10px 16px 48px;
+    box-sizing: border-box;
+}
+
+/* Header */
+.teacher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.teacher-header > div {
+    min-width: 0;
+}
+
+.teacher-header h1 {
+    overflow-wrap: anywhere;
+}
+
+/* Tabs */
+.material-tabs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 28px;
+}
+
+.material-tab {
+    justify-content: center;
+    white-space: nowrap;
+}
+
+/* Group heading and material cards */
+.teacher-subject-section {
+    width: 100%;
+    min-width: 0;
+}
+
+.material-type-section {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(min(100%, 460px), 1fr)
+    );
+    gap: 16px;
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 36px;
+}
+
+.material-type-section .typeTitleContainer {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 4px;
+}
+
+.typeTitleContainer h3 {
+    margin: 0;
+}
+
+/* Individual cards */
+.material-list-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    min-width: 0;
+    padding: 18px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.card-main-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.card-title-row,
+.card-title-row h4 {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.card-title-row .Type-Title {
+    display: flex;
+    align-items: flex-start;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.card-title-row .Type-Logo {
+    flex-shrink: 0;
+}
+
+/* Keep action buttons inside the card */
+.card-actions-group {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 220px;
+    min-width: 0;
+}
+
+.card-actions-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+}
+
+.card-actions-row a {
+    display: flex;
+    min-width: 0;
+    width: 100%;
+    flex: initial;
+}
+
+.btn-card-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    min-width: 0;
+    min-height: 34px;
+    height: auto;
+    padding: 7px 5px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    font-size: 0.78rem;
+    line-height: 1.2;
+}
+
+.btn-card-action svg {
+    flex-shrink: 0;
+}
+
+.btn-card-submissions {
+    width: 100%;
+}
+
+/* Assignment information */
+.assignment-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.assignment-status-tag {
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+}
+
+/* Empty state */
+.empty-state {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* =========================================
+   TABLET AND SMALL DESKTOP
+   ========================================= */
+@media (max-width: 1000px) {
+    .material-type-section {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .material-list-card {
+        align-items: center;
+    }
+
+    .card-actions-group {
+        width: 220px;
+    }
+}
+
+/* =========================================
+   MOBILE
+   ========================================= */
+@media (max-width: 600px) {
+    .teacher-subject-container {
+        padding: 8px 12px 32px;
+    }
+
+    .teacher-header {
+        align-items: stretch;
+    }
+
+    .teacher-header h1 {
+        font-size: 1.45rem;
+    }
+
+    .teacher-header .btn-primary {
+        align-self: flex-start;
+    }
+
+    .material-tabs {
+        display: flex;
+        width: 100%;
+        gap: 4px;
+        padding: 4px;
+    }
+
+    .material-tab {
+        flex: 1 1 0;
+        min-width: 0;
+        gap: 6px;
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
+
+    .material-list-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        padding: 16px;
+    }
+
+    .card-main-content {
+        width: 100%;
+    }
+
+    .card-actions-group {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .card-actions-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .btn-card-action {
+        padding: 8px 4px;
+        font-size: 0.78rem;
+    }
+
+    .app-modal-overlay {
+        padding: 10px;
+    }
+
+    .app-modal-card {
+        max-height: 94vh;
+    }
+
+    .app-modal-header,
+    .app-modal-body {
+        padding: 16px;
+    }
+
+    .app-modal-footer {
+        padding: 14px 16px;
+        flex-wrap: wrap;
+    }
+
+    .form-row-2 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Very narrow phones */
+@media (max-width: 360px) {
+    .card-actions-row {
+        gap: 4px;
+    }
+
+    .btn-card-action {
+        gap: 3px;
+        padding: 7px 2px;
+        font-size: 0.72rem;
+    }
+
+    .material-tab {
+        font-size: 0.78rem;
+    }
+
+    .material-tab-count {
+        min-width: 18px;
+        height: 18px;
+        padding: 0 4px;
+    }
 }

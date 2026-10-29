@@ -148,10 +148,17 @@ function TeacherSubjects() {
     const [totalPoints, setTotalPoints] = useState("");
 
     const [showEditModal, setShowEditModal] = useState(false);
-    const [editingAssignment, setEditingAssignment] = useState(null);
+   const [editingMaterial, setEditingMaterial] = useState(null);
+    const [editTitle, setEditTitle] = useState("");
+    const [editDescription, setEditDescription] = useState("");
+    const [editFile, setEditFile] = useState(null);
     const [editAssignmentType, setEditAssignmentType] = useState("");
     const [editDueDate, setEditDueDate] = useState("");
     const [editTotalPoints, setEditTotalPoints] = useState("");
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+const [materialToDelete, setMaterialToDelete] = useState(null);
+const [isDeleting, setIsDeleting] = useState(false);
 
     const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
     const [selectedAssignmentForGrading, setSelectedAssignmentForGrading] =
@@ -526,58 +533,222 @@ function TeacherSubjects() {
         }
     }
 
-    async function updateAssignment() {
-        if (!editingAssignment) return;
-
-        if (
-            !editAssignmentType ||
-            !editDueDate ||
-            !editTotalPoints ||
-            Number(editTotalPoints) <= 0
-        ) {
-            alert("Fill up all fields correctly.");
-            return;
-        }
-
-        const { error } = await supabase
-            .from("Assignments")
-            .update({
-                Assignment_Type: editAssignmentType,
-                Due_Date: new Date(editDueDate).toISOString(),
-                Total_Points: Number(editTotalPoints),
-                Updated_At: new Date().toISOString(),
-            })
-            .eq("Assignment_ID", editingAssignment.Assignment_ID);
-
-        if (error) {
-            console.error(error);
-            alert("Failed to update assignment.");
-            return;
-        }
-
-        alert("Assignment updated!");
-
-        setShowEditModal(false);
-        setEditingAssignment(null);
-
-        await LoadData();
+    // "https://.../Material_Storage/123-file.pdf" -> "123-file.pdf"
+    function getStoragePath(url) {
+        const marker = "/Material_Storage/";
+        const index = String(url || "").indexOf(marker);
+        if (index === -1) return null;
+        return decodeURIComponent(
+            url.slice(index + marker.length).split("?")[0]
+        );
     }
 
-    function openEditAssignment(assignment) {
-        setEditingAssignment(assignment);
-        setEditAssignmentType(assignment.Assignment_Type || "");
+    function openEditMaterial(material) {
+        const assignment = material.assignment;
+
+        setEditingMaterial(material);
+        setEditTitle(material.Material_Name || "");
+        setEditDescription(material.Material_Description || "");
+        setEditFile(null);
+
+        setEditAssignmentType(assignment?.Assignment_Type || "Homework");
+        setEditTotalPoints(assignment?.Total_Points ?? "");
         setEditDueDate(
-            assignment.Due_Date
+            assignment?.Due_Date
                 ? new Date(
-                      new Date(assignment.Due_Date).getTime() -
-                      new Date(assignment.Due_Date).getTimezoneOffset() * 60000
-                  )
-                      .toISOString()
-                      .slice(0, 16)
+                    new Date(assignment.Due_Date).getTime() -
+                    new Date(assignment.Due_Date).getTimezoneOffset() * 60000
+                ).toISOString().slice(0, 16)
                 : ""
         );
-        setEditTotalPoints(assignment.Total_Points ?? "");
+
         setShowEditModal(true);
+    }
+
+    function closeEditModal() {
+        if (isSavingEdit) return;
+        setShowEditModal(false);
+        setEditingMaterial(null);
+        setEditFile(null);
+    }
+
+    async function saveMaterialEdit() {
+        if (!editingMaterial || isSavingEdit) return;
+
+        const assignment = editingMaterial.assignment;
+
+        if (!editTitle.trim()) {
+            alert("Title is required.");
+            return;
+        }
+
+        if (
+            assignment &&
+            (!editAssignmentType || !editDueDate ||
+                !editTotalPoints || Number(editTotalPoints) <= 0)
+        ) {
+            alert("Fill up all assignment fields correctly.");
+            return;
+        }
+
+        setIsSavingEdit(true);
+
+        try {
+            const updates = {
+                Material_Name: editTitle.trim(),
+                Material_Description: editDescription.trim(),
+            };
+
+            // Optional: replace the attached file
+            if (editFile) {
+                const newPath = `${Date.now()}-${editFile.name}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from("Material_Storage")
+                    .upload(newPath, editFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: urlData } = supabase.storage
+                    .from("Material_Storage")
+                    .getPublicUrl(newPath);
+
+                updates.Material_URL = urlData.publicUrl;
+                updates.file_name = editFile.name;
+            }
+
+            const { data: updatedMaterial, error: materialError } = await supabase
+                .from("Materials")
+                .update(updates)
+                .eq("Material_ID", editingMaterial.Material_ID)
+                .select();
+
+            if (materialError) throw materialError;
+
+            if (!updatedMaterial || updatedMaterial.length === 0) {
+                throw new Error("Update was blocked. Check the RLS policy on Materials.");
+            }
+
+            if (assignment) {
+                const { data: updatedAssignment, error: assignmentError } = await supabase
+                    .from("Assignments")
+                    .update({
+                        Assignment_Type: editAssignmentType,
+                        Due_Date: new Date(editDueDate).toISOString(),
+                        Total_Points: Number(editTotalPoints),
+                        Updated_At: new Date().toISOString(),
+                    })
+                    .eq("Assignment_ID", assignment.Assignment_ID)
+                    .select();
+
+                if (assignmentError) throw assignmentError;
+
+                if (!updatedAssignment || updatedAssignment.length === 0) {
+                    throw new Error("Update was blocked. Check the RLS policy on Assignments.");
+                }
+            }
+
+            // Remove the old file only after everything else succeeded
+            if (editFile) {
+                const oldPath = getStoragePath(editingMaterial.Material_URL);
+                if (oldPath) {
+                    await supabase.storage.from("Material_Storage").remove([oldPath]);
+                }
+            }
+
+            alert("Changes saved!");
+
+            setShowEditModal(false);
+            setEditingMaterial(null);
+            setEditFile(null);
+
+            await LoadData();
+        } catch (error) {
+            console.error(error);
+            alert(error.message || "Failed to save changes.");
+        } finally {
+            setIsSavingEdit(false);
+        }
+    }
+
+    async function deleteMaterial() {
+        if (!materialToDelete || isDeleting) return;
+
+        setIsDeleting(true);
+
+        try {
+            const material = materialToDelete;
+
+            const assignmentIds = (
+                Array.isArray(material.Assignments)
+                    ? material.Assignments
+                    : material.Assignments ? [material.Assignments] : []
+            ).map((a) => a.Assignment_ID);
+
+            // 1. This student's submissions for the assignment(s)
+            if (assignmentIds.length > 0) {
+                const { error } = await supabase
+                    .from("Assignment_Submissions")
+                    .delete()
+                    .in("Assignment_ID", assignmentIds)
+                    .eq("Student_ID", studentID);
+
+                if (error) throw error;
+            }
+
+            // 2. Remove it from this student
+            const { data: removed, error: removeError } = await supabase
+                .from("Material_Assignment")
+                .delete()
+                .eq("ID", material.assignmentID)
+                .select();
+
+            if (removeError) throw removeError;
+
+            if (!removed || removed.length === 0) {
+                throw new Error("Delete was blocked. Check the RLS policy on Material_Assignment.");
+            }
+
+            // 3. If no other student still has it, delete the material itself
+            const { count, error: countError } = await supabase
+                .from("Material_Assignment")
+                .select("ID", { count: "exact", head: true })
+                .eq("Material_ID", material.Material_ID);
+
+            if (countError) throw countError;
+
+            if (!count) {
+                if (assignmentIds.length > 0) {
+                    const { error } = await supabase
+                        .from("Assignments")
+                        .delete()
+                        .eq("Material_ID", material.Material_ID);
+
+                    if (error) throw error;
+                }
+
+                const { error: materialError } = await supabase
+                    .from("Materials")
+                    .delete()
+                    .eq("Material_ID", material.Material_ID);
+
+                if (materialError) throw materialError;
+
+                const path = getStoragePath(material.Material_URL);
+                if (path) {
+                    await supabase.storage.from("Material_Storage").remove([path]);
+                }
+            }
+
+            alert("Deleted successfully.");
+            setMaterialToDelete(null);
+            await LoadData();
+        } catch (error) {
+            console.error(error);
+            alert(error.message || "Failed to delete.");
+        } finally {
+            setIsDeleting(false);
+        }
     }
 
     async function loadSubmissions(assignment) {
@@ -873,18 +1044,23 @@ function TeacherSubjects() {
                                                         </a>
                                                     )}
 
-                                                    {assignment && (
-                                                        <button
-                                                            type="button"
-                                                            className="btn-card-action btn-card-edit"
-                                                            onClick={() =>
-                                                                openEditAssignment(assignment)
-                                                            }
-                                                        >
-                                                            <Pencil size={12} />
-                                                            <span>Edit</span>
-                                                        </button>
-                                                    )}
+                                                  <button
+                                                        type="button"
+                                                        className="btn-card-action btn-card-edit"
+                                                        onClick={() => openEditMaterial(material)}
+                                                    >
+                                                        <Pencil size={12} />
+                                                        <span>Edit</span>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        className="btn-card-action btn-card-delete"
+                                                        onClick={() => setMaterialToDelete(material)}
+                                                    >
+                                                        <Trash2 size={12} />
+                                                        <span>Delete</span>
+                                                    </button>
                                                 </div>
 
                                                 {assignment &&
@@ -1095,89 +1271,181 @@ function TeacherSubjects() {
             )}
 
             {/* EDIT ASSIGNMENT MODAL */}
-            {showEditModal && (
-                <div className="app-modal-overlay" onClick={() => { setShowEditModal(false); setEditingAssignment(null); }}>
-                    <div className="app-modal-card" onClick={(e) => e.stopPropagation()}>
-                        <div className="app-modal-header">
-                            <div className="app-modal-header-text">
-                                <h2>Edit Assignment</h2>
-                                <p>Update the assignment type, deadline, and total points</p>
-                            </div>
-                            <button
-                                type="button"
-                                className="app-modal-close"
-                                onClick={() => {
-                                    setShowEditModal(false);
-                                    setEditingAssignment(null);
-                                }}
-                                aria-label="Close modal"
-                            >
-                                <X size={18} />
-                            </button>
+           {showEditModal && editingMaterial && (
+            <div className="app-modal-overlay" onClick={closeEditModal}>
+                <div className="app-modal-card" onClick={(e) => e.stopPropagation()}>
+                    <div className="app-modal-header">
+                        <div className="app-modal-header-text">
+                            <h2>{editingMaterial.assignment ? "Edit Assignment" : "Edit Material"}</h2>
+                            <p>Update the details, or replace the attached file</p>
+                        </div>
+                        <button type="button" className="app-modal-close" onClick={closeEditModal} aria-label="Close modal">
+                            <X size={18} />
+                        </button>
+                    </div>
+
+                    <div className="app-modal-body">
+                        <div className="form-group">
+                            <label className="form-label">Title <span className="text-danger">*</span></label>
+                            <input
+                                className="form-control"
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                            />
                         </div>
 
-                        <div className="app-modal-body">
-                            <div className="form-group">
-                                <label className="form-label">Assignment Type</label>
-                                <select
-                                    className="form-control form-select"
-                                    value={editAssignmentType}
-                                    onChange={(e) =>
-                                        setEditAssignmentType(e.target.value)
-                                    }
-                                >
-                                    {assignmentOptions}
-                                </select>
-                            </div>
+                        <div className="form-group">
+                            <label className="form-label">Description</label>
+                            <textarea
+                                className="form-control form-textarea"
+                                value={editDescription}
+                                onChange={(e) => setEditDescription(e.target.value)}
+                            />
+                        </div>
 
-                            <div className="form-row-2">
+                        <div className="form-group">
+                            <label className="form-label">File</label>
+                            <div className="selected-file-card">
+                                <div className="file-info-group">
+                                    <div className="file-icon-box"><FileText size={20} /></div>
+                                    <div className="file-details">
+                                        <span className="file-name-text">
+                                            {editFile ? editFile.name : editingMaterial.file_name || "Current file"}
+                                        </span>
+                                        <span className="file-meta-text">
+                                            {editFile ? "New file will replace the current one" : "Current file"}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="file-actions">
+                                    <label className="btn-file-change">
+                                        Replace
+                                        <input
+                                            type="file"
+                                            style={{ display: "none" }}
+                                            onChange={(e) => setEditFile(e.target.files?.[0] || null)}
+                                        />
+                                    </label>
+                                    {editFile && (
+                                        <button
+                                            type="button"
+                                            className="btn-file-remove"
+                                            onClick={() => setEditFile(null)}
+                                            title="Keep current file"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {editingMaterial.assignment && (
+                            <div className="assignment-config-panel">
                                 <div className="form-group">
-                                    <label className="form-label">Due Date</label>
-                                    <input
-                                        className="form-control"
-                                        type="datetime-local"
-                                        value={editDueDate}
-                                        onChange={(e) => setEditDueDate(e.target.value)}
-                                    />
+                                    <label className="form-label">Assignment Type</label>
+                                    <select
+                                        className="form-control form-select"
+                                        value={editAssignmentType}
+                                        onChange={(e) => setEditAssignmentType(e.target.value)}
+                                    >
+                                        {assignmentOptions}
+                                    </select>
                                 </div>
 
-                                <div className="form-group">
-                                    <label className="form-label">Total Points</label>
-                                    <input
-                                        className="form-control"
-                                        type="number"
-                                        min="1"
-                                        value={editTotalPoints}
-                                        onChange={(e) => setEditTotalPoints(e.target.value)}
-                                    />
+                                <div className="form-row-2">
+                                    <div className="form-group">
+                                        <label className="form-label">Due Date</label>
+                                        <input
+                                            className="form-control"
+                                            type="datetime-local"
+                                            value={editDueDate}
+                                            onChange={(e) => setEditDueDate(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Total Points</label>
+                                        <input
+                                            className="form-control"
+                                            type="number"
+                                            min="1"
+                                            value={editTotalPoints}
+                                            onChange={(e) => setEditTotalPoints(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
+                    </div>
 
-                        <div className="app-modal-footer">
-                            <button
-                                type="button"
-                                className="btn-modal-cancel"
-                                onClick={() => {
-                                    setShowEditModal(false);
-                                    setEditingAssignment(null);
-                                }}
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                type="button"
-                                className="btn-modal-submit"
-                                onClick={updateAssignment}
-                            >
-                                Save Changes
-                            </button>
-                        </div>
+                    <div className="app-modal-footer">
+                        <button type="button" className="btn-modal-cancel" onClick={closeEditModal} disabled={isSavingEdit}>
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-modal-submit"
+                            onClick={saveMaterialEdit}
+                            disabled={isSavingEdit || !editTitle.trim()}
+                        >
+                            {isSavingEdit ? "Saving..." : "Save Changes"}
+                        </button>
                     </div>
                 </div>
-            )}
+            </div>
+        )}
 
+        {/* DELETE MATERIAL MODAL */}
+        {materialToDelete && (
+            <div className="app-modal-overlay" onClick={() => !isDeleting && setMaterialToDelete(null)}>
+                <div className="app-modal-card" style={{ maxWidth: "460px" }} onClick={(e) => e.stopPropagation()}>
+                    <div className="app-modal-header">
+                        <div className="app-modal-header-text">
+                            <h2>{materialToDelete.assignment ? "Delete Assignment" : "Delete Material"}</h2>
+                            <p>This action cannot be undone</p>
+                        </div>
+                        <button
+                            type="button"
+                            className="app-modal-close"
+                            onClick={() => setMaterialToDelete(null)}
+                            disabled={isDeleting}
+                            aria-label="Close modal"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+
+                    <div className="app-modal-body">
+                        <p style={{ margin: 0, color: "#334155", fontSize: "0.92rem" }}>
+                            You are about to permanently delete{" "}
+                            <strong>{materialToDelete.Material_Name}</strong>
+                            {student?.Name ? <> for <strong>{student.Name}</strong></> : null}.
+                        </p>
+
+                        {materialToDelete.assignment && (
+                            <p style={{ margin: "10px 0 0", color: "#b91c1c", fontSize: "0.85rem" }}>
+                                This also deletes the student's submission and grade for this assignment.
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="app-modal-footer">
+                        <button type="button" className="btn-modal-cancel" onClick={() => setMaterialToDelete(null)} disabled={isDeleting}>
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-modal-submit"
+                            style={{ background: "#dc2626", borderColor: "#dc2626" }}
+                            onClick={deleteMaterial}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? "Deleting..." : "Confirm Delete"}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
             {/* SUBMISSIONS MODAL */}
             {showSubmissionsModal && (
                 <div className="app-modal-overlay" onClick={() => { setShowSubmissionsModal(false); setSelectedAssignmentForGrading(null); setSubmissions([]); }}>
