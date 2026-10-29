@@ -9,19 +9,18 @@ import {
     decrementMerchandiseStock,
     deleteMerchandiseItem
 } from '../../Services/merchandiseService';
+import {
+    getQty,
+    formatMerchService,
+    matchItemToPayment,
+    isMerchandisePayment
+} from '../../lib/merchandiseUtils';
 
 // Academic Tutoring Services (separated from physical merchandise)
 const ACADEMIC_SERVICES = [
     { label: "Hourly Tutoring", price: 200, category: "Academic Tutoring" },
     { label: "Reading Sessions", price: 3500, category: "Literacy & Reading" },
     { label: "Diagnostic Assessment", price: 500, category: "Assessment & Testing" },
-];
-
-// Preserved for backwards compatibility with any existing lookups
-const SALE_ITEMS = [
-    ...ACADEMIC_SERVICES,
-    { label: "Notebooks", price: 80, category: "Merchandise" },
-    { label: "T-shirt", price: 300, category: "Merchandise" }
 ];
 
 const CUSTOM_ITEM = "Custom";
@@ -64,6 +63,7 @@ function AdminPayment(){
     const [saleMethod, setSaleMethod] = useState("CASH");
     const [savingSale, setSavingSale] = useState(false);
 
+    // For academic: the service label. For merchandise: the catalog item id.
     const [saleItem, setSaleItem] = useState("");
     const [saleQuantity, setSaleQuantity] = useState(1);
 
@@ -71,6 +71,10 @@ function AdminPayment(){
     const [merchandiseList, setMerchandiseList] = useState([]);
     const [merchSearch, setMerchSearch] = useState("");
     const [merchCategoryFilter, setMerchCategoryFilter] = useState("All");
+
+    // Merchandise transaction history filters
+    const [merchTxSearch, setMerchTxSearch] = useState("");
+    const [merchTxFilter, setMerchTxFilter] = useState("All");
 
     // Merchandise Modals
     const [showAddMerchModal, setShowAddMerchModal] = useState(false);
@@ -98,7 +102,10 @@ function AdminPayment(){
     // Derived sale values (recalculate on every render, so the total updates live)
     const isCustomSale = saleCategory === "custom" || saleItem === CUSTOM_ITEM;
     const selectedAcademic = ACADEMIC_SERVICES.find(item => item.label === saleItem);
-    const selectedMerch = merchandiseList.find(item => item.name === saleItem || item.id === saleItem);
+    const selectedMerch =
+        saleCategory === "merchandise"
+            ? merchandiseList.find(item => item.id === saleItem)
+            : undefined;
 
     const saleUnitPrice = isCustomSale
         ? Number(salePrice) || 0
@@ -106,7 +113,7 @@ function AdminPayment(){
         ? selectedAcademic.price
         : selectedMerch
         ? selectedMerch.price
-        : (SALE_ITEMS.find(item => item.label === saleItem)?.price || 0);
+        : 0;
 
     const saleQty = Math.max(1, parseInt(saleQuantity, 10) || 1);
     const saleTotal = saleUnitPrice * saleQty;
@@ -121,14 +128,14 @@ function AdminPayment(){
     const [reviewNote, setReviewNote] = useState("");
     const [reviewing, setReviewing] = useState(false);
 
-        useEffect(() => { 
-            getUsers();
-            getPaymentList();
-            getRenewalRequests();
-            setMerchandiseList(getMerchandiseList());
-        }, []);
-    
-    
+    useEffect(() => {
+        getUsers();
+        getPaymentList();
+        getRenewalRequests();
+        setMerchandiseList(getMerchandiseList());
+    }, []);
+
+
     async function getUsers() {
         const { data: users, error } = await supabase
         .from("users")
@@ -189,25 +196,22 @@ function AdminPayment(){
         setSelectedStudent(student);
     }
 
-   async function getPaymentList() {
-    const { data, error } = await supabase
-        .from("payments")
-        .select(`
-            *,
-            student:users!payments_student_id_fkey(*)
-        `)
-        .order("payment_date", { ascending: false });
+    async function getPaymentList() {
+        const { data, error } = await supabase
+            .from("payments")
+            .select(`
+                *,
+                student:users!payments_student_id_fkey(*)
+            `)
+            .order("payment_date", { ascending: false });
 
-    console.log("ERROR:", error);
-    console.log("DATA:", data);
+        if (error) {
+            console.error(error);
+            return;
+        }
 
-    if (error) {
-        console.error(error);
-        return;
+        setPaymentLists(data || []);
     }
-
-    setPaymentLists(data);
-}
 
     // ==========================================
     // RENEWAL REQUESTS
@@ -453,8 +457,13 @@ function AdminPayment(){
     async function addPayment(){
         if (loading) return;
 
+        if (!admin) {
+            alert("Unable to identify the logged-in admin. Please refresh and try again.");
+            return;
+        }
+
         setLoading(true);
-        
+
         try{
 
             const today = new Date();
@@ -490,7 +499,7 @@ function AdminPayment(){
             .from("payments")
             .insert({
                 student_id: selectedStudent.id,
-                amount: 3200,
+                amount: MONTHLY_PRICE,
                 months: 1,
                 payment_date: new Date().toISOString(),
                 subscription_start: subscriptionStart.toISOString(),
@@ -501,7 +510,8 @@ function AdminPayment(){
             });
 
             if(paymentError){
-                console.log(paymentError);
+                console.error(paymentError);
+                alert("Unable to record the payment: " + paymentError.message);
                 return;
             }
 
@@ -509,12 +519,12 @@ function AdminPayment(){
             .from("users")
             .update({
                 Status: "Active",
-                Subscription_Expires: subscriptionExpires
+                Subscription_Expires: subscriptionExpires.toISOString()
             })
             .eq("id", selectedStudent.id);
 
             if(updateError){
-                console.log(updateError);
+                console.error(updateError);
             }
 
             setShowModal(false);
@@ -531,7 +541,7 @@ function AdminPayment(){
 
         }finally {
 
-        setLoading(false);
+            setLoading(false);
 
         }
     }
@@ -566,12 +576,24 @@ function AdminPayment(){
             return;
         }
 
+        if (selectedMerch && saleQty > (Number(selectedMerch.stock) || 0)) {
+            alert(`Only ${selectedMerch.stock || 0} units available in stock.`);
+            return;
+        }
+
         if (!admin) {
             alert("Unable to identify the logged-in admin. Please refresh and try again.");
             return;
         }
 
-        const serviceTitle = isCustomSale ? saleService.trim() : saleItem;
+        // Merchandise keeps the size in the text, e.g. "Tutorial Shirt [Size M] (x2)"
+        // so reports can tell sizes apart.
+        const serviceText = selectedMerch
+            ? formatMerchService(selectedMerch, saleQty)
+            : (() => {
+                const title = isCustomSale ? saleService.trim() : saleItem;
+                return saleQty > 1 ? `${title} (x${saleQty})` : title;
+            })();
 
         setSavingSale(true);
 
@@ -582,8 +604,7 @@ function AdminPayment(){
                 .insert({
                     student_id: null,
                     customer_name: saleName.trim(),
-                    // e.g. "Notebooks (x3)" so the quantity shows in Transaction History
-                    service: saleQty > 1 ? `${serviceTitle} (x${saleQty})` : serviceTitle,
+                    service: serviceText,
                     amount: saleTotal,
                     months: 0,
                     payment_date: new Date().toISOString(),
@@ -739,7 +760,8 @@ function AdminPayment(){
                 .insert({
                     student_id: null,
                     customer_name: quickSellCustomer.trim(),
-                    service: qty > 1 ? `${quickSellItem.name} (x${qty})` : quickSellItem.name,
+                    // includes the size, e.g. "Tutorial Shirt [Size M] (x2)"
+                    service: formatMerchService(quickSellItem, qty),
                     amount: total,
                     months: 0,
                     payment_date: new Date().toISOString(),
@@ -767,51 +789,41 @@ function AdminPayment(){
         }
     }
 
-    function getUnitsSold(item) {
-        const sLower = item.name.toLowerCase();
-        const itemSize = (item.size || "").toLowerCase();
-        let total = 0;
-        paymentLists.forEach(p => {
-            if (p.status !== "Completed" || !p.service) return;
-            const pLower = p.service.toLowerCase();
-            
-            let isMatch = false;
-            if (pLower.includes(sLower)) {
-                isMatch = true;
-            } else if (itemSize && (pLower.includes("shirt") || pLower.includes("t-shirt"))) {
-                // If payment mentions a specific size
-                const sizeMatch = pLower.match(/\b(xs|xl|2xl|s|m|l)\b/i);
-                if (sizeMatch) {
-                    if (sizeMatch[1].toLowerCase() === itemSize) {
-                        isMatch = true;
-                    }
-                } else if (itemSize === "m") {
-                    // Attribute legacy un-sized "T-shirt" sales to Medium
-                    isMatch = true;
-                }
-            } else if (sLower.includes("notebook") && pLower.includes("notebook")) {
-                isMatch = true;
-            }
+    // ==========================================
+    // MERCHANDISE ANALYTICS
+    // ==========================================
 
-            if (isMatch) {
-                const match = p.service.match(/\(x(\d+)\)/);
-                total += match ? parseInt(match[1], 10) : 1;
-            }
-        });
-        return total;
-    }
+    // Walk-in merchandise sales
+    const merchandisePayments = useMemo(
+        () => paymentLists.filter(p => isMerchandisePayment(p, merchandiseList)),
+        [paymentLists, merchandiseList]
+    );
 
-    // Merchandise Analytics
+    // Everything else: student subscriptions, academic services, custom sales
+    const subscriptionPayments = useMemo(
+        () => paymentLists.filter(p => !isMerchandisePayment(p, merchandiseList)),
+        [paymentLists, merchandiseList]
+    );
+
     const totalMerchRevenue = useMemo(() => {
-        return paymentLists
+        return merchandisePayments
             .filter(p => p.status === "Completed")
-            .reduce((sum, p) => {
-                const sLower = (p.service || "").toLowerCase();
-                const isMerch = merchandiseList.some(m => sLower.includes(m.name.toLowerCase())) ||
-                    sLower.includes("t-shirt") || sLower.includes("shirt") || sLower.includes("notebook");
-                return isMerch ? sum + Number(p.amount || 0) : sum;
-            }, 0);
-    }, [paymentLists, merchandiseList]);
+            .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    }, [merchandisePayments]);
+
+    // Units sold per catalog row, using the same matching as the Reports page
+    const unitsSoldById = useMemo(() => {
+        const map = {};
+
+        merchandiseList.forEach(item => {
+            map[item.id] = merchandisePayments
+                .filter(p => p.status === "Completed")
+                .filter(p => matchItemToPayment(item, p.service, merchandiseList))
+                .reduce((sum, p) => sum + getQty(p.service), 0);
+        });
+
+        return map;
+    }, [merchandiseList, merchandisePayments]);
 
     const totalStockUnits = useMemo(() => {
         return merchandiseList.reduce((sum, m) => sum + (Number(m.stock) || 0), 0);
@@ -830,11 +842,23 @@ function AdminPayment(){
             return matchesCat && matchesSearch;
         });
     }, [merchandiseList, merchCategoryFilter, merchSearch]);
+
     // A payment is either a student subscription (has a student) or a
     // walk-in sale (has customer_name instead).
     function getPaymentName(payment){
         return payment.student?.Name || payment.customer_name || "Walk-in";
     }
+
+    const filteredMerchPayments = merchandisePayments.filter(payment => {
+        const term = merchTxSearch.toLowerCase().trim();
+
+        const matchesFilter = merchTxFilter === "All" || payment.status === merchTxFilter;
+        const matchesSearch =
+            getPaymentName(payment).toLowerCase().includes(term) ||
+            (payment.service || "").toLowerCase().includes(term);
+
+        return matchesFilter && matchesSearch;
+    });
 
     const pendingRequestCount = requests.filter(r => r.status === "Pending").length;
 
@@ -853,19 +877,14 @@ function AdminPayment(){
 
     });
 
-    const totalRevenue = paymentLists
+    // Subscription-side numbers (merchandise excluded)
+    const totalRevenue = subscriptionPayments
+        .filter(payment => payment.status === "Completed")
+        .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 
-        .filter(payment=>payment.status==="Completed")
+    const totalPayments = subscriptionPayments.length;
 
-        .reduce(
-        (sum,payment)=>sum+Number(payment.amount),
-        0
-        );
-
-
-    const totalPayments = paymentLists.length;
-
-    const successfulPayments = paymentLists.filter(
+    const successfulPayments = subscriptionPayments.filter(
         payment => payment.status === "Completed"
     ).length;
 
@@ -874,9 +893,7 @@ function AdminPayment(){
             ? 0
             : ((successfulPayments / totalPayments) * 100).toFixed(1);
 
-
-
-     const latestRefundable = {};
+    const latestRefundable = {};
 
     paymentLists
         .filter(payment => payment.status === "Completed" && payment.student_id)
@@ -891,9 +908,8 @@ function AdminPayment(){
                 latestRefundable[payment.student_id] = payment;
             }
         });
-        
-        
-    const filteredPayments = paymentLists.filter(payment => {
+
+    const filteredPayments = subscriptionPayments.filter(payment => {
 
         const matchesFilter =
             filter === "All" ||
@@ -912,92 +928,81 @@ function AdminPayment(){
     // modal's own search box. `users` is already ordered newest-first from
     // getUsers(), so this preserves that order.
     const filteredStudentOptions = users.filter(user =>
-        user.Name.toLowerCase().includes(studentSearch.toLowerCase().trim())
+        (user.Name || "").toLowerCase().includes(studentSearch.toLowerCase().trim())
     );
 
     async function refundPayment(){
 
-            if(!selectedPayment) return;
+        if(!selectedPayment) return;
 
-            const latestPayment = latestRefundable[selectedPayment.student_id];
+        const latestPayment = latestRefundable[selectedPayment.student_id];
 
-            if (
-                !latestPayment ||
-                latestPayment.payment_id !== selectedPayment.payment_id
-            ) {
-                alert("Only the latest completed payment can be refunded.");
-                return;
-            }
+        if (
+            !latestPayment ||
+            latestPayment.payment_id !== selectedPayment.payment_id
+        ) {
+            alert("Only the latest completed payment can be refunded.");
+            return;
+        }
 
-            if(refundReason.trim() === ""){
-                alert("Please provide a refund reason.");
-                return;
-            }
+        if(refundReason.trim() === ""){
+            alert("Please provide a refund reason.");
+            return;
+        }
 
-            setLoading(true);
+        setLoading(true);
 
-            try{
+        try{
 
-                // Update payment
-
-                const { error: paymentError } = await supabase
-
+            // Update payment
+            const { error: paymentError } = await supabase
                 .from("payments")
-
                 .update({
-
                     status:"Refunded",
-
                     refund_date:new Date().toISOString(),
-
                     refund_reason:refundReason
-
                 })
-
                 .eq("payment_id",selectedPayment.payment_id);
 
-                if(paymentError){
+            if(paymentError){
+                console.error(paymentError);
+                return;
+            }
 
-                    console.error(paymentError);
+            // Get all remaining completed payments
+            const { data: remainingPayments, error: remainingError } = await supabase
+                .from("payments")
+                .select("*")
+                .eq("student_id", selectedPayment.student_id)
+                .eq("status", "Completed")
+                .order("subscription_expires", { ascending: false });
 
+            if (remainingError) {
+                console.error(remainingError);
+                return;
+            }
+
+            if (remainingPayments.length === 0) {
+
+                const { error } = await supabase
+                    .from("users")
+                    .update({
+                        Status: "Inactive",
+                        Subscription_Expires: null
+                    })
+                    .eq("id", selectedPayment.student_id);
+
+                if (error) {
+                    console.error(error);
                     return;
-
                 }
 
-               // Get all remaining completed payments
-                const { data: remainingPayments, error: remainingError } = await supabase
-                    .from("payments")
-                    .select("*")
-                    .eq("student_id", selectedPayment.student_id)
-                    .eq("status", "Completed")
-                    .order("subscription_expires", { ascending: false });
+            }
+            else {
 
-                if (remainingError) {
-                    console.error(remainingError);
-                    return;
-                }
+                const newestPayment = remainingPayments[0];
 
-                if (remainingPayments.length === 0) {
-
-                    const { error } = await supabase
-                        .from("users")
-                        .update({
-                            Status: "Inactive",
-                            Subscription_Expires: null
-                        })
-                        .eq("id", selectedPayment.student_id);
-
-                    if (error) {
-                        console.error(error);
-                        return;
-                    }
-
-                }
-                else {
-
-                const latestPayment = remainingPayments[0];
-
-                const latestExpiry = new Date(latestPayment.subscription_expires);
+                const latestExpiry = new Date(newestPayment.subscription_expires);
                 const today = new Date();
 
                 const status =
@@ -1005,47 +1010,39 @@ function AdminPayment(){
                         ? "Active"
                         : "Inactive";
 
-               const { error: userError } = await supabase
+                const { error: userError } = await supabase
                     .from("users")
                     .update({
                         Status: status,
-                        Subscription_Expires: latestPayment.subscription_expires
+                        Subscription_Expires: newestPayment.subscription_expires
                     })
                     .eq("id", selectedPayment.student_id);
-                 if (userError) {
+
+                if (userError) {
                     console.error(userError);
                     return;
                 }
 
             }
 
-                alert("Refund completed.");
+            alert("Refund completed.");
 
-                setShowRefundModal(false);
+            setShowRefundModal(false);
+            setSelectedPayment(null);
+            setRefundReason("");
 
-                setSelectedPayment(null);
-
-                setRefundReason("");
-
-                getUsers();
-
-                getPaymentList();
-
-            }
-
-            catch(err){
-
-                console.error(err);
-
-            }
-
-            finally{
-
-                setLoading(false);
-
-            }
+            getUsers();
+            getPaymentList();
 
         }
+        catch(err){
+            console.error(err);
+        }
+        finally{
+            setLoading(false);
+        }
+
+    }
 
     async function deletePayment(){
 
@@ -1064,6 +1061,21 @@ function AdminPayment(){
                 console.error(deleteError);
                 alert("Unable to delete transaction.");
                 return;
+            }
+
+            // Deleting a completed merchandise sale puts the units back in stock
+            if (
+                paymentToDelete.status === "Completed" &&
+                isMerchandisePayment(paymentToDelete, merchandiseList)
+            ) {
+                const soldItem = merchandiseList.find(item =>
+                    matchItemToPayment(item, paymentToDelete.service, merchandiseList)
+                );
+
+                if (soldItem) {
+                    restockMerchandise(soldItem.id, getQty(paymentToDelete.service));
+                    setMerchandiseList(getMerchandiseList());
+                }
             }
 
             // Walk-in sales have no student, so there is no subscription
@@ -1095,8 +1107,8 @@ function AdminPayment(){
 
                 } else {
 
-                    const latestPayment = remainingPayments[0];
-                    const latestExpiry = new Date(latestPayment.subscription_expires);
+                    const newestPayment = remainingPayments[0];
+                    const latestExpiry = new Date(newestPayment.subscription_expires);
                     const today = new Date();
 
                     const status = latestExpiry > today ? "Active" : "Inactive";
@@ -1105,7 +1117,7 @@ function AdminPayment(){
                         .from("users")
                         .update({
                             Status: status,
-                            Subscription_Expires: latestPayment.subscription_expires
+                            Subscription_Expires: newestPayment.subscription_expires
                         })
                         .eq("id", paymentToDelete.student_id);
 
@@ -1317,16 +1329,19 @@ function AdminPayment(){
                     {saleCategory === "merchandise" && (
                         <select
                             value={saleItem}
-                            onChange={(e) => setSaleItem(e.target.value)}
+                            onChange={(e) => {
+                                setSaleItem(e.target.value);
+                                setSaleQuantity(1);
+                            }}
                         >
                             <option value="">Select physical merchandise</option>
                             {merchandiseList.map(item => (
                                 <option
                                     key={item.id}
-                                    value={item.name}
+                                    value={item.id}
                                     disabled={item.stock <= 0}
                                 >
-                                    {item.name} - ₱{item.price.toLocaleString()} ({item.stock > 0 ? `${item.stock} in stock` : "Out of stock"})
+                                    {item.name}{item.size ? ` [Size ${item.size}]` : ""} - ₱{item.price.toLocaleString()} ({item.stock > 0 ? `${item.stock} in stock` : "Out of stock"})
                                 </option>
                             ))}
                         </select>
@@ -1545,7 +1560,7 @@ function AdminPayment(){
                 <div className="modal restock-modal">
                     <h2>Restock Inventory</h2>
                     <p style={{ margin: "4px 0 16px", color: "#64748b", fontSize: "0.88rem" }}>
-                        Adding units for <strong>{restockTarget.name}</strong> (Current Stock: {restockTarget.stock})
+                        Adding units for <strong>{restockTarget.name}</strong>{restockTarget.size ? ` (Size ${restockTarget.size})` : ""} (Current Stock: {restockTarget.stock})
                     </p>
 
                     <label style={{ fontSize: "0.84rem", fontWeight: 600, color: "#334155" }}>
@@ -1798,7 +1813,7 @@ function AdminPayment(){
                         <>
                             <button className='ActiveUser-Button' onClick={() => {
                                 if (merchandiseList.length > 0) {
-                                    setQuickSellItem(merchandiseList[0]);
+                                    setQuickSellItem(merchandiseList.find(m => m.stock > 0) || merchandiseList[0]);
                                     setQuickSellQty(1);
                                     setQuickSellCustomer("");
                                     setShowQuickSellModal(true);
@@ -1847,7 +1862,7 @@ function AdminPayment(){
                 <div className="AdminPaymentNumberPanel">
                     <div className='PaymentNumberBox'>
                         <text>Total Revenue (YTR)</text>
-                        <h1>₱{totalRevenue}</h1>
+                        <h1>₱{totalRevenue.toLocaleString()}</h1>
                     </div>
 
                     <div className='PaymentNumberBox'>
@@ -1857,9 +1872,7 @@ function AdminPayment(){
 
                     <div className='PaymentNumberBox'>
                         <text>Refunds</text>
-                        <h1>
-                            {paymentLists.filter(p => p.status === "Refunded").length}
-                        </h1>
+                        <h1>{subscriptionPayments.filter(p => p.status === "Refunded").length}</h1>
                     </div>
                 </div>
 
@@ -1973,7 +1986,7 @@ function AdminPayment(){
 
         <div className='AdminLowerPaymentPanel'>
 
-            <h1 className='TransactionHistory-Title'>Transaction History</h1>
+            <h1 className='TransactionHistory-Title'>Subscription & Services Transaction History</h1>
             <div className="payment-toolbar">
 
                 <input
@@ -1984,34 +1997,15 @@ function AdminPayment(){
                 />
 
                 <div className="button-panel">
-                <button
-                    className={filter === "All" ? "active-filter" : ""}
-                    onClick={() => setFilter("All")}
-                >
-                    All
-                </button>
-
-                <button
-                    className={filter === "Completed" ? "active-filter" : ""}
-                    onClick={() => setFilter("Completed")}
-                >
-                    Completed
-                </button>
-
-                <button
-                    className={filter === "Failed" ? "active-filter" : ""}
-                    onClick={() => setFilter("Failed")}
-                >
-                    Failed
-                </button>
-
-                <button
-                    className={filter === "Refunded" ? "active-filter" : ""}
-                    onClick={() => setFilter("Refunded")}
-                >
-                    Refunded
-                </button>
-                    
+                    {["All", "Completed", "Failed", "Refunded"].map(option => (
+                        <button
+                            key={option}
+                            className={filter === option ? "active-filter" : ""}
+                            onClick={() => setFilter(option)}
+                        >
+                            {option}
+                        </button>
+                    ))}
                 </div>
             </div>
             <div>
@@ -2032,9 +2026,14 @@ function AdminPayment(){
                         </thead>
 
                         <tbody>
-                            {
-                                filteredPayments.map((payment) => 
-                                (
+                            {filteredPayments.length === 0 ? (
+                                <tr>
+                                    <td colSpan={8} className="empty-row">
+                                        No transactions found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredPayments.map((payment) => (
                                     <tr key={payment.payment_id}>
                                         <td><strong>RCPT-{String(payment.payment_id).padStart(5, '0')}</strong></td>
                                         <td>{getPaymentName(payment)}</td>
@@ -2064,14 +2063,12 @@ function AdminPayment(){
 
                                                 ) : (
 
-                                                   <button disabled>
-
-                                                    {
-                                                    payment.status === "Completed"
-                                                        ? (payment.student_id ? "Cannot Refund" : "Sale")
-                                                        : payment.status
-                                                    }
-
+                                                    <button disabled>
+                                                        {
+                                                        payment.status === "Completed"
+                                                            ? (payment.student_id ? "Cannot Refund" : "Sale")
+                                                            : payment.status
+                                                        }
                                                     </button>
 
                                                 )}
@@ -2088,10 +2085,8 @@ function AdminPayment(){
                                             </div>
                                         </td>
                                     </tr>
-                                )
-                                )
-                            }
-                        
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -2133,13 +2128,6 @@ function AdminPayment(){
                             </p>
                         </div>
                         <div className="merch-quick-header-actions">
-                            <button
-                                type="button"
-                                className="ActiveUser-Button"
-                                onClick={() => openAddMerchModal()}
-                            >
-                                + Add Product
-                            </button>
                         </div>
                     </div>
 
@@ -2210,7 +2198,7 @@ function AdminPayment(){
                                                 </span>
                                             </td>
                                             <td>
-                                                <span style={{ fontWeight: 600, color: "#1e293b" }}>{getUnitsSold(item)} sold</span>
+                                                <span style={{ fontWeight: 600, color: "#1e293b" }}>{unitsSoldById[item.id] || 0} sold</span>
                                             </td>
                                             <td>
                                                 <div className="action-buttons">
@@ -2261,6 +2249,90 @@ function AdminPayment(){
                         </table>
                     </div>
                 </div>
+
+
+                {/* Merchandise Transaction History */}
+                <div className='AdminLowerPaymentPanel'>
+                    <h1 className='TransactionHistory-Title'>Merchandise Transaction History</h1>
+
+                    <div className="payment-toolbar">
+                        <input
+                            type="text"
+                            placeholder="Search customer or item..."
+                            value={merchTxSearch}
+                            onChange={(e) => setMerchTxSearch(e.target.value)}
+                        />
+
+                        <div className="button-panel">
+                            {["All", "Completed", "Failed", "Refunded"].map(option => (
+                                <button
+                                    key={option}
+                                    type="button"
+                                    className={merchTxFilter === option ? "active-filter" : ""}
+                                    onClick={() => setMerchTxFilter(option)}
+                                >
+                                    {option}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className='mainTable'>
+                        <table className='user-table'>
+                            <thead>
+                                <tr>
+                                    <th>Receipt Ref #</th>
+                                    <th>Customer</th>
+                                    <th>Item</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Payment Method</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {filteredMerchPayments.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={8} className="empty-row">
+                                            No merchandise transactions found.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredMerchPayments.map(payment => (
+                                        <tr key={payment.payment_id}>
+                                            <td><strong>RCPT-{String(payment.payment_id).padStart(5, '0')}</strong></td>
+                                            <td>{getPaymentName(payment)}</td>
+                                            <td>{payment.service}</td>
+                                            <td>₱{Number(payment.amount).toLocaleString()}</td>
+                                            <td>{new Date(payment.payment_date).toLocaleDateString()}</td>
+                                            <td>{payment.method || "CASH"}</td>
+                                            <td>
+                                                <span className={`status ${payment.status.toLowerCase()}`}>
+                                                    {payment.status}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="action-buttons">
+                                                    <button
+                                                        className="delete-button"
+                                                        onClick={() => {
+                                                            setPaymentToDelete(payment);
+                                                            setShowDeleteModal(true);
+                                                        }}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         )}
 
@@ -2274,27 +2346,23 @@ function AdminPayment(){
                     <h2>Refund Payment</h2>
 
                     <p>
-                        Student:
+                        Student:{" "}
                         <strong>
                             {selectedPayment && getPaymentName(selectedPayment)}
                         </strong>
                     </p>
 
                     <p>
-                        Amount:
+                        Amount:{" "}
                         <strong>
                             ₱{selectedPayment?.amount}
                         </strong>
                     </p>
 
                     <textarea
-
                         placeholder="Reason for refund"
-
                         value={refundReason}
-
                         onChange={(e)=>setRefundReason(e.target.value)}
-
                     />
 
                     <div className="modal-buttons">
@@ -2323,7 +2391,7 @@ function AdminPayment(){
             </div>
 
             )
-            }
+        }
 
         {
             showDeleteModal && (
@@ -2335,22 +2403,23 @@ function AdminPayment(){
                     <h2>Delete Transaction</h2>
 
                     <p>
-                        Student:
+                        {paymentToDelete?.student_id ? "Student" : "Customer"}:{" "}
                         <strong>
                             {paymentToDelete && getPaymentName(paymentToDelete)}
                         </strong>
                     </p>
 
                     <p>
-                        Amount:
+                        Amount:{" "}
                         <strong>
                             ₱{paymentToDelete?.amount}
                         </strong>
                     </p>
 
                     <p>
-                        This permanently removes the transaction and recalculates the
-                        student's subscription status. This cannot be undone.
+                        {paymentToDelete?.student_id
+                            ? "This permanently removes the transaction and recalculates the student's subscription status. This cannot be undone."
+                            : "This permanently removes the transaction. If it was a merchandise sale, the units are returned to stock. This cannot be undone."}
                     </p>
 
                     <div className="modal-buttons">
@@ -2379,8 +2448,8 @@ function AdminPayment(){
             </div>
 
             )
-            }
+        }
     </>);
 }
 
-export default AdminPayment
+export default AdminPayment;

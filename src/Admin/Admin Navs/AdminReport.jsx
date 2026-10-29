@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Download,
-    FileText,
     FileSpreadsheet,
     X,
     Banknote,
@@ -10,8 +9,7 @@ import {
     Users,
     ShoppingBag,
     Filter,
-    RotateCcw,
-    BookOpen
+    RotateCcw
 } from "lucide-react";
 
 import {
@@ -29,9 +27,12 @@ import {
 } from "recharts";
 
 import { supabase } from "../../lib/supabase";
-
-import LogoImage from "../../assets/yosefLogo.jpg";
 import { getMerchandiseList } from "../../Services/merchandiseService";
+import {
+    getQty,
+    isMerchandisePayment,
+    matchItemToPayment
+} from "../../lib/merchandiseUtils";
 
 import "./adminReport.css";
 
@@ -57,6 +58,26 @@ const EMPTY_FILTERS = {
     status: "",
     enrolled: "",
     tutorId: ""
+};
+
+const ALL_SHEETS_ON = {
+    summary: true,
+    payments: true,
+    sessions: true,
+    ratings: true,
+    students: true,
+    merchandise: true,
+    tutors: true
+};
+
+const ALL_SHEETS_OFF = {
+    summary: false,
+    payments: false,
+    sessions: false,
+    ratings: false,
+    students: false,
+    merchandise: false,
+    tutors: false
 };
 
 const STATUS_COLORS = {
@@ -206,9 +227,39 @@ function matchesFilters(student, filters) {
         return false;
     }
 
-
-
     return true;
+
+}
+
+function formatCurrency(value) {
+
+    return new Intl.NumberFormat(
+        "en-PH",
+        {
+            style: "currency",
+            currency: "PHP",
+            maximumFractionDigits: 0
+        }
+    ).format(value || 0);
+
+}
+
+function formatDate(date) {
+
+    if (!date) {
+        return "—";
+    }
+
+    return new Date(
+        date
+    ).toLocaleDateString(
+        "en-PH",
+        {
+            year: "numeric",
+            month: "short",
+            day: "numeric"
+        }
+    );
 
 }
 
@@ -228,15 +279,7 @@ function AdminReport() {
 
     const [exportFormat, setExportFormat] = useState("excel_pdf");
 
-    const [selectedSheets, setSelectedSheets] = useState({
-        summary: true,
-        payments: true,
-        sessions: true,
-        ratings: true,
-        students: true,
-        merchandise: true,
-        tutors: true
-    });
+    const [selectedSheets, setSelectedSheets] = useState(ALL_SHEETS_ON);
 
     const [adminUser, setAdminUser] = useState({
         name: "Admin",
@@ -304,13 +347,15 @@ function AdminReport() {
                 tutorsRes
             ] = await Promise.all([
 
-                // PAYMENTS
+                // PAYMENTS (service + method are needed to identify merchandise sales)
                 supabase
                     .from("payments")
                     .select(`
                         payment_id,
                         student_id,
                         customer_name,
+                        service,
+                        method,
                         amount,
                         payment_date,
                         status,
@@ -569,8 +614,6 @@ function AdminReport() {
         if (filters.school.trim())
             list.push({ label: "School contains", value: filters.school.trim() });
 
-
-
         if (filters.grade)
             list.push({ label: "Grade", value: filters.grade });
 
@@ -619,20 +662,21 @@ function AdminReport() {
         const allowedIds = new Set(filteredStudents.map(s => s.id));
 
         // When a profile filter is active, only records that
-        // belong to a matching student are kept. Records with no
-        // student (e.g. walk-in payments) are dropped in that case.
+        // belong to a matching student are kept. Walk-in merchandise
+        // sales have no student profile, so they are handled separately
+        // below and are never affected by profile filters.
         const keep = studentId =>
             !filtersActive || allowedIds.has(studentId);
 
         const nameOf = id => studentById.get(id)?.Name || "";
 
+        // Merchandise catalog (stock + prices) from the inventory service
+        const catalogList = getMerchandiseList() || [];
+
 
         // ---------- PAYMENTS ----------
-        const completedPayments = raw.payments
-            .filter(payment =>
-                payment.status === "Completed" &&
-                keep(payment.student_id)
-            )
+        const allCompleted = raw.payments
+            .filter(payment => payment.status === "Completed")
             .map(payment => ({
                 ...payment,
                 studentName:
@@ -641,10 +685,40 @@ function AdminReport() {
                     ""
             }));
 
-        const totalRevenue = completedPayments.reduce(
+        // Merchandise sales: walk-ins whose service matches the catalog.
+        // These ignore the student profile filters.
+        const merchandisePayments = allCompleted.filter(payment =>
+            isMerchandisePayment(payment, catalogList)
+        );
+
+        // Subscriptions / academic services: follow the profile filters
+        const completedPayments = allCompleted.filter(payment =>
+            !isMerchandisePayment(payment, catalogList) &&
+            keep(payment.student_id)
+        );
+
+        const academicRevenue = completedPayments.reduce(
             (total, payment) => total + Number(payment.amount || 0),
             0
         );
+
+        const merchandiseRevenue = merchandisePayments.reduce(
+            (total, payment) => total + Number(payment.amount || 0),
+            0
+        );
+
+        // Headline revenue = subscriptions/services + merchandise.
+        // With a profile filter active, merchandise is excluded so the
+        // total only reflects the filtered students.
+        const totalRevenue =
+            academicRevenue + (filtersActive ? 0 : merchandiseRevenue);
+
+        // Rows shown in the Revenue Details modal and the export sheets
+        const revenuePayments = filtersActive
+            ? completedPayments
+            : [...completedPayments, ...merchandisePayments].sort(
+                (a, b) => new Date(b.payment_date) - new Date(a.payment_date)
+            );
 
 
         // ---------- SESSIONS ----------
@@ -691,7 +765,7 @@ function AdminReport() {
         // ---------- REVENUE BY MONTH ----------
         const monthlyRevenue = {};
 
-        completedPayments.forEach(payment => {
+        revenuePayments.forEach(payment => {
 
             const month = new Date(payment.payment_date).toLocaleString(
                 "en-US",
@@ -727,58 +801,17 @@ function AdminReport() {
 
 
         // ---------- MERCHANDISE & INVENTORY STATS ----------
-        const catalogList = getMerchandiseList();
-
-        function isMerchService(serviceStr) {
-            if (!serviceStr) return false;
-            const sLower = serviceStr.toLowerCase();
-            if (sLower.includes("shirt") || sLower.includes("t-shirt") || sLower.includes("notebook")) {
-                return true;
-            }
-            return catalogList.some(m => sLower.includes((m.name || "").toLowerCase()));
-        }
-
-        const merchandisePayments = completedPayments.filter(p => isMerchService(p.service));
-        const academicPayments = completedPayments.filter(p => !isMerchService(p.service));
-
-        const merchandiseRevenue = merchandisePayments.reduce(
-            (sum, p) => sum + Number(p.amount || 0),
-            0
-        );
-        const academicRevenue = academicPayments.reduce(
-            (sum, p) => sum + Number(p.amount || 0),
-            0
-        );
-
-        function matchItemToPayment(item, serviceStr) {
-            if (!serviceStr) return false;
-            const pLower = serviceStr.toLowerCase();
-            const sLower = item.name.toLowerCase();
-            const itemSize = (item.size || "").toLowerCase();
-
-            if (pLower.includes(sLower)) return true;
-            if (itemSize && (pLower.includes("shirt") || pLower.includes("t-shirt"))) {
-                const sizeMatch = pLower.match(/\b(xs|xl|2xl|s|m|l)\b/i);
-                if (sizeMatch) {
-                    return sizeMatch[1].toLowerCase() === itemSize;
-                }
-                if (itemSize === "m") return true;
-            }
-            if (sLower.includes("notebook") && pLower.includes("notebook")) return true;
-            return false;
-        }
-
         const merchandiseSummary = catalogList.map(item => {
             let unitsSold = 0;
             let periodRevenue = 0;
-            merchandisePayments.forEach(p => {
-                if (matchItemToPayment(item, p.service)) {
-                    const match = (p.service || "").match(/\(x(\d+)\)/);
-                    const qty = match ? parseInt(match[1], 10) : 1;
-                    unitsSold += qty;
-                    periodRevenue += Number(p.amount || 0);
+
+            merchandisePayments.forEach(payment => {
+                if (matchItemToPayment(item, payment.service, catalogList)) {
+                    unitsSold += getQty(payment.service);
+                    periodRevenue += Number(payment.amount || 0);
                 }
             });
+
             return {
                 ...item,
                 unitsSold,
@@ -786,9 +819,18 @@ function AdminReport() {
             };
         });
 
-        const totalMerchUnitsSold = merchandiseSummary.reduce((sum, m) => sum + m.unitsSold, 0);
-        const totalMerchStock = catalogList.reduce((sum, m) => sum + (Number(m.stock) || 0), 0);
+        const totalMerchUnitsSold = merchandiseSummary.reduce(
+            (sum, item) => sum + item.unitsSold,
+            0
+        );
 
+        const totalMerchStock = catalogList.reduce(
+            (sum, item) => sum + (Number(item.stock) || 0),
+            0
+        );
+
+
+        // ---------- TUTOR PROFILES ----------
         const tutorsList = (raw.tutors || []).map(tutor => {
             const assignedStudents = raw.students.filter(s => {
                 const det = Array.isArray(s.user_details) ? s.user_details[0] || {} : s.user_details || {};
@@ -828,7 +870,8 @@ function AdminReport() {
             revenueByMonth,
             sessionsByStatus,
 
-            completedPayments,
+            // Used by the Revenue Details modal and the export files
+            completedPayments: revenuePayments,
             sessionsData,
             ratingsData,
             enrollmentsData,
@@ -922,36 +965,17 @@ function AdminReport() {
     function selectOnlySheet(id, e) {
         if (e) e.stopPropagation();
         setSelectedSheets({
-            summary: id === "summary",
-            payments: id === "payments",
-            sessions: id === "sessions",
-            ratings: id === "ratings",
-            students: id === "students",
-            merchandise: id === "merchandise",
-            tutors: id === "tutors"
+            ...ALL_SHEETS_OFF,
+            [id]: true
         });
     }
 
     function selectAllSheets() {
-        setSelectedSheets({
-            summary: true,
-            payments: true,
-            sessions: true,
-            ratings: true,
-            students: true,
-            merchandise: true
-        });
+        setSelectedSheets({ ...ALL_SHEETS_ON });
     }
 
     function deselectAllSheets() {
-        setSelectedSheets({
-            summary: false,
-            payments: false,
-            sessions: false,
-            ratings: false,
-            students: false,
-            merchandise: false
-        });
+        setSelectedSheets({ ...ALL_SHEETS_OFF });
     }
 
 
@@ -976,53 +1000,11 @@ function AdminReport() {
 
 
     // ==========================================
-    // FORMAT MONEY
-    // ==========================================
-
-    function formatCurrency(value) {
-
-        return new Intl.NumberFormat(
-            "en-PH",
-            {
-                style: "currency",
-                currency: "PHP",
-                maximumFractionDigits: 0
-            }
-        ).format(value);
-
-    }
-
-
-    // ==========================================
-    // FORMAT DATE
-    // ==========================================
-
-    function formatDate(date) {
-
-        if (!date) {
-            return "—";
-        }
-
-        return new Date(
-            date
-        ).toLocaleDateString(
-            "en-PH",
-            {
-                year: "numeric",
-                month: "short",
-                day: "numeric"
-            }
-        );
-
-    }
-
-
-    // ==========================================
     // EXPORT REPORT (PDF OR EXCEL)
     // ==========================================
 
     async function handleExecuteExport() {
-        if (exportFormat !== "pdf" && selectedSheetCount === 0) {
+        if (selectedSheetCount === 0) {
             alert("Please select at least one sheet to export.");
             return;
         }
@@ -1259,8 +1241,6 @@ function AdminReport() {
                             />
                         </div>
 
-
-
                         {/* GRADE */}
                         <div className="report-filter-field">
                             <label>Grade level</label>
@@ -1279,9 +1259,7 @@ function AdminReport() {
                             </select>
                         </div>
 
-
-
-                                                {/* LEARNING MODALITY */}
+                        {/* LEARNING MODALITY */}
                         <div className="report-filter-field">
                             <label>Learning modality</label>
                             <select
@@ -1401,7 +1379,9 @@ function AdminReport() {
                         {" "}student{filteredStudents.length === 1 ? "" : "s"} match
                         {filteredStudents.length === 1 ? "es" : ""} your filters.
                         Revenue, sessions, ratings and enrollments below only
-                        include these students.
+                        include these students. Merchandise sales are walk-in
+                        sales, so they are shown in full and are not part of the
+                        filtered revenue total.
                     </div>
                 )}
 
@@ -1409,440 +1389,448 @@ function AdminReport() {
                     KPI CARDS
                 ================================== */}
 
-            <div className="report-kpi-grid">
+                <div className="report-kpi-grid">
 
-                <div className="report-kpi-card">
-                    <div className="kpi-card-top">
-                        <span>Total Revenue</span>
-                        <div className="kpi-icon-pill kpi-icon-emerald">
-                            <Banknote size={17} />
+                    <div className="report-kpi-card">
+                        <div className="kpi-card-top">
+                            <span>Total Revenue</span>
+                            <div className="kpi-icon-pill kpi-icon-emerald">
+                                <Banknote size={17} />
+                            </div>
+                        </div>
+                        <h2>
+                            {formatCurrency(reportData.revenue)}
+                        </h2>
+                        <div className="kpi-subtitle">
+                            From completed payments
                         </div>
                     </div>
-                    <h2>
-                        {formatCurrency(reportData.revenue)}
-                    </h2>
-                    <div className="kpi-subtitle">
-                        From completed payments
-                    </div>
-                </div>
 
-                <div className="report-kpi-card">
-                    <div className="kpi-card-top">
-                        <span>Total Sessions</span>
-                        <div className="kpi-icon-pill kpi-icon-blue">
-                            <Calendar size={17} />
+                    <div className="report-kpi-card">
+                        <div className="kpi-card-top">
+                            <span>Total Sessions</span>
+                            <div className="kpi-icon-pill kpi-icon-blue">
+                                <Calendar size={17} />
+                            </div>
+                        </div>
+                        <h2>
+                            {reportData.sessions.toLocaleString()}
+                        </h2>
+                        <div className="kpi-subtitle">
+                            Schedule volume & activity
                         </div>
                     </div>
-                    <h2>
-                        {reportData.sessions.toLocaleString()}
-                    </h2>
-                    <div className="kpi-subtitle">
-                        Schedule volume & activity
-                    </div>
-                </div>
 
-                <div className="report-kpi-card">
-                    <div className="kpi-card-top">
-                        <span>Avg. Tutor Rating</span>
-                        <div className="kpi-icon-pill kpi-icon-amber">
-                            <Star size={17} />
+                    <div className="report-kpi-card">
+                        <div className="kpi-card-top">
+                            <span>Avg. Tutor Rating</span>
+                            <div className="kpi-icon-pill kpi-icon-amber">
+                                <Star size={17} />
+                            </div>
                         </div>
-                    </div>
-                    <h2>
-                        {reportData.avgRating}
-                        <span className="rating-small">
-                            / 5.0
-                        </span>
-                    </h2>
-                    <div className="kpi-subtitle">
-                        Student evaluations
-                    </div>
-                </div>
-
-                <div className="report-kpi-card">
-                    <div className="kpi-card-top">
-                        <span>New Enrollments</span>
-                        <div className="kpi-icon-pill kpi-icon-purple">
-                            <Users size={17} />
-                        </div>
-                    </div>
-                    <h2>
-                        {reportData.newEnrollments.toLocaleString()}
-                    </h2>
-                    <div className="kpi-subtitle">
-                        Active student profiles
-                    </div>
-                </div>
-
-                <div className="report-kpi-card">
-                    <div className="kpi-card-top">
-                        <span>Merchandise Sales</span>
-                        <div className="kpi-icon-pill kpi-icon-indigo">
-                            <ShoppingBag size={17} />
-                        </div>
-                    </div>
-                    <h2>
-                        {formatCurrency(reportData.merchandiseRevenue || 0)}
-                    </h2>
-                    <div className="kpi-subtitle">
-                        <strong>{reportData.totalMerchUnitsSold || 0}</strong> sold • <strong>{reportData.totalMerchStock || 0}</strong> in stock
-                    </div>
-                </div>
-
-            </div>
-
-
-            {/* ==================================
-                CHARTS
-            ================================== */}
-
-            <div className="report-chart-grid">
-
-
-                {/* REVENUE */}
-
-                <div className="report-chart-card revenue-chart">
-
-                    <div className="chart-card-header">
-
-                        <div>
-
-                            <h3>
-                                Revenue Over Time
-                            </h3>
-
-                            <span>
-                                Completed payments
+                        <h2>
+                            {reportData.avgRating}
+                            <span className="rating-small">
+                                / 5.0
                             </span>
-
+                        </h2>
+                        <div className="kpi-subtitle">
+                            Student evaluations
                         </div>
-
-                        <button
-                            onClick={() =>
-                                setShowRevenueDetails(true)
-                            }
-                        >
-                            View details
-                        </button>
-
                     </div>
 
+                    <div className="report-kpi-card">
+                        <div className="kpi-card-top">
+                            <span>New Enrollments</span>
+                            <div className="kpi-icon-pill kpi-icon-purple">
+                                <Users size={17} />
+                            </div>
+                        </div>
+                        <h2>
+                            {reportData.newEnrollments.toLocaleString()}
+                        </h2>
+                        <div className="kpi-subtitle">
+                            Active student profiles
+                        </div>
+                    </div>
 
-                    <div className="chart-container">
+                    <div className="report-kpi-card">
+                        <div className="kpi-card-top">
+                            <span>Merchandise Sales</span>
+                            <div className="kpi-icon-pill kpi-icon-indigo">
+                                <ShoppingBag size={17} />
+                            </div>
+                        </div>
+                        <h2>
+                            {formatCurrency(reportData.merchandiseRevenue)}
+                        </h2>
+                        <div className="kpi-subtitle">
+                            <strong>{reportData.totalMerchUnitsSold || 0}</strong> sold • <strong>{reportData.totalMerchStock || 0}</strong> in stock
+                        </div>
+                    </div>
 
-                        {reportData.revenueByMonth.length === 0 ? (
+                </div>
 
-                            <div className="chart-empty">
-                                No revenue data available.
+
+                {/* ==================================
+                    CHARTS
+                ================================== */}
+
+                <div className="report-chart-grid">
+
+
+                    {/* REVENUE */}
+
+                    <div className="report-chart-card revenue-chart">
+
+                        <div className="chart-card-header">
+
+                            <div>
+
+                                <h3>
+                                    Revenue Over Time
+                                </h3>
+
+                                <span>
+                                    Completed payments
+                                </span>
+
                             </div>
 
-                        ) : (
-
-                            <ResponsiveContainer
-                                width="100%"
-                                height="100%"
+                            <button
+                                onClick={() =>
+                                    setShowRevenueDetails(true)
+                                }
                             >
-
-                                <BarChart
-                                    data={reportData.revenueByMonth}
-                                    margin={{ top: 12, right: 16, left: 10, bottom: 4 }}
-                                >
-                                    <CartesianGrid
-                                        strokeDasharray="3 3"
-                                        vertical={false}
-                                        stroke="#f1f5f9"
-                                    />
-                                    <XAxis
-                                        dataKey="month"
-                                        tick={{ fill: "#64748b", fontSize: 12 }}
-                                        axisLine={{ stroke: "#e2e8f0" }}
-                                        tickLine={false}
-                                    />
-                                    <YAxis
-                                        tick={{ fill: "#64748b", fontSize: 12 }}
-                                        axisLine={{ stroke: "#e2e8f0" }}
-                                        tickLine={false}
-                                        tickFormatter={val => `₱${Number(val).toLocaleString()}`}
-                                    />
-                                    <Tooltip
-                                        formatter={value => [formatCurrency(value), "Total Revenue"]}
-                                        contentStyle={{
-                                            backgroundColor: "#1e293b",
-                                            color: "#ffffff",
-                                            borderRadius: "8px",
-                                            border: "none",
-                                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                                            fontSize: "12px",
-                                            padding: "8px 12px"
-                                        }}
-                                        itemStyle={{ color: "#ffffff" }}
-                                        labelStyle={{ color: "#94a3b8", fontWeight: 600, marginBottom: "4px" }}
-                                    />
-                                    <Bar
-                                        dataKey="revenue"
-                                        maxBarSize={48}
-                                        radius={[6, 6, 0, 0]}
-                                        fill="#2563eb"
-                                    />
-                                </BarChart>
-
-                            </ResponsiveContainer>
-
-                        )}
-
-                    </div>
-
-                </div>
-
-
-                {/* SESSION STATUS */}
-
-                <div className="report-chart-card">
-
-                    <div className="chart-card-header">
-
-                        <div>
-
-                            <h3>
-                                Sessions by Status
-                            </h3>
-
-                            <span>
-                                Schedule activity
-                            </span>
+                                View details
+                            </button>
 
                         </div>
 
-                    </div>
 
+                        <div className="chart-container">
 
-                    <div className="pie-chart-container">
+                            {reportData.revenueByMonth.length === 0 ? (
 
-                        {reportData.sessionsByStatus.length === 0 ? (
+                                <div className="chart-empty">
+                                    No revenue data available.
+                                </div>
 
-                            <div className="chart-empty">
-                                No session data available.
-                            </div>
-
-                        ) : (
-
-                            <ResponsiveContainer
-                                width="100%"
-                                height="100%"
-                            >
-
-                                <PieChart>
-
-                                    <Pie
-                                        data={reportData.sessionsByStatus}
-                                        dataKey="value"
-                                        nameKey="name"
-                                        cx="50%"
-                                        cy="42%"
-                                        innerRadius={50}
-                                        outerRadius={80}
-                                        paddingAngle={3}
-                                    >
-
-                                        {reportData.sessionsByStatus.map(
-                                            (entry, index) => (
-                                                <Cell
-                                                    key={`cell-${index}`}
-                                                    fill={
-                                                        STATUS_COLORS[entry.name] ||
-                                                        pieColors[
-                                                            index %
-                                                            pieColors.length
-                                                        ]
-                                                    }
-                                                />
-                                            )
-                                        )}
-
-                                    </Pie>
-
-                                    <Tooltip
-                                        formatter={(val, name) => [`${val} sessions`, name]}
-                                        contentStyle={{
-                                            backgroundColor: "#1e293b",
-                                            color: "#ffffff",
-                                            borderRadius: "8px",
-                                            border: "none",
-                                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                                            fontSize: "12px",
-                                            padding: "8px 12px"
-                                        }}
-                                        itemStyle={{ color: "#ffffff" }}
-                                    />
-
-                                    <Legend
-                                        verticalAlign="bottom"
-                                        iconType="circle"
-                                        iconSize={8}
-                                        wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }}
-                                        formatter={(value, entry) => (
-                                            <span style={{ color: "#334155", fontSize: "12px", fontWeight: 500, marginRight: "8px" }}>
-                                                {value}: <strong style={{ color: "#0f172a" }}>{entry.payload.value}</strong>
-                                            </span>
-                                        )}
-                                    />
-
-                                </PieChart>
-
-                            </ResponsiveContainer>
-
-                        )}
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            {/* ==================================
-                PHYSICAL MERCHANDISE & INVENTORY PERFORMANCE
-            ================================== */}
-            <div className="report-merch-section">
-                <div className="report-merch-header">
-                    <div>
-                        <h3>Physical Merchandise & Inventory Performance</h3>
-                        <p>Official center merchandise sales (Tutorial Shirts & Notebooks) and current stock levels</p>
-                    </div>
-                    <div className="report-merch-badges">
-                        <span className="merch-stat-chip highlight">
-                            🛍️ <strong>{formatCurrency(reportData.merchandiseRevenue || 0)}</strong> Merch Sales
-                        </span>
-                        <span className="merch-stat-chip">
-                            📦 <strong>{reportData.totalMerchStock || 0}</strong> Items in Stock
-                        </span>
-                    </div>
-                </div>
-
-                <div className="report-table-wrapper" style={{ maxHeight: "360px" }}>
-                    <table className="report-details-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Product & Variant</th>
-                                <th>Category</th>
-                                <th>Unit Price</th>
-                                <th>Current Stock</th>
-                                <th>Units Sold ({DATE_RANGE_LABELS[dateRange]})</th>
-                                <th>Revenue Generated</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {(reportData.merchandiseList || []).map((item, idx) => (
-                                <tr key={item.id}>
-                                    <td>{idx + 1}</td>
-                                    <td>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                                            <strong>{item.name}</strong>
-                                            {item.size && <span className="merch-size-badge">Size: {item.size}</span>}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span className="merch-cat-pill">{item.category}</span>
-                                    </td>
-                                    <td>
-                                        <strong>₱{item.price.toLocaleString()}</strong>
-                                    </td>
-                                    <td>
-                                        <span className={`stock-pill ${item.stock > 10 ? "in-stock" : item.stock > 0 ? "low-stock" : "out-of-stock"}`}>
-                                            {item.stock > 10 ? `${item.stock} in stock` : item.stock > 0 ? `Low (${item.stock})` : "Out of stock (0)"}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <strong>{item.unitsSold || 0} units</strong>
-                                    </td>
-                                    <td className="report-amount">
-                                        {formatCurrency(item.periodRevenue || 0)}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            <tr className="report-table-total-row">
-                                <td colSpan={4} style={{ textAlign: "right", fontWeight: 700 }}>
-                                    Catalog Total:
-                                </td>
-                                <td>
-                                    <strong>{reportData.totalMerchStock || 0} in stock</strong>
-                                </td>
-                                <td>
-                                    <strong>{reportData.totalMerchUnitsSold || 0} sold</strong>
-                                </td>
-                                <td className="report-amount" style={{ fontWeight: 800, color: "#1e40af" }}>
-                                    {formatCurrency(reportData.merchandiseRevenue || 0)}
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-
-                            {/* ==================================
-                TUTOR PROFILES & FACULTY PERFORMANCE
-            ================================== */}
-            <div className="report-merch-section report-tutor-section" style={{ marginTop: "24px" }}>
-                <div className="report-merch-header">
-                    <div>
-                        <h3>Tutor Profiles & Faculty Performance</h3>
-                        <p>Official faculty roster, assigned student caseloads, sessions delivered, and student ratings</p>
-                    </div>
-                    <div className="report-merch-badges">
-                        <span className="merch-stat-chip highlight">
-                            🧑‍🏫 <strong>{(reportData.tutorsList || []).length}</strong> Active Tutors
-                        </span>
-                        <span className="merch-stat-chip">
-                            ⭐ <strong>{reportData.avgRating || 0} / 5.0</strong> Center Rating
-                        </span>
-                    </div>
-                </div>
-
-                <div className="report-table-wrapper" style={{ maxHeight: "360px" }}>
-                    <table className="report-details-table">
-                        <thead>
-                            <tr>
-                                <th style={{ width: "40px" }}>#</th>
-                                <th>Tutor Name</th>
-                                <th>Email Address</th>
-                                <th>Account Status</th>
-                                <th>Date Joined</th>
-                                <th>Assigned Students</th>
-                                <th>Total Sessions</th>
-                                <th>Average Rating</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {(reportData.tutorsList || []).length === 0 ? (
-                                <tr>
-                                    <td colSpan={8} style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>
-                                        No tutor records found.
-                                    </td>
-                                </tr>
                             ) : (
-                                (reportData.tutorsList || []).map((tutor, idx) => (
-                                    <tr key={tutor.id}>
-                                        <td>{idx + 1}</td>
-                                        <td><strong>{tutor.Name}</strong></td>
-                                        <td>{tutor.Email}</td>
-                                        <td>
-                                            <span className={`status ${String(tutor.Status).toLowerCase() === "active" ? "active" : "inactive"}`}>
-                                                {tutor.Status}
-                                            </span>
-                                        </td>
-                                        <td>{formatDate(tutor.Joined)}</td>
-                                        <td><strong>{tutor.assignedStudentsCount}</strong> students</td>
-                                        <td>{tutor.sessionsCount} sessions</td>
-                                        <td><strong style={{ color: "#2563eb" }}>{tutor.avgRating}</strong></td>
-                                    </tr>
-                                ))
+
+                                <ResponsiveContainer
+                                    width="100%"
+                                    height="100%"
+                                >
+
+                                    <BarChart
+                                        data={reportData.revenueByMonth}
+                                        margin={{ top: 12, right: 16, left: 10, bottom: 4 }}
+                                    >
+                                        <CartesianGrid
+                                            strokeDasharray="3 3"
+                                            vertical={false}
+                                            stroke="#f1f5f9"
+                                        />
+                                        <XAxis
+                                            dataKey="month"
+                                            tick={{ fill: "#64748b", fontSize: 12 }}
+                                            axisLine={{ stroke: "#e2e8f0" }}
+                                            tickLine={false}
+                                        />
+                                        <YAxis
+                                            tick={{ fill: "#64748b", fontSize: 12 }}
+                                            axisLine={{ stroke: "#e2e8f0" }}
+                                            tickLine={false}
+                                            tickFormatter={val => `₱${Number(val).toLocaleString()}`}
+                                        />
+                                        <Tooltip
+                                            formatter={value => [formatCurrency(value), "Total Revenue"]}
+                                            contentStyle={{
+                                                backgroundColor: "#1e293b",
+                                                color: "#ffffff",
+                                                borderRadius: "8px",
+                                                border: "none",
+                                                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                                fontSize: "12px",
+                                                padding: "8px 12px"
+                                            }}
+                                            itemStyle={{ color: "#ffffff" }}
+                                            labelStyle={{ color: "#94a3b8", fontWeight: 600, marginBottom: "4px" }}
+                                        />
+                                        <Bar
+                                            dataKey="revenue"
+                                            maxBarSize={48}
+                                            radius={[6, 6, 0, 0]}
+                                            fill="#2563eb"
+                                        />
+                                    </BarChart>
+
+                                </ResponsiveContainer>
+
                             )}
-                        </tbody>
-                    </table>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* SESSION STATUS */}
+
+                    <div className="report-chart-card">
+
+                        <div className="chart-card-header">
+
+                            <div>
+
+                                <h3>
+                                    Sessions by Status
+                                </h3>
+
+                                <span>
+                                    Schedule activity
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div className="pie-chart-container">
+
+                            {reportData.sessionsByStatus.length === 0 ? (
+
+                                <div className="chart-empty">
+                                    No session data available.
+                                </div>
+
+                            ) : (
+
+                                <ResponsiveContainer
+                                    width="100%"
+                                    height="100%"
+                                >
+
+                                    <PieChart>
+
+                                        <Pie
+                                            data={reportData.sessionsByStatus}
+                                            dataKey="value"
+                                            nameKey="name"
+                                            cx="50%"
+                                            cy="42%"
+                                            innerRadius={50}
+                                            outerRadius={80}
+                                            paddingAngle={3}
+                                        >
+
+                                            {reportData.sessionsByStatus.map(
+                                                (entry, index) => (
+                                                    <Cell
+                                                        key={`cell-${index}`}
+                                                        fill={
+                                                            STATUS_COLORS[entry.name] ||
+                                                            pieColors[
+                                                                index %
+                                                                pieColors.length
+                                                            ]
+                                                        }
+                                                    />
+                                                )
+                                            )}
+
+                                        </Pie>
+
+                                        <Tooltip
+                                            formatter={(val, name) => [`${val} sessions`, name]}
+                                            contentStyle={{
+                                                backgroundColor: "#1e293b",
+                                                color: "#ffffff",
+                                                borderRadius: "8px",
+                                                border: "none",
+                                                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                                fontSize: "12px",
+                                                padding: "8px 12px"
+                                            }}
+                                            itemStyle={{ color: "#ffffff" }}
+                                        />
+
+                                        <Legend
+                                            verticalAlign="bottom"
+                                            iconType="circle"
+                                            iconSize={8}
+                                            wrapperStyle={{ paddingTop: "10px", fontSize: "12px" }}
+                                            formatter={(value, entry) => (
+                                                <span style={{ color: "#334155", fontSize: "12px", fontWeight: 500, marginRight: "8px" }}>
+                                                    {value}: <strong style={{ color: "#0f172a" }}>{entry.payload.value}</strong>
+                                                </span>
+                                            )}
+                                        />
+
+                                    </PieChart>
+
+                                </ResponsiveContainer>
+
+                            )}
+
+                        </div>
+
+                    </div>
+
                 </div>
-            </div>
+
+                {/* ==================================
+                    PHYSICAL MERCHANDISE & INVENTORY PERFORMANCE
+                ================================== */}
+                <div className="report-merch-section">
+                    <div className="report-merch-header">
+                        <div>
+                            <h3>Physical Merchandise & Inventory Performance</h3>
+                            <p>Official center merchandise sales (Tutorial Shirts & Notebooks) and current stock levels</p>
+                        </div>
+                        <div className="report-merch-badges">
+                            <span className="merch-stat-chip highlight">
+                                🛍️ <strong>{formatCurrency(reportData.merchandiseRevenue)}</strong> Merch Sales
+                            </span>
+                            <span className="merch-stat-chip">
+                                📦 <strong>{reportData.totalMerchStock || 0}</strong> Items in Stock
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="report-table-wrapper" style={{ maxHeight: "360px" }}>
+                        <table className="report-details-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product & Variant</th>
+                                    <th>Category</th>
+                                    <th>Unit Price</th>
+                                    <th>Current Stock</th>
+                                    <th>Units Sold ({DATE_RANGE_LABELS[dateRange]})</th>
+                                    <th>Revenue Generated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(reportData.merchandiseList || []).length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>
+                                            No merchandise in the catalog yet.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    (reportData.merchandiseList || []).map((item, idx) => (
+                                        <tr key={item.id}>
+                                            <td>{idx + 1}</td>
+                                            <td>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                                    <strong>{item.name}</strong>
+                                                    {item.size && <span className="merch-size-badge">Size: {item.size}</span>}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span className="merch-cat-pill">{item.category}</span>
+                                            </td>
+                                            <td>
+                                                <strong>₱{Number(item.price || 0).toLocaleString()}</strong>
+                                            </td>
+                                            <td>
+                                                <span className={`stock-pill ${item.stock > 10 ? "in-stock" : item.stock > 0 ? "low-stock" : "out-of-stock"}`}>
+                                                    {item.stock > 10 ? `${item.stock} in stock` : item.stock > 0 ? `Low (${item.stock})` : "Out of stock (0)"}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <strong>{item.unitsSold || 0} units</strong>
+                                            </td>
+                                            <td className="report-amount">
+                                                {formatCurrency(item.periodRevenue)}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                            <tfoot>
+                                <tr className="report-table-total-row">
+                                    <td colSpan={4} style={{ textAlign: "right", fontWeight: 700 }}>
+                                        Catalog Total:
+                                    </td>
+                                    <td>
+                                        <strong>{reportData.totalMerchStock || 0} in stock</strong>
+                                    </td>
+                                    <td>
+                                        <strong>{reportData.totalMerchUnitsSold || 0} sold</strong>
+                                    </td>
+                                    <td className="report-amount" style={{ fontWeight: 800, color: "#1e40af" }}>
+                                        {formatCurrency(reportData.merchandiseRevenue)}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                {/* ==================================
+                    TUTOR PROFILES & FACULTY PERFORMANCE
+                ================================== */}
+                <div className="report-merch-section report-tutor-section" style={{ marginTop: "24px" }}>
+                    <div className="report-merch-header">
+                        <div>
+                            <h3>Tutor Profiles & Faculty Performance</h3>
+                            <p>Official faculty roster, assigned student caseloads, sessions delivered, and student ratings</p>
+                        </div>
+                        <div className="report-merch-badges">
+                            <span className="merch-stat-chip highlight">
+                                🧑‍🏫 <strong>{(reportData.tutorsList || []).length}</strong> Tutors
+                            </span>
+                            <span className="merch-stat-chip">
+                                ⭐ <strong>{reportData.avgRating || 0} / 5.0</strong> Center Rating
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="report-table-wrapper" style={{ maxHeight: "360px" }}>
+                        <table className="report-details-table">
+                            <thead>
+                                <tr>
+                                    <th style={{ width: "40px" }}>#</th>
+                                    <th>Tutor Name</th>
+                                    <th>Email Address</th>
+                                    <th>Account Status</th>
+                                    <th>Date Joined</th>
+                                    <th>Assigned Students</th>
+                                    <th>Total Sessions</th>
+                                    <th>Average Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(reportData.tutorsList || []).length === 0 ? (
+                                    <tr>
+                                        <td colSpan={8} style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>
+                                            No tutor records found.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    (reportData.tutorsList || []).map((tutor, idx) => (
+                                        <tr key={tutor.id}>
+                                            <td>{idx + 1}</td>
+                                            <td><strong>{tutor.Name}</strong></td>
+                                            <td>{tutor.Email}</td>
+                                            <td>
+                                                <span className={`status ${String(tutor.Status).toLowerCase() === "active" ? "active" : "inactive"}`}>
+                                                    {tutor.Status}
+                                                </span>
+                                            </td>
+                                            <td>{formatDate(tutor.Joined)}</td>
+                                            <td><strong>{tutor.assignedStudentsCount}</strong> students</td>
+                                            <td>{tutor.sessionsCount} sessions</td>
+                                            <td><strong style={{ color: "#2563eb" }}>{tutor.avgRating}</strong></td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 {/* SNAPSHOT FOOTER */}
                 <div className="report-snapshot-footer">
@@ -1857,7 +1845,7 @@ function AdminReport() {
             </div>
 
 
-{/* ==================================
+            {/* ==================================
                 REVENUE DETAILS MODAL
             ================================== */}
 
@@ -1912,13 +1900,13 @@ function AdminReport() {
                             </div>
 
                             <div>
-                                <span>Academic Subscriptions</span>
-                                <strong style={{ color: "#2563eb" }}>{formatCurrency(reportData.academicRevenue || 0)}</strong>
+                                <span>Subscriptions & Services</span>
+                                <strong style={{ color: "#2563eb" }}>{formatCurrency(reportData.academicRevenue)}</strong>
                             </div>
 
                             <div>
                                 <span>Physical Merchandise</span>
-                                <strong style={{ color: "#059669" }}>{formatCurrency(reportData.merchandiseRevenue || 0)}</strong>
+                                <strong style={{ color: "#059669" }}>{formatCurrency(reportData.merchandiseRevenue)}</strong>
                             </div>
 
                             <div>
@@ -2056,8 +2044,6 @@ function AdminReport() {
                                         <div className={`format-radio-dot ${exportFormat === "excel_pdf" ? "selected" : ""}`} />
                                     </div>
 
-
-
                                     <div
                                         className={`export-format-card ${exportFormat === "excel" ? "active" : ""}`}
                                         onClick={() => setExportFormat("excel")}
@@ -2077,88 +2063,88 @@ function AdminReport() {
                             </div>
 
                             {/* Sheet Selection Section */}
-                                <div className="form-group sheet-selection-group">
-                                    <div className="sheet-selection-header">
-                                        <div>
-                                            <label className="form-label" style={{ fontWeight: 700, margin: 0 }}>
-                                                Select Sheets to Include
-                                            </label>
-                                            <span className="sheet-selection-subtitle">
-                                                Choose which sheets to export ({selectedSheetCount} of {sheetDefinitions.length} selected)
-                                            </span>
-                                        </div>
-                                        <div className="sheet-quick-actions">
-                                            <button
-                                                type="button"
-                                                className="btn-sheet-quick"
-                                                onClick={selectAllSheets}
-                                                disabled={selectedSheetCount === sheetDefinitions.length}
-                                            >
-                                                Select All
-                                            </button>
-                                            <span className="sheet-quick-sep">•</span>
-                                            <button
-                                                type="button"
-                                                className="btn-sheet-quick"
-                                                onClick={deselectAllSheets}
-                                                disabled={selectedSheetCount === 0}
-                                            >
-                                                Clear All
-                                            </button>
-                                        </div>
+                            <div className="form-group sheet-selection-group">
+                                <div className="sheet-selection-header">
+                                    <div>
+                                        <label className="form-label" style={{ fontWeight: 700, margin: 0 }}>
+                                            Select Sheets to Include
+                                        </label>
+                                        <span className="sheet-selection-subtitle">
+                                            Choose which sheets to export ({selectedSheetCount} of {sheetDefinitions.length} selected)
+                                        </span>
                                     </div>
+                                    <div className="sheet-quick-actions">
+                                        <button
+                                            type="button"
+                                            className="btn-sheet-quick"
+                                            onClick={selectAllSheets}
+                                            disabled={selectedSheetCount === sheetDefinitions.length}
+                                        >
+                                            Select All
+                                        </button>
+                                        <span className="sheet-quick-sep">•</span>
+                                        <button
+                                            type="button"
+                                            className="btn-sheet-quick"
+                                            onClick={deselectAllSheets}
+                                            disabled={selectedSheetCount === 0}
+                                        >
+                                            Clear All
+                                        </button>
+                                    </div>
+                                </div>
 
-                                    <div className="sheet-checkbox-grid">
-                                        {sheetDefinitions.map(sheet => {
-                                            const isSelected = !!selectedSheets[sheet.id];
-                                            return (
-                                                <div
-                                                    key={sheet.id}
-                                                    className={`sheet-checkbox-card ${isSelected ? "selected" : ""}`}
-                                                    onClick={() => toggleSheet(sheet.id)}
-                                                    role="checkbox"
-                                                    aria-checked={isSelected}
-                                                    tabIndex={0}
-                                                >
-                                                    <div className="sheet-card-left">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelected}
-                                                            onChange={() => toggleSheet(sheet.id)}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            className="sheet-checkbox-input"
-                                                        />
-                                                        <span className="sheet-number-pill">Sheet {sheet.sheetNum}</span>
-                                                        <div className="sheet-text-info">
-                                                            <span className="sheet-name-text">{sheet.title}</span>
-                                                            <span className="sheet-desc-text">{sheet.description}</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="sheet-card-right">
-                                                        <span className="sheet-meta-pill">
-                                                            {sheet.count} {sheet.unit}
-                                                        </span>
-                                                        <button
-                                                            type="button"
-                                                            className="btn-only-this-sheet"
-                                                            title={`Export only Sheet ${sheet.sheetNum}: ${sheet.title}`}
-                                                            onClick={(e) => selectOnlySheet(sheet.id, e)}
-                                                        >
-                                                            Only this
-                                                        </button>
+                                <div className="sheet-checkbox-grid">
+                                    {sheetDefinitions.map(sheet => {
+                                        const isSelected = !!selectedSheets[sheet.id];
+                                        return (
+                                            <div
+                                                key={sheet.id}
+                                                className={`sheet-checkbox-card ${isSelected ? "selected" : ""}`}
+                                                onClick={() => toggleSheet(sheet.id)}
+                                                role="checkbox"
+                                                aria-checked={isSelected}
+                                                tabIndex={0}
+                                            >
+                                                <div className="sheet-card-left">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleSheet(sheet.id)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="sheet-checkbox-input"
+                                                    />
+                                                    <span className="sheet-number-pill">Sheet {sheet.sheetNum}</span>
+                                                    <div className="sheet-text-info">
+                                                        <span className="sheet-name-text">{sheet.title}</span>
+                                                        <span className="sheet-desc-text">{sheet.description}</span>
                                                     </div>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
 
-                                    {selectedSheetCount === 0 && (
-                                        <div className="sheet-selection-warning">
-                                            ⚠️ Please select at least one sheet to export.
-                                        </div>
-                                    )}
+                                                <div className="sheet-card-right">
+                                                    <span className="sheet-meta-pill">
+                                                        {sheet.count} {sheet.unit}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-only-this-sheet"
+                                                        title={`Export only Sheet ${sheet.sheetNum}: ${sheet.title}`}
+                                                        onClick={(e) => selectOnlySheet(sheet.id, e)}
+                                                    >
+                                                        Only this
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
+
+                                {selectedSheetCount === 0 && (
+                                    <div className="sheet-selection-warning">
+                                        ⚠️ Please select at least one sheet to export.
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Reporter Identification Box */}
                             <div className="form-group">
@@ -2208,7 +2194,8 @@ function AdminReport() {
                                             selectedSheets.sessions ? `${reportData.sessionsData.length} Sessions` : null,
                                             selectedSheets.ratings ? `${reportData.ratingsData.length} Ratings` : null,
                                             selectedSheets.students ? `${filteredStudents.length} Students` : null,
-                                            selectedSheets.merchandise ? `${(reportData.merchandiseList || []).length} Merch Items` : null
+                                            selectedSheets.merchandise ? `${(reportData.merchandiseList || []).length} Merch Items` : null,
+                                            selectedSheets.tutors ? `${(reportData.tutorsList || []).length} Tutors` : null
                                         ].filter(Boolean).join(" • ") || "No sheets selected"}
                                     </span>
                                 </div>

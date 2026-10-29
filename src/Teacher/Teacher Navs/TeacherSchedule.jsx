@@ -676,34 +676,45 @@ function TeacherSchedule(){
 
     }
 
-    async function deleteSingleSession() {
-        if (!selectedEvent) return;
-        const confirmDelete = window.confirm(
-            `Permanently delete this session ("${selectedEvent.title}") from your calendar?`
-        );
-        if (!confirmDelete) return;
+   async function deleteSingleSession() {
+    if (!selectedEvent) return;
 
-        const { error } = await supabase
-            .from("calendar")
-            .delete()
-            .eq("id", selectedEvent.id);
+    const confirmDelete = window.confirm(
+        `Permanently delete this session ("${selectedEvent.title}") from your calendar?`
+    );
+    if (!confirmDelete) return;
 
-        if (error) {
-            console.error(error);
-            alert("Failed to delete session: " + error.message);
-            return;
-        }
+    const { data, error } = await supabase
+        .from("calendar")
+        .delete()
+        .eq("id", selectedEvent.id)
+        .select();
 
-        setSelectedEvent(null);
-        await Promise.all([
-            getEvents(loggedTutor.id),
-            loadUpcomingSessions(),
-            loadPastSessions(),
-            loadTodayCount(),
-            loadNewScheduleRequest()
-        ]);
-        alert("Session deleted successfully.");
+    console.log("delete result:", { data, error });
+
+    if (error) {
+        console.error(error);
+        alert("Failed to delete session: " + error.message);
+        return;
     }
+
+    if (!data || data.length === 0) {
+        alert("Nothing was deleted. You likely don't have permission (RLS policy missing).");
+        return;
+    }
+
+    setSelectedEvent(null);
+
+    await Promise.all([
+        getEvents(loggedTutor.id),
+        loadUpcomingSessions(),
+        loadPastSessions(),
+        loadTodayCount(),
+        loadNewScheduleRequest()
+    ]);
+
+    alert("Session deleted successfully.");
+}
 
 
     async function requestReschedule(){

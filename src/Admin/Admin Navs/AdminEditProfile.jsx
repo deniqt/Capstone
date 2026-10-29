@@ -3,6 +3,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./adminEditProfile.css";
 import { supabase } from "../../lib/supabase";
 
+function formatDate(date) {
+    if (!date) return "—";
+
+    return new Date(date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+    });
+}
+
 function AdminEditProfile() {
 
     const { id } = useParams();
